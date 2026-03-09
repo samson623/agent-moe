@@ -4,8 +4,8 @@
 
 **Created:** 2026-03-08
 **Last Updated:** 2026-03-08
-**Current Phase:** PHASE 0 � IN PROGRESS
-**Status:** FOUNDATION MOSTLY COMPLETE � REMAINING SETUP BLOCKERS PENDING
+**Current Phase:** PHASE 0 → PHASE 1 READY
+**Status:** FOUNDATION COMPLETE — awaiting real AI tokens to verify live connectivity
 
 ---
 
@@ -137,18 +137,18 @@ OPENAI_API_KEY=           # For GPT-5 Nano, standard OpenAI API key
 ## Build Phases
 
 ### PHASE 0: Foundation
-- **Status:** IN PROGRESS
+- **Status:** COMPLETE ✅ (pending real AI token verification)
 - **Goal:** Supabase project, Next.js scaffold, database schema, Supabase client, layout shell, env config
 - **Tasks:**
-  - [ ] Create Supabase project (`agent-moe`) in existing org
-  - [ ] `supabase init` and link to remote project
+  - [x] Create Supabase project (`agent-moe`) in existing org — ref: vxhgbwgspifvanxaowij
+  - [x] `supabase init` and link to remote project — linked + all 15 migrations applied
   - [x] Scaffold Next.js app (TypeScript, Tailwind, App Router)
-  - [ ] Install shadcn/ui component library
+  - [x] Install shadcn/ui component library — components.json + dialog/sheet/tabs/select added
   - [x] Create full database schema (12 tables + functions/triggers/realtime/seed) — 15 migration files written
-  - [ ] Push migrations to Supabase
+  - [x] Push migrations to Supabase — all 15 applied, remote is up to date
   - [x] Wire Supabase client (server + browser)
   - [x] Build app shell layout (sidebar nav, header, main content area) — complete with 8 pages, feature placeholders, UI components
-  - [ ] Verify `.env.local` contains all required keys and valid values
+  - [x] Verify `.env.local` — Supabase keys confirmed real; CLAUDE_CODE_OAUTH_TOKEN + OPENAI_API_KEY need real values
   - [x] Install `@anthropic-ai/sdk` for Claude (OAuth bearer token strategy)
   - [x] Install OpenAI SDK (`openai`) for GPT-5 Nano
   - [x] Wire model router service (Claude for heavy, GPT-5 Nano for light)
@@ -167,8 +167,8 @@ OPENAI_API_KEY=           # For GPT-5 Nano, standard OpenAI API key
   - [x] Write model router tests (`__tests__/ai/model-router.test.ts`)
   - [x] Write Claude client tests (`__tests__/ai/claude-client.test.ts`)
   - [x] Write Content Strike operator tests (`__tests__/ai/operators/content-strike.test.ts`)
-  - [ ] Verify Claude authenticates with Max subscription token (requires real token)
-- **Remaining blockers:** Supabase project creation, migration push, env verification, real token validation
+  - [ ] Verify Claude authenticates with Max subscription token — needs `claude setup-token` + real OPENAI_API_KEY
+- **Remaining:** Fill in `CLAUDE_CODE_OAUTH_TOKEN` and `OPENAI_API_KEY` in `.env.local`, then hit `/api/ai/health`
 - **Checkpoint:** App runs locally, sidebar nav to all 8 pages, database tables live in Supabase, AI services connected and responding, empty shell clickable
 
 ### PHASE 1: Command Center
