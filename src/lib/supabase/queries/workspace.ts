@@ -47,7 +47,7 @@ export async function getWorkspace(
   const { data, error } = await client
     .from('workspaces')
     .select('*')
-    .eq('owner_id', userId)
+    .eq('user_id', userId)
     .single()
 
   if (error) {

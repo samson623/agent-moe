@@ -172,13 +172,7 @@ export async function updateMissionStatus(
 ): Promise<{ data: Mission | null; error: string | null }> {
   const now = new Date().toISOString()
 
-  const patch: Database['public']['Tables']['missions']['Update'] = { status }
-
-  if (status === 'running') {
-    patch.started_at = now
-  } else if (status === 'completed' || status === 'failed') {
-    patch.completed_at = now
-  }
+  const patch: Database['public']['Tables']['missions']['Update'] = { status, updated_at: now }
 
   const { data, error } = await client
     .from('missions')

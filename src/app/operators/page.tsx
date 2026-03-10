@@ -1,7 +1,19 @@
-import { OperatorsPage } from "@/features/operators/components/OperatorsPage";
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { OperatorsPage } from '@/features/operators/components/OperatorsPage'
 
-export const metadata = { title: "Operators" };
+export const metadata = { title: 'Operators' }
 
-export default function Page() {
-  return <OperatorsPage />;
+export default async function Page() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: workspace } = (await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()) as { data: { id: string } | null }
+
+  return <OperatorsPage workspaceId={workspace?.id ?? ''} />
 }

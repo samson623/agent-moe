@@ -21,6 +21,15 @@ const config = {
     "!src/**/*.d.ts",
     "!src/**/index.ts",
   ],
+  testPathIgnorePatterns: [
+    "<rootDir>/node_modules/",
+    "<rootDir>/.next/",
+    "<rootDir>/.claude/",
+  ],
+  modulePathIgnorePatterns: [
+    "<rootDir>/.claude/",
+    "<rootDir>/.next/",
+  ],
 };
 
 module.exports = createJestConfig(config);

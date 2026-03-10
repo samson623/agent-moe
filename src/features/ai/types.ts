@@ -25,6 +25,7 @@ export enum JobType {
   CONTENT_REPURPOSING = "content_repurposing",
   RESEARCH = "research",
   TREND_ANALYSIS = "trend_analysis",
+  TREND_SCAN = "trend_scan",
   MARKET_ANGLE_FINDING = "market_angle_finding",
   AUDIENCE_ANALYSIS = "audience_analysis",
   OFFER_MAPPING = "offer_mapping",
@@ -33,6 +34,17 @@ export enum JobType {
   SAFETY_REVIEW = "safety_review",
   OPPORTUNITY_GENERATION = "opportunity_generation",
   PRICING_STRATEGY = "pricing_strategy",
+  VIDEO_PACKAGE = "video_package",
+
+  // --- Browser Agent (Playwright automation via Claude) ---
+  BROWSER_SCRAPE = "browser_scrape",
+  BROWSER_SCREENSHOT = "browser_screenshot",
+  BROWSER_CLICK = "browser_click",
+  BROWSER_FILL_FORM = "browser_fill_form",
+  BROWSER_NAVIGATE = "browser_navigate",
+  BROWSER_MONITOR = "browser_monitor",
+  BROWSER_EXTRACT_DATA = "browser_extract_data",
+  BROWSER_SUBMIT_FORM = "browser_submit_form",
 
   // --- GPT-5 Nano-handled (light / high-volume / cheap) ---
   TOPIC_SCORING = "topic_scoring",
@@ -53,12 +65,13 @@ export enum ModelChoice {
   GPT5_NANO = "gpt5_nano",
 }
 
-/** The four operator teams on the platform. */
+/** The operator teams on the platform. */
 export enum OperatorTeam {
   CONTENT_STRIKE = "content_strike",
   GROWTH_OPERATOR = "growth_operator",
   REVENUE_CLOSER = "revenue_closer",
   BRAND_GUARDIAN = "brand_guardian",
+  BROWSER_AGENT = "browser_agent",
 }
 
 /** Content platform targets. */

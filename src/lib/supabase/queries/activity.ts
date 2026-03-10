@@ -10,7 +10,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   Database,
   ActivityLog,
-  ActivityLogInsert,
   AnalyticsEvent,
   AnalyticsEventInsert,
   OperatorTeam,
@@ -19,6 +18,16 @@ import type {
 } from '../types'
 
 type TypedClient = SupabaseClient<Database>
+
+export interface LogActivityInput {
+  workspace_id: string
+  actor_type: string
+  action: string
+  entity_type: string
+  entity_id: string
+  summary: string
+  details?: Record<string, unknown>
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,7 +62,7 @@ export async function getActivityLogs(
     .from('activity_logs')
     .select('*')
     .eq('workspace_id', workspaceId)
-    .order('created_at', { ascending: false })
+    .order('occurred_at', { ascending: false })
     .limit(clampedLimit)
 
   if (error) {
@@ -69,11 +78,19 @@ export async function getActivityLogs(
  */
 export async function logActivity(
   client: TypedClient,
-  entry: ActivityLogInsert,
+  entry: LogActivityInput,
 ): Promise<{ data: ActivityLog | null; error: string | null }> {
   const { data, error } = await client
     .from('activity_logs')
-    .insert(entry)
+    .insert({
+      workspace_id: entry.workspace_id,
+      actor: entry.actor_type,
+      action: entry.action,
+      entity_type: entry.entity_type,
+      entity_id: entry.entity_id,
+      message: entry.summary,
+      meta: (entry.details ?? {}) as Database['public']['Tables']['activity_logs']['Insert']['meta'],
+    })
     .select()
     .single()
 

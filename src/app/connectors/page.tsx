@@ -1,7 +1,21 @@
-import { ConnectorsPage } from "@/features/connectors/components/ConnectorsPage";
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { ConnectorsPage } from '@/features/connectors/components/ConnectorsPage'
 
-export const metadata = { title: "Connectors" };
+export const metadata = { title: 'Connectors — MOE' }
 
-export default function Page() {
-  return <ConnectorsPage />;
+export default async function Page() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: workspace } = (await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()) as { data: { id: string } | null }
+
+  const workspaceId = workspace?.id ?? ''
+
+  return <ConnectorsPage workspaceId={workspaceId} />
 }

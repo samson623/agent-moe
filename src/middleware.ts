@@ -21,14 +21,32 @@ import type { NextRequest } from 'next/server'
 import type { Database } from '@/lib/supabase/types'
 
 /** Routes that are accessible without a session */
-const PUBLIC_ROUTES = ['/login', '/api/health']
+const PUBLIC_ROUTES = [
+  '/login',
+  '/auth/callback',
+  '/api/health',
+  '/api/ai/health',
+  '/api/ai/route-test',
+]
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'))
 }
 
+function buildForwardedHeaders(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', request.nextUrl.pathname)
+  return requestHeaders
+}
+
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const requestHeaders = buildForwardedHeaders(request)
+
+  let supabaseResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,7 +62,11 @@ export async function middleware(request: NextRequest) {
 
           // Rebuild the response so outgoing Set-Cookie headers include
           // the refreshed tokens
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = NextResponse.next({
+            request: {
+              headers: requestHeaders,
+            },
+          })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           )

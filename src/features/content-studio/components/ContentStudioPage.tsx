@@ -1,214 +1,384 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  FileText,
-  Video,
-  Image,
-  MessageSquare,
-  Filter,
-  Search,
-  SlidersHorizontal,
-  Layers,
-  Sparkles,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+'use client'
 
-interface ContentTypeCardProps {
-  icon: LucideIcon;
-  label: string;
-  count: string;
-  color: string;
+import { useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  Palette,
+  FileText,
+  MessageSquare,
+  Film,
+  Quote,
+  MousePointerClick,
+  Image,
+  Video,
+  LayoutGrid,
+  RefreshCw,
+  AlertTriangle,
+  Inbox,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  Activity,
+  CheckCircle2,
+  Clock,
+  FileBarChart,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+import { useAssets } from '../hooks/use-assets'
+import { useBulkActions } from '../hooks/use-bulk-actions'
+import { AssetCard } from './AssetCard'
+import { AssetFilters } from './AssetFilters'
+import { BulkActionBar } from './BulkActionBar'
+
+// ---------------------------------------------------------------------------
+// Content type tab config
+// ---------------------------------------------------------------------------
+
+interface ContentTab {
+  value: string
+  label: string
+  icon: LucideIcon
+  color: string
 }
 
-function ContentTypeCard({ icon: Icon, label, count, color }: ContentTypeCardProps) {
+const CONTENT_TABS: ContentTab[] = [
+  { value: '', label: 'All', icon: Layers, color: 'var(--text-secondary)' },
+  { value: 'post', label: 'Posts', icon: FileText, color: '#3b82f6' },
+  { value: 'thread', label: 'Threads', icon: MessageSquare, color: '#8b5cf6' },
+  { value: 'script', label: 'Scripts', icon: Film, color: '#f59e0b' },
+  { value: 'caption', label: 'Captions', icon: Quote, color: '#10b981' },
+  { value: 'cta', label: 'CTAs', icon: MousePointerClick, color: '#ef4444' },
+  { value: 'video_concept', label: 'Video Concepts', icon: Video, color: '#f97316' },
+  { value: 'thumbnail_concept', label: 'Thumbnails', icon: Image, color: '#ec4899' },
+  { value: 'carousel', label: 'Carousels', icon: LayoutGrid, color: '#06b6d4' },
+]
+
+// ---------------------------------------------------------------------------
+// Skeleton helpers
+// ---------------------------------------------------------------------------
+
+function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-4 rounded-[var(--radius-lg)]",
-        "border border-[var(--border)] bg-[var(--surface-elevated)]",
-        "hover:border-[var(--primary)] hover:bg-[var(--surface-hover)]",
-        "transition-all duration-150 cursor-pointer group"
+        'animate-pulse rounded-[var(--radius)] bg-[var(--skeleton)]',
+        className,
       )}
-    >
-      <div
-        className="flex items-center justify-center w-10 h-10 rounded-[var(--radius)]"
-        style={{ background: `${color}20`, border: `1px solid ${color}30` }}
-      >
-        <Icon size={18} style={{ color }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--text)]">{label}</p>
-        <p className="text-xs text-[var(--text-muted)]">{count} assets</p>
-      </div>
-    </div>
-  );
+    />
+  )
 }
 
-const CONTENT_TYPES: ContentTypeCardProps[] = [
-  {
-    icon: FileText,
-    label: "Posts & Threads",
-    count: "0",
-    color: "var(--primary)",
-  },
-  {
-    icon: MessageSquare,
-    label: "Captions & Hooks",
-    count: "0",
-    color: "var(--accent)",
-  },
-  { icon: Video, label: "Video Scripts", count: "0", color: "var(--warning)" },
-  {
-    icon: Image,
-    label: "Thumbnails & Carousels",
-    count: "0",
-    color: "var(--success)",
-  },
-  {
-    icon: Sparkles,
-    label: "CTA Packs",
-    count: "0",
-    color: "var(--info)",
-  },
-  {
-    icon: Layers,
-    label: "All Assets",
-    count: "0",
-    color: "var(--text-secondary)",
-  },
-];
-
-const PLATFORMS = ["All", "X / Twitter", "LinkedIn", "Instagram", "TikTok", "YouTube"];
-
-export function ContentStudioPage() {
+function AssetCardSkeleton() {
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
+    <Card className="overflow-hidden">
+      <Skeleton className="h-0.5 w-full rounded-none" />
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-5 h-5 rounded-[3px]" />
+          <Skeleton className="w-7 h-7 rounded-[var(--radius-sm)]" />
+          <Skeleton className="h-4 w-14 rounded-full" />
+          <Skeleton className="h-4 w-12 rounded-full ml-auto" />
+        </div>
+        <Skeleton className="h-4 w-3/4" />
+        <div className="space-y-1.5">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+        <div className="flex gap-1.5">
+          <Skeleton className="h-5 w-8 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <Skeleton className="h-1 w-full rounded-full" />
+        <Skeleton className="h-3 w-16" />
+      </CardContent>
+    </Card>
+  )
+}
+
+function StatsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+        >
+          <Skeleton className="w-4 h-4 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-5 w-8" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Error alert
+// ---------------------------------------------------------------------------
+
+function ErrorAlert({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] border border-red-500/30 bg-red-500/10 text-red-400">
+      <AlertTriangle size={18} className="shrink-0" />
+      <p className="text-sm flex-1">{message}</p>
+      <Button variant="ghost" size="sm" onClick={onRetry}>
+        Retry
+      </Button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Quick stat
+// ---------------------------------------------------------------------------
+
+function QuickStat({ label, value, icon: Icon }: { label: string; value: number; icon: LucideIcon }) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-[var(--radius-lg)]',
+        'border border-[var(--border)] bg-[var(--surface)]',
+      )}
+    >
+      <Icon size={14} className="text-[var(--primary)] shrink-0" />
+      <div>
+        <p className="text-base font-bold text-[var(--text)] leading-none tabular-nums">
+          {value.toLocaleString()}
+        </p>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Empty state
+// ---------------------------------------------------------------------------
+
+function EmptyState() {
+  return (
+    <div
+      className={cn(
+        'relative rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--border)]',
+        'bg-[var(--surface)] p-16 text-center overflow-hidden',
+      )}
+    >
+      <div className="absolute inset-0 grid-bg opacity-50" aria-hidden="true" />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none"
+        style={{ background: 'radial-gradient(circle, var(--accent) 0%, var(--primary) 100%)' }}
+        aria-hidden="true"
+      />
+      <div className="relative flex flex-col items-center gap-3">
+        <Inbox size={36} className="text-[var(--text-disabled)]" />
+        <h3 className="text-lg font-bold text-[var(--text)]">No assets yet</h3>
+        <p className="text-sm text-[var(--text-muted)] max-w-xs mx-auto leading-relaxed">
+          Assets created by operator teams will appear here. Submit a mission to generate content.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main Page Component
+// ---------------------------------------------------------------------------
+
+export function ContentStudioPage({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter()
+  const [activeType, setActiveType] = useState<string>('')
+
+  const {
+    assets,
+    loading,
+    error,
+    filters,
+    setFilters,
+    page,
+    setPage,
+    totalCount,
+    pageCount,
+    refresh,
+  } = useAssets(workspaceId)
+
+  const {
+    selectedIds,
+    toggleSelect,
+    clearSelection,
+    executeBulkAction,
+    loading: bulkLoading,
+    error: bulkError,
+  } = useBulkActions()
+
+  const isLive = !!workspaceId
+
+  const handleTypeChange = (typeValue: string) => {
+    setActiveType(typeValue)
+    setFilters({ ...filters, type: typeValue || undefined })
+  }
+
+  const handleAssetClick = (id: string) => {
+    router.push(`/content/${id}`)
+  }
+
+  // Derive quick stats from current data
+  const statusCounts = assets.reduce<Record<string, number>>((acc, a) => {
+    acc[a.status] = (acc[a.status] ?? 0) + 1
+    return acc
+  }, {})
+
+  return (
+    <div className="p-7 max-w-7xl mx-auto space-y-8">
+      {/* ── Header ──────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]",
-              "bg-gradient-to-br from-[#7c3aed] to-[#3b82f6]",
-              "shadow-[0_0_24px_rgba(124,58,237,0.4)]"
+              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
+              'bg-gradient-to-br from-[var(--accent)] to-[var(--primary)]',
+              'shadow-[0_0_24px_rgba(124,58,237,0.4)]',
             )}
           >
-            <FileText size={20} className="text-white" />
+            <Palette size={20} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">
-              Content Studio
-            </h2>
+            <h2 className="text-xl font-bold text-[var(--text)]">Content Studio</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              All generated assets — posts, scripts, CTAs, thumbnails
+              All generated assets — browse, filter, approve, and publish
             </p>
           </div>
         </div>
-        <Badge variant="accent">Phase 4 — Building Soon</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={isLive ? 'success' : 'warning'}>
+            {isLive ? 'Live' : 'No Workspace'}
+          </Badge>
+          <Button variant="ghost" size="icon-sm" onClick={refresh} title="Refresh">
+            <RefreshCw size={14} />
+          </Button>
+        </div>
       </div>
 
-      {/* Content type filter row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {CONTENT_TYPES.map((ct) => (
-          <ContentTypeCard key={ct.label} {...ct} />
-        ))}
-      </div>
+      {/* ── Errors ──────────────────────────────────── */}
+      {error && <ErrorAlert message={error} onRetry={refresh} />}
+      {bulkError && <ErrorAlert message={bulkError} onRetry={() => {}} />}
 
-      {/* Filter bar */}
-      <Card>
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div
+      {/* ── Content type tabs ───────────────────────── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {CONTENT_TABS.map((tab) => {
+          const isActive = activeType === tab.value
+          const TabIcon = tab.icon
+          return (
+            <button
+              key={tab.value || '__all'}
+              onClick={() => handleTypeChange(tab.value)}
               className={cn(
-                "flex items-center gap-2 flex-1 min-w-[180px] px-3 h-8",
-                "rounded-[var(--radius)] border border-[var(--border)]",
-                "bg-[var(--surface-elevated)]"
+                'flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium transition-all duration-150',
+                isActive
+                  ? 'text-white shadow-[0_0_14px_rgba(59,130,246,0.3)]'
+                  : 'bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--text)]',
               )}
+              style={isActive ? { background: tab.value ? tab.color : 'var(--primary)' } : undefined}
             >
-              <Search size={13} className="text-[var(--text-muted)] shrink-0" />
-              <span className="text-sm text-[var(--text-disabled)]">
-                Search assets...
-              </span>
-            </div>
+              <TabIcon size={13} />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
 
-            <div className="flex items-center gap-2">
-              {PLATFORMS.slice(0, 4).map((p) => (
-                <button
-                  key={p}
-                  className={cn(
-                    "px-3 h-7 rounded-full text-xs font-medium transition-colors duration-100",
-                    p === "All"
-                      ? "bg-[var(--primary)] text-white"
-                      : "bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--text)]"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-
-            <Button variant="outline" size="sm" className="gap-1.5 ml-auto shrink-0">
-              <Filter size={13} />
-              Filters
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-              <SlidersHorizontal size={13} />
-              Sort
-            </Button>
-          </div>
+      {/* ── Filter bar ──────────────────────────────── */}
+      <Card>
+        <CardContent className="py-4 px-4">
+          <AssetFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            assetCount={totalCount}
+          />
         </CardContent>
       </Card>
 
-      {/* Empty state / coming soon */}
-      <div
-        className={cn(
-          "relative rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--border)]",
-          "bg-[var(--surface)] p-16 text-center",
-          "overflow-hidden"
-        )}
-      >
-        {/* Background grid */}
-        <div className="absolute inset-0 grid-bg opacity-50" aria-hidden="true" />
-
-        {/* Glow orb */}
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl opacity-10 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle, var(--accent) 0%, var(--primary) 100%)",
-          }}
-          aria-hidden="true"
-        />
-
-        <div className="relative flex flex-col items-center gap-4">
-          <div
-            className={cn(
-              "flex items-center justify-center w-16 h-16 rounded-[var(--radius-xl)]",
-              "bg-gradient-to-br from-[var(--accent-muted)] to-[var(--primary-muted)]",
-              "border border-[rgba(124,58,237,0.3)]"
-            )}
-          >
-            <FileText size={28} className="text-[var(--accent)]" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-[var(--text)] mb-2">
-              Content Studio
-            </h3>
-            <p className="text-sm text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
-              Full asset management with inline editing, version history, status
-              workflow, and platform targeting — across all content types.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap justify-center">
-            <Badge variant="accent">Phase 4 — Building Soon</Badge>
-            <Badge variant="muted">Asset Library</Badge>
-            <Badge variant="muted">Version History</Badge>
-            <Badge variant="muted">Platform Targeting</Badge>
-          </div>
+      {/* ── Quick stats row ─────────────────────────── */}
+      {loading ? (
+        <StatsSkeleton />
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <QuickStat label="Total Assets" value={totalCount} icon={Layers} />
+          <QuickStat label="Drafts" value={statusCounts['draft'] ?? 0} icon={FileBarChart} />
+          <QuickStat label="In Review" value={statusCounts['review'] ?? 0} icon={Clock} />
+          <QuickStat label="Approved" value={statusCounts['approved'] ?? 0} icon={CheckCircle2} />
+          <QuickStat label="Published" value={statusCounts['published'] ?? 0} icon={Activity} />
         </div>
-      </div>
+      )}
+
+      {/* ── Asset grid ──────────────────────────────── */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <AssetCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : assets.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {assets.map((asset) => (
+            <AssetCard
+              key={asset.id}
+              asset={asset}
+              isSelected={selectedIds.has(asset.id)}
+              onSelect={toggleSelect}
+              onClick={handleAssetClick}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Pagination ──────────────────────────────── */}
+      {!loading && assets.length > 0 && (
+        <div className="flex items-center justify-center gap-4 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+            className="gap-1"
+          >
+            <ChevronLeft size={14} />
+            Previous
+          </Button>
+          <span className="text-sm text-[var(--text-muted)] tabular-nums">
+            Page {page} of {pageCount}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= pageCount}
+            onClick={() => setPage(page + 1)}
+            className="gap-1"
+          >
+            Next
+            <ChevronRight size={14} />
+          </Button>
+        </div>
+      )}
+
+      {/* ── Bulk action bar ─────────────────────────── */}
+      <BulkActionBar
+        selectionCount={selectedIds.size}
+        onAction={async (action) => {
+          const ok = await executeBulkAction(action, workspaceId)
+          if (ok) refresh()
+        }}
+        onClear={clearSelection}
+        loading={bulkLoading}
+      />
     </div>
-  );
+  )
 }

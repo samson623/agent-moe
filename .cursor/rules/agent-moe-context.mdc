@@ -1,0 +1,50 @@
+---
+description: AGENT MOE project context and build plan. Auto-loads to maintain continuity across sessions.
+alwaysApply: true
+---
+
+# AGENT MOE — Project Context
+
+This is a **private AI operator platform** being built in phases.
+
+## Critical Files to Read First
+- `PLAN.md` — Full build plan with phases, tasks, checkboxes, and tech stack
+- `PROGRESS.md` — Session-by-session log of what was done and what's next
+
+## Before doing ANY work:
+1. Read `PLAN.md` to see current phase and task status
+2. Read the latest entry in `PROGRESS.md` to understand where we left off
+3. Continue from the first unchecked `[ ]` task in the current phase
+4. After completing work, UPDATE both files with progress
+
+## Tech Stack
+- Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- Supabase (PostgreSQL, Auth, Realtime)
+- **Claude Agent SDK** (`@anthropic-ai/claude-agent-sdk`) for heavy AI tasks — uses Max subscription ($0 cost)
+- **OpenAI GPT-5 Nano** for lightweight tasks — near-zero cost ($0.05/M input, $0.40/M output)
+- Playwright for browser automation
+- pnpm as package manager
+
+## AI Architecture
+- **Dual-model strategy**: Claude Agent SDK (complex/tool-using tasks) + GPT-5 Nano (simple/high-volume tasks)
+- **Model Router** decides which model handles each job based on type and complexity
+- Operator teams are Claude Agent SDK **subagents** with specialized prompts and tools
+- Auth: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) + `OPENAI_API_KEY`
+- Claude SDK provides built-in tools: Read, Write, Bash, WebSearch, WebFetch, MCP support
+- GPT-5 Nano handles: scoring, classification, formatting, simple extraction
+
+## Architecture
+- Feature-based folder structure (`src/features/`)
+- Server Components by default, Client Components only when needed
+- Supabase for all data (12 tables)
+- AI operator teams: Content Strike Team, Growth Operator, Revenue Closer, Brand Guardian
+- Approval queue gates all important actions
+
+## Build Order (Core Loop)
+Phase 0: Foundation → Phase 1: Command Center → Phase 2: Mission Engine → Phase 3: Operators → Phase 4: Content Studio → Phase 5: Approval Queue
+
+## Rules
+- This is a PRIVATE app for one user (not SaaS, no public signup, no Stripe)
+- Every phase ends with a checkpoint — user must approve before moving on
+- Update PLAN.md checkboxes as tasks complete
+- Log session progress in PROGRESS.md before ending

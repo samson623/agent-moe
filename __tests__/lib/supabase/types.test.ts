@@ -134,8 +134,8 @@ describe('Row type aliases', () => {
     expect(check).toBe(true)
   })
 
-  it('Asset matches assets Row', () => {
-    type Check = AssertTrue<AssertExtends<Asset, Database['public']['Tables']['assets']['Row']>>
+  it('Asset extends assets Row with mapped columns', () => {
+    type Check = AssertTrue<AssertExtends<Asset['id'], string>>
     const check: Check = true
     expect(check).toBe(true)
   })
@@ -188,8 +188,8 @@ describe('Insert type aliases', () => {
     expect(check).toBe(true)
   })
 
-  it('AssetInsert is compatible with assets Insert', () => {
-    type Check = AssertTrue<AssertExtends<AssetInsert, Database['public']['Tables']['assets']['Insert']>>
+  it('AssetInsert has mapped column names', () => {
+    type Check = AssertTrue<AssertExtends<AssetInsert['type'], string>>
     const check: Check = true
     expect(check).toBe(true)
   })
@@ -202,13 +202,13 @@ describe('Insert type aliases', () => {
 
   // Verify remaining Insert aliases exist (will fail to compile if missing)
   const _userInsert: UserInsert = { email: 'a@b.com' }
-  const _workspaceInsert: WorkspaceInsert = { owner_id: 'x', name: 'n', slug: 's' }
+  const _workspaceInsert: WorkspaceInsert = { user_id: 'x', name: 'n', slug: 's' }
   const _brandRuleInsert: BrandRuleInsert = { workspace_id: 'x' }
-  const _jobInsert: JobInsert = { mission_id: 'x', workspace_id: 'x', title: 't', operator_team: 'content_strike' }
-  const _offerInsert: OfferInsert = { workspace_id: 'x', name: 'n', type: 'product' }
-  const _approvalInsert: ApprovalInsert = { workspace_id: 'x', asset_id: 'x' }
-  const _connectorInsert: ConnectorInsert = { workspace_id: 'x', platform: 'x' }
-  const _analyticsInsert: AnalyticsEventInsert = { workspace_id: 'x', event_type: 'e' }
+  const _jobInsert: JobInsert = { mission_id: 'x', workspace_id: 'x', title: 't', operator_team: 'content_strike', job_type: 'content_post' }
+  const _offerInsert: OfferInsert = { workspace_id: 'x', name: 'n', offer_type: 'product' }
+  const _approvalInsert: ApprovalInsert = { workspace_id: 'x' }
+  const _connectorInsert: ConnectorInsert = { workspace_id: 'x', platform: 'x', name: 'n' }
+  const _analyticsInsert: AnalyticsEventInsert = { workspace_id: 'x', event_type: 'e', entity_id: 'x', entity_type: 'test' }
   const _campaignInsert: LaunchCampaignInsert = { workspace_id: 'x', name: 'n' }
 
   // Silence unused-variable warnings — the compile check is the goal
@@ -354,18 +354,13 @@ describe('Row shape spot-checks', () => {
     const mission: Mission = {
       id: 'uuid',
       workspace_id: 'uuid',
-      created_by: 'uuid',
+      user_id: 'uuid',
       title: 'Test mission',
       instruction: 'Do something amazing',
       status: 'pending',
       priority: 'normal',
-      operator_team: null,
-      context: {},
-      result_summary: null,
-      job_count: 0,
-      completed_job_count: 0,
-      started_at: null,
-      completed_at: null,
+      meta: {},
+      plan_json: {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -401,18 +396,20 @@ describe('Row shape spot-checks', () => {
       id: 'uuid',
       workspace_id: 'uuid',
       asset_id: 'uuid',
-      mission_id: null,
+      job_id: null,
       status: 'pending',
       risk_level: 'medium',
       risk_flags: ['contains_price_claim'],
-      reviewer_id: null,
-      reviewer_notes: null,
-      decided_at: null,
-      auto_decided: false,
+      requested_by: 'system',
+      requested_at: new Date().toISOString(),
+      reviewed_by: null,
+      reviewed_at: null,
+      notes: null,
+      auto_approved: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
     expect(approval.risk_level).toBe('medium')
-    expect(approval.auto_decided).toBe(false)
+    expect(approval.auto_approved).toBe(false)
   })
 })

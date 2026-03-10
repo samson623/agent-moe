@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 
@@ -15,25 +16,25 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0f",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0c0d14" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f6fa" },
+  ],
+  colorScheme: "dark light",
 };
 
-/**
- * Root layout — wraps all routes with AppShell (sidebar + topbar).
- *
- * Exception: /login uses src/app/login/layout.tsx which renders
- * a fixed full-screen overlay so the sidebar is not visible behind the login UI.
- */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isLoginRoute = pathname === "/login";
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body>
-        <AppShell>{children}</AppShell>
+      <body suppressHydrationWarning>
+        {isLoginRoute ? children : <AppShell>{children}</AppShell>}
       </body>
     </html>
   );

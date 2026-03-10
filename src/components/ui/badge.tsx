@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 const badgeVariants = cva(
   [
     "inline-flex items-center gap-1.5",
-    "rounded-full px-2.5 py-0.5",
-    "text-xs font-medium",
+    "rounded-full px-3 py-1",
+    "text-[13px] font-medium",
     "transition-colors duration-150",
     "select-none whitespace-nowrap",
   ].join(" "),

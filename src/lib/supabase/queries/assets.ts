@@ -9,8 +9,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   Database,
+  Json,
   Asset,
   AssetInsert,
+  AssetRow,
   AssetStatus,
   AssetType,
   Platform,
@@ -18,6 +20,18 @@ import type {
 } from '../types'
 
 type TypedClient = SupabaseClient<Database>
+
+function toAsset(row: AssetRow): Asset {
+  const { asset_type, content, linked_offer_id, ...rest } = row
+  return { ...rest, type: asset_type, body: content, offer_id: linked_offer_id }
+}
+
+function toInsertRow(insert: Omit<AssetInsert, 'type' | 'body' | 'offer_id'> & {
+  type: AssetInsert['type']; body?: string; offer_id?: string | null
+}): Database['public']['Tables']['assets']['Insert'] {
+  const { type, body, offer_id, ...rest } = insert
+  return { ...rest, asset_type: type, content: body ?? '', linked_offer_id: offer_id } as Database['public']['Tables']['assets']['Insert']
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,7 +89,7 @@ export async function getAssets(
     query = query.eq('status', filters.status)
   }
   if (filters.type) {
-    query = query.eq('type', filters.type)
+    query = query.eq('asset_type', filters.type)
   }
   if (filters.platform) {
     query = query.eq('platform', filters.platform)
@@ -87,7 +101,7 @@ export async function getAssets(
     query = query.eq('mission_id', filters.mission_id)
   }
   if (filters.search) {
-    query = query.or(`title.ilike.%${filters.search}%,body.ilike.%${filters.search}%`)
+    query = query.or(`title.ilike.%${filters.search}%,content.ilike.%${filters.search}%`)
   }
 
   const { data, error, count } = await query
@@ -100,7 +114,7 @@ export async function getAssets(
 
   return {
     data: {
-      data: (data ?? []) as unknown as Asset[],
+      data: (data ?? []).map(toAsset),
       count: total,
       page,
       pageSize,
@@ -128,7 +142,7 @@ export async function getAsset(
     return { data: null, error: error.message }
   }
 
-  return { data: data as unknown as Asset | null, error: null }
+  return { data: data ? toAsset(data) : null, error: null }
 }
 
 /**
@@ -140,7 +154,7 @@ export async function createAsset(
 ): Promise<{ data: Asset | null; error: string | null }> {
   const { data, error } = await client
     .from('assets')
-    .insert(asset)
+    .insert(toInsertRow(asset))
     .select()
     .single()
 
@@ -148,7 +162,7 @@ export async function createAsset(
     return { data: null, error: error.message }
   }
 
-  return { data: data as unknown as Asset | null, error: null }
+  return { data: data ? toAsset(data) : null, error: null }
 }
 
 /**
@@ -171,7 +185,7 @@ export async function updateAssetStatus(
     return { data: null, error: error.message }
   }
 
-  return { data: data as unknown as Asset | null, error: null }
+  return { data: data ? toAsset(data) : null, error: null }
 }
 
 /**
@@ -192,7 +206,7 @@ export async function getAssetsByMission(
     return { data: [], error: error.message }
   }
 
-  return { data: (data ?? []) as unknown as Asset[], error: null }
+  return { data: (data ?? []).map(toAsset), error: null }
 }
 
 /**
@@ -217,5 +231,173 @@ export async function getAssetVersions(
     return { data: [], error: error.message }
   }
 
-  return { data: (data ?? []) as unknown as Asset[], error: null }
+  return { data: (data ?? []).map(toAsset), error: null }
+}
+
+// ---------------------------------------------------------------------------
+// Mutations
+// ---------------------------------------------------------------------------
+
+/**
+ * Updates arbitrary fields on a single asset and returns the updated row.
+ */
+export async function updateAsset(
+  client: TypedClient,
+  assetId: string,
+  updates: Partial<Pick<Asset, 'title' | 'body' | 'metadata' | 'status' | 'platform' | 'confidence_score' | 'offer_id'>>,
+): Promise<{ data: Asset | null; error: string | null }> {
+  const { body, offer_id, ...rest } = updates
+  const dbUpdates: Database['public']['Tables']['assets']['Update'] = {
+    ...rest,
+    ...(body !== undefined && { content: body }),
+    ...(offer_id !== undefined && { linked_offer_id: offer_id }),
+  }
+
+  const { data, error } = await client
+    .from('assets')
+    .update(dbUpdates)
+    .eq('id', assetId)
+    .select()
+    .single()
+
+  if (error) {
+    return { data: null, error: error.message }
+  }
+
+  return { data: data ? toAsset(data) : null, error: null }
+}
+
+/**
+ * Duplicates an existing asset as a new draft with version incremented by 1.
+ * The copy links back to the root parent via `parent_asset_id`.
+ */
+export async function duplicateAsset(
+  client: TypedClient,
+  assetId: string,
+): Promise<{ data: Asset | null; error: string | null }> {
+  const { data: orig, error: fetchError } = await getAsset(client, assetId)
+
+  if (fetchError || !orig) {
+    return { data: null, error: fetchError ?? 'Asset not found' }
+  }
+
+  const { data, error } = await client
+    .from('assets')
+    .insert({
+      workspace_id: orig.workspace_id,
+      mission_id: orig.mission_id,
+      job_id: orig.job_id,
+      operator_team: orig.operator_team,
+      asset_type: orig.type,
+      platform: orig.platform,
+      status: 'draft' as const,
+      title: orig.title,
+      content: orig.body,
+      metadata: orig.metadata as Json,
+      confidence_score: orig.confidence_score,
+      linked_offer_id: orig.offer_id,
+      version: orig.version + 1,
+      parent_asset_id: orig.parent_asset_id ?? orig.id,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { data: null, error: error.message }
+  }
+
+  return { data: data ? toAsset(data) : null, error: null }
+}
+
+/**
+ * Creates a new version of an asset with updated content.
+ * Links to the root parent and bumps the version counter.
+ */
+export async function createAssetVersion(
+  client: TypedClient,
+  assetId: string,
+  updates: { body: string; title?: string | null; metadata?: Json },
+): Promise<{ data: Asset | null; error: string | null }> {
+  const { data: orig, error: fetchError } = await getAsset(client, assetId)
+
+  if (fetchError || !orig) {
+    return { data: null, error: fetchError ?? 'Asset not found' }
+  }
+
+  const rootId = orig.parent_asset_id ?? orig.id
+
+  const { count } = await client
+    .from('assets')
+    .select('*', { count: 'exact', head: true })
+    .or(`id.eq.${rootId},parent_asset_id.eq.${rootId}`)
+
+  const nextVersion = (count ?? orig.version) + 1
+
+  const { data, error } = await client
+    .from('assets')
+    .insert({
+      workspace_id: orig.workspace_id,
+      mission_id: orig.mission_id,
+      job_id: orig.job_id,
+      operator_team: orig.operator_team,
+      asset_type: orig.type,
+      platform: orig.platform,
+      status: 'draft' as const,
+      title: (updates.title !== undefined ? updates.title : orig.title) ?? 'Untitled',
+      content: updates.body,
+      metadata: (updates.metadata ?? orig.metadata) as Json,
+      confidence_score: orig.confidence_score,
+      linked_offer_id: orig.offer_id,
+      version: nextVersion,
+      parent_asset_id: rootId,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { data: null, error: error.message }
+  }
+
+  return { data: data ? toAsset(data) : null, error: null }
+}
+
+/**
+ * Hard-deletes an asset by ID.
+ */
+export async function deleteAsset(
+  client: TypedClient,
+  assetId: string,
+): Promise<{ error: string | null }> {
+  const { error } = await client
+    .from('assets')
+    .delete()
+    .eq('id', assetId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { error: null }
+}
+
+/**
+ * Bulk-updates the status of multiple assets in a single query.
+ * Returns the number of rows affected.
+ */
+export async function bulkUpdateAssetStatus(
+  client: TypedClient,
+  assetIds: string[],
+  status: AssetStatus,
+): Promise<{ count: number; error: string | null }> {
+  const { data, error } = await client
+    .from('assets')
+    .update({ status })
+    .in('id', assetIds)
+    .select('id')
+
+  if (error) {
+    return { count: 0, error: error.message }
+  }
+
+  return { count: data?.length ?? 0, error: null }
 }

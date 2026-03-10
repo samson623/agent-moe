@@ -1,279 +1,367 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  TrendingUp,
-  Target,
-  BarChart3,
-  Globe,
-  Flame,
-  Zap,
-  Search,
-  Eye,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+'use client'
 
-interface SignalCardProps {
-  icon: LucideIcon;
-  label: string;
-  description: string;
-  color: string;
-  status: string;
+import { useState, useEffect, useCallback } from 'react'
+import { TrendingUp, Radar, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { SignalFilters } from './SignalFilters'
+import { SignalCard } from './SignalCard'
+import { OpportunityBoard } from './OpportunityBoard'
+import { MarketAnglesPanel } from './MarketAnglesPanel'
+import { TopicScorer } from './TopicScorer'
+import { TrendScanModal } from './TrendScanModal'
+import { useRealtimeSignals } from '../hooks/use-realtime-signals'
+import type { TrendSignal } from '../types'
+
+interface GrowthEnginePageProps {
+  workspaceId: string;
 }
 
-const SIGNAL_TYPES: SignalCardProps[] = [
-  {
-    icon: Flame,
-    label: "Trend Scanner",
-    description:
-      "Real-time topic momentum and velocity tracking across platforms",
-    color: "#f59e0b",
-    status: "Phase 7",
-  },
-  {
-    icon: Target,
-    label: "Competitor Gaps",
-    description:
-      "Identify what competitors are not covering — claim the whitespace",
-    color: "#3b82f6",
-    status: "Phase 7",
-  },
-  {
-    icon: BarChart3,
-    label: "Topic Scoring",
-    description:
-      "GPT-5 Nano scores topics by audience fit, momentum, and potential",
-    color: "#10b981",
-    status: "Phase 7",
-  },
-  {
-    icon: Globe,
-    label: "Web Research",
-    description:
-      "Browser agent pulls live data, articles, and signals from the web",
-    color: "#7c3aed",
-    status: "Phase 8",
-  },
-  {
-    icon: Search,
-    label: "Opportunity Board",
-    description: "Ranked opportunities ready to spin into content missions",
-    color: "#06b6d4",
-    status: "Phase 7",
-  },
-  {
-    icon: Eye,
-    label: "Audience Fit",
-    description:
-      "Match trending signals to your specific audience profile and goals",
-    color: "#f43f5e",
-    status: "Phase 7",
-  },
-];
+const LIMIT = 12
 
-function SignalCard({ card }: { card: SignalCardProps }) {
-  const Icon = card.icon;
-
+function StatCard({
+  label,
+  value,
+  color,
+  pulse,
+}: {
+  label: string;
+  value: string | number;
+  color: string;
+  pulse?: boolean;
+}) {
   return (
-    <div
-      className={cn(
-        "p-4 rounded-[var(--radius-lg)] border border-[var(--border)]",
-        "bg-[var(--surface)] hover:border-[var(--border)]",
-        "hover:bg-[var(--surface-hover)] transition-all duration-150 group"
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="flex items-center justify-center w-9 h-9 rounded-[var(--radius)] shrink-0"
-          style={{
-            background: `${card.color}18`,
-            border: `1px solid ${card.color}30`,
-          }}
-        >
-          <Icon size={16} style={{ color: card.color }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <p className="text-sm font-semibold text-[var(--text)]">
-              {card.label}
-            </p>
-            <Badge variant="muted" className="text-[9px] shrink-0">
-              {card.status}
-            </Badge>
-          </div>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-            {card.description}
-          </p>
-        </div>
+    <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 overflow-hidden">
+      <div
+        className="absolute -top-6 -right-6 w-16 h-16 rounded-full blur-2xl opacity-40"
+        style={{ background: color }}
+        aria-hidden="true"
+      />
+      <p className="text-xs text-[var(--text-muted)] mb-1">{label}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-2xl font-bold tabular-nums" style={{ color }}>
+          {value}
+        </p>
+        {pulse && (
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: color }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: color }} />
+          </span>
+        )}
       </div>
     </div>
-  );
+  )
 }
 
-const MOCK_OPPORTUNITIES = [
-  {
-    topic: "AI agent economics in 2026",
-    score: 94,
-    platform: "LinkedIn",
-    momentum: "+48%",
-  },
-  {
-    topic: "GPT cost vs. Claude Max breakdown",
-    score: 88,
-    platform: "X",
-    momentum: "+31%",
-  },
-  {
-    topic: "Operator-based AI workflows",
-    score: 82,
-    platform: "YouTube",
-    momentum: "+22%",
-  },
-  {
-    topic: "Content automation for solopreneurs",
-    score: 76,
-    platform: "LinkedIn",
-    momentum: "+17%",
-  },
-];
-
-export function GrowthEnginePage() {
+function SkeletonSignalCard() {
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 animate-pulse space-y-3">
+      <div className="h-4 bg-[var(--border)] rounded w-3/4" />
+      <div className="space-y-2">
+        <div className="h-2 bg-[var(--border)] rounded" />
+        <div className="h-2 bg-[var(--border)] rounded" />
+        <div className="h-2 bg-[var(--border)] rounded" />
+      </div>
+      <div className="h-3 bg-[var(--border)] rounded w-1/2" />
+    </div>
+  )
+}
+
+export function GrowthEnginePage({ workspaceId }: GrowthEnginePageProps) {
+  // Filter state
+  const [momentum, setMomentum] = useState('all')
+  const [category, setCategory] = useState('all')
+  const [platform, setPlatform] = useState('all')
+  const [minScore, setMinScore] = useState(0)
+  const [page, setPage] = useState(1)
+
+  // UI state
+  const [scanModalOpen, setScanModalOpen] = useState(false)
+  const [selectedSignal, setSelectedSignal] = useState<string | null>(null)
+
+  // Data state
+  const [signals, setSignals] = useState<TrendSignal[]>([])
+  const [total, setTotal] = useState(0)
+  const [opportunities, setOpportunities] = useState<TrendSignal[]>([])
+  const [allSignals, setAllSignals] = useState<TrendSignal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isOppLoading, setIsOppLoading] = useState(true)
+  const [tick, setTick] = useState(0)
+
+  const refresh = useCallback(() => setTick((t) => t + 1), [])
+
+  // Reset page on filter change
+  useEffect(() => { setPage(1) }, [momentum, category, platform, minScore])
+
+  // Load signals (filtered grid)
+  useEffect(() => {
+    if (!workspaceId) return
+    const controller = new AbortController()
+
+    async function load() {
+      setIsLoading(true)
+      try {
+        const params = new URLSearchParams({
+          workspace_id: workspaceId,
+          limit: String(LIMIT),
+          offset: String((page - 1) * LIMIT),
+          sort: 'opportunity',
+        })
+        if (momentum !== 'all') params.set('momentum', momentum)
+        if (category !== 'all') params.set('category', category)
+        if (platform !== 'all') params.set('platform', platform)
+        if (minScore > 0) params.set('min_score', String(minScore))
+
+        const res = await fetch(`/api/trend-signals?${params.toString()}`, { signal: controller.signal })
+        if (!res.ok) throw new Error()
+        const json = await res.json() as { data?: TrendSignal[]; count?: number }
+        setSignals(json.data ?? [])
+        setTotal(json.count ?? 0)
+      } catch {
+        // silently handle abort
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void load()
+    return () => controller.abort()
+  }, [workspaceId, momentum, category, platform, minScore, page, tick])
+
+  // Load opportunities + all signals for stats/angles
+  useEffect(() => {
+    if (!workspaceId) return
+    const controller = new AbortController()
+
+    async function load() {
+      setIsOppLoading(true)
+      try {
+        const [oppRes, allRes] = await Promise.all([
+          fetch(`/api/trend-signals?workspace_id=${workspaceId}&limit=10&sort=opportunity`, { signal: controller.signal }),
+          fetch(`/api/trend-signals?workspace_id=${workspaceId}&limit=100&sort=opportunity`, { signal: controller.signal }),
+        ])
+        if (oppRes.ok) {
+          const json = await oppRes.json() as { data?: TrendSignal[] }
+          setOpportunities(json.data ?? [])
+        }
+        if (allRes.ok) {
+          const json = await allRes.json() as { data?: TrendSignal[] }
+          setAllSignals(json.data ?? [])
+        }
+      } catch {
+        // silently handle abort
+      } finally {
+        setIsOppLoading(false)
+      }
+    }
+    void load()
+    return () => controller.abort()
+  }, [workspaceId, tick])
+
+  // Realtime: prepend new signals
+  useRealtimeSignals({
+    workspaceId,
+    onInsert: (signal) => {
+      setSignals((prev) => [signal, ...prev].slice(0, LIMIT))
+      setAllSignals((prev) => [signal, ...prev])
+    },
+    onUpdate: (signal) => {
+      setSignals((prev) => prev.map((s) => s.id === signal.id ? signal : s))
+      setAllSignals((prev) => prev.map((s) => s.id === signal.id ? signal : s))
+    },
+    onDelete: (id) => {
+      setSignals((prev) => prev.filter((s) => s.id !== id))
+      setAllSignals((prev) => prev.filter((s) => s.id !== id))
+    },
+  })
+
+  // Stats
+  const hotCount = allSignals.filter((s) => s.momentum === 'explosive' || s.momentum === 'rising').length
+  const topOpp = Math.max(0, ...allSignals.map((s) => s.opportunity_score))
+  const avgFit = allSignals.length > 0
+    ? Math.round((allSignals.reduce((sum, s) => sum + s.audience_fit, 0) / allSignals.length) * 100)
+    : 0
+
+  const activeFilterCount = [
+    momentum !== 'all',
+    category !== 'all',
+    platform !== 'all',
+    minScore > 0,
+  ].filter(Boolean).length
+
+  const totalPages = Math.ceil(total / LIMIT)
+
+  return (
+    <div className="p-7 max-w-7xl mx-auto space-y-8">
+      {/* Hero Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]",
-              "bg-gradient-to-br from-[#10b981] to-[#3b82f6]",
-              "shadow-[0_0_24px_rgba(16,185,129,0.4)]"
+              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
+              'bg-gradient-to-br from-[#10b981] to-[#6366f1]',
+              'shadow-[0_0_32px_rgba(16,185,129,0.35)]'
             )}
           >
             <TrendingUp size={20} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">
+            <h2
+              className="text-xl font-bold"
+              style={{
+                background: 'linear-gradient(90deg, #10b981, #6366f1)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
               Growth Engine
             </h2>
             <p className="text-sm text-[var(--text-muted)]">
-              Signals, trends, competitor analysis, and opportunity scoring
+              Real-time trend intelligence. AI-scored signals. Competitive edge.
             </p>
           </div>
         </div>
-        <Badge variant="warning">Phase 7 — Building Soon</Badge>
-      </div>
 
-      {/* Signal types grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {SIGNAL_TYPES.map((card) => (
-          <SignalCard key={card.label} card={card} />
-        ))}
-      </div>
-
-      {/* Opportunity board preview */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Opportunity Board</CardTitle>
-            <Badge variant="muted">Preview</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 pb-2">
-          <div className="px-5 pb-3">
-            <p className="text-xs text-[var(--text-muted)]">
-              Ranked by momentum score — live data in Phase 7
-            </p>
-          </div>
-          <div className="divide-y divide-[var(--border-subtle)]">
-            {MOCK_OPPORTUNITIES.map((opp, i) => (
-              <div
-                key={opp.topic}
-                className={cn(
-                  "flex items-center gap-4 px-5 py-3.5",
-                  "hover:bg-[var(--surface-hover)] transition-colors duration-100"
-                )}
-              >
-                {/* Rank */}
-                <span className="text-xs font-bold text-[var(--text-muted)] w-4 shrink-0">
-                  #{i + 1}
-                </span>
-
-                {/* Topic */}
-                <p className="flex-1 text-sm font-medium text-[var(--text)] truncate">
-                  {opp.topic}
-                </p>
-
-                {/* Platform */}
-                <span className="text-xs text-[var(--text-muted)] shrink-0">
-                  {opp.platform}
-                </span>
-
-                {/* Momentum */}
-                <span className="text-xs font-semibold text-[var(--success)] shrink-0">
-                  {opp.momentum}
-                </span>
-
-                {/* Score bar */}
-                <div className="flex items-center gap-2 shrink-0 w-24">
-                  <div className="flex-1 h-1.5 rounded-full bg-[var(--border)]">
-                    <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--success)]"
-                      style={{ width: `${opp.score}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-[var(--text)] tabular-nums">
-                    {opp.score}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Empty state */}
-      <div
-        className={cn(
-          "relative rounded-[var(--radius-xl)] border border-[var(--border)]",
-          "bg-[var(--surface)] p-12 text-center overflow-hidden"
-        )}
-      >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 70%)",
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col items-center gap-4">
-          <div
-            className={cn(
-              "flex items-center justify-center w-14 h-14 rounded-[var(--radius-xl)]",
-              "border border-[rgba(16,185,129,0.3)]"
-            )}
-            style={{ background: "rgba(16,185,129,0.12)" }}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={refresh}
+            className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
+            title="Refresh signals"
           >
-            <Zap size={24} className="text-[var(--success)]" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-[var(--text)] mb-1.5">
-              Growth Engine
-            </h3>
-            <p className="text-sm text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
-              The Growth Operator will scan the web in real-time, score topics
-              by momentum, surface competitor gaps, and deliver ranked
-              opportunities directly to your mission queue.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <Badge variant="success">Phase 7 — Trend Engine</Badge>
-            <Badge variant="muted">Browser Agent</Badge>
-            <Badge variant="muted">GPT-5 Nano Scoring</Badge>
-          </div>
+            <RefreshCw size={14} />
+          </button>
+          <Button
+            onClick={() => setScanModalOpen(true)}
+            variant="accent"
+            size="sm"
+            className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+          >
+            <Radar size={14} />
+            Launch Scan
+          </Button>
         </div>
       </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label="Total Signals" value={allSignals.length} color="#6366f1" />
+        <StatCard label="Rising / Explosive" value={hotCount} color="#10b981" pulse={hotCount > 0} />
+        <StatCard label="Top Opportunity" value={topOpp || '—'} color="#f59e0b" />
+        <StatCard label="Avg Audience Fit" value={allSignals.length > 0 ? `${avgFit}%` : '—'} color="#3b82f6" />
+      </div>
+
+      {/* Main 2-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-7">
+        {/* Left: Filters + Signal Grid */}
+        <div className="lg:col-span-2 space-y-4">
+          <SignalFilters
+            momentum={momentum}
+            category={category}
+            platform={platform}
+            minScore={minScore}
+            onMomentumChange={(v) => setMomentum(v)}
+            onCategoryChange={(v) => setCategory(v)}
+            onPlatformChange={(v) => setPlatform(v)}
+            onMinScoreChange={(v) => setMinScore(v)}
+            activeCount={activeFilterCount}
+          />
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonSignalCard key={i} />)}
+            </div>
+          ) : signals.length === 0 ? (
+            <div
+              className={cn(
+                'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
+                'bg-[var(--surface)] p-12 text-center overflow-hidden'
+              )}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 70%)' }}
+                aria-hidden="true"
+              />
+              <div className="relative flex flex-col items-center gap-3">
+                <Radar size={32} className="text-[var(--text-muted)] opacity-40" />
+                <p className="text-sm text-[var(--text-muted)]">
+                  {activeFilterCount > 0
+                    ? 'No signals match your filters'
+                    : 'Run your first scan to populate the signal board'}
+                </p>
+                {activeFilterCount === 0 && (
+                  <Button
+                    onClick={() => setScanModalOpen(true)}
+                    variant="accent"
+                    size="sm"
+                    className="mt-2"
+                  >
+                    Launch Scan
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {signals.map((signal) => (
+                  <SignalCard
+                    key={signal.id}
+                    signal={signal}
+                    selected={selectedSignal === signal.id}
+                    onClick={() => setSelectedSignal((prev) => prev === signal.id ? null : signal.id)}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    Page {page} of {totalPages} · {total} signal{total !== 1 ? 's' : ''}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Right: Opportunity Board + Market Angles */}
+        <div className="space-y-4">
+          <OpportunityBoard
+            signals={opportunities}
+            isLoading={isOppLoading}
+            onSignalClick={(s) => setSelectedSignal((prev) => prev === s.id ? null : s.id)}
+          />
+          <MarketAnglesPanel signals={allSignals} isLoading={isOppLoading} />
+        </div>
+      </div>
+
+      {/* Bottom: Topic Scorer */}
+      <TopicScorer workspaceId={workspaceId} onScanQueued={refresh} />
+
+      {/* Scan Modal */}
+      <TrendScanModal
+        workspaceId={workspaceId}
+        isOpen={scanModalOpen}
+        onClose={() => setScanModalOpen(false)}
+        onScanComplete={refresh}
+      />
     </div>
-  );
+  )
 }

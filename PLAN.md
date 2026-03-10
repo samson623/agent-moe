@@ -4,8 +4,8 @@
 
 **Created:** 2026-03-08
 **Last Updated:** 2026-03-08
-**Current Phase:** PHASE 0 → PHASE 1 READY
-**Status:** FOUNDATION COMPLETE — awaiting real AI tokens to verify live connectivity
+**Current Phase:** PHASE 12 COMPLETE — ALL PHASES DONE
+**Status:** ANALYTICS COMPLETE — publishing_logs table, 9 platform adapters (X OAuth2 PKCE + thread chaining, LinkedIn UGC Posts, Instagram Meta Graph 2-step, YouTube Data API drafts, Email/Resend, Notion Pages, HMAC Webhook + 2 stubs), ConnectorPublisher, OAuthManager, full API layer + OAuth callbacks, React hooks, UI components, /connectors page
 
 ---
 
@@ -172,75 +172,78 @@ OPENAI_API_KEY=           # For GPT-5 Nano, standard OpenAI API key
 - **Checkpoint:** App runs locally, sidebar nav to all 8 pages, database tables live in Supabase, AI services connected and responding, empty shell clickable
 
 ### PHASE 1: Command Center
-- **Status:** NOT STARTED
+- **Status:** COMPLETE ✅
 - **Goal:** Main dashboard with mission input, active jobs, recent content, system health, approvals badge, quick-launch
 - **Tasks:**
-  - [ ] Mission input component (text area + submit → API)
-  - [ ] Active missions list (status, progress, timestamps)
-  - [ ] Recent assets feed (latest generated content)
-  - [ ] System health panel (job queue depth, operator status)
-  - [ ] Pending approvals badge with count
-  - [ ] Quick-stats cards (missions today, assets created, approval rate)
-  - [ ] API routes: `POST /api/missions`, `GET /api/missions`, `GET /api/dashboard/stats`
-  - [ ] Real-time subscription for live mission status updates
+  - [x] Mission input component (text area + submit → API)
+  - [x] Active missions list (status, progress, timestamps)
+  - [x] Recent assets feed (latest generated content)
+  - [x] System health panel (job queue depth, operator status)
+  - [x] Pending approvals badge with count
+  - [x] Quick-stats cards (missions today, assets created, approval rate)
+  - [x] API routes: `POST /api/missions`, `GET /api/missions`, `GET /api/dashboard/stats`, `GET/PATCH /api/missions/[id]`
+  - [x] Real-time subscription for live mission status updates
 - **Checkpoint:** Type a mission, see it in active list, dashboard shows live stats, looks like a real command center
 
 ### PHASE 2: Mission Engine
-- **Status:** NOT STARTED
+- **Status:** COMPLETE ✅
 - **Goal:** AI planner that decomposes natural language missions into structured job workflows
 - **Tasks:**
-  - [ ] Mission planner service (mission text → AI call → structured plan)
-  - [ ] Job decomposition logic (plan → jobs with types, priorities, dependencies)
-  - [ ] Operator routing (map job types to operator teams)
-  - [ ] Job queue system (status: pending → running → completed → failed)
-  - [ ] Mission preferences loader (business rules, active offers, brand rules)
-  - [ ] API routes: `POST /api/missions/{id}/plan`, `GET /api/jobs`, `PATCH /api/jobs/{id}`
-  - [ ] Mission detail page (plan breakdown, job tree, operator assignments)
-  - [ ] Job execution engine (sequential processing with dependency awareness)
+  - [x] Mission planner service (mission text → AI call → structured plan)
+  - [x] Job decomposition logic (plan → jobs with types, priorities, dependencies)
+  - [x] Operator routing (map job types to operator teams)
+  - [x] Job queue system (status: pending → running → completed → failed)
+  - [x] Mission preferences loader (business rules, active offers, brand rules)
+  - [x] API routes: `POST /api/missions/{id}/plan`, `GET /api/jobs`, `PATCH /api/jobs/{id}`, `POST /api/jobs/{id}/execute`
+  - [x] Mission detail page (plan breakdown, job tree, operator assignments)
+  - [x] Job execution engine (sequential processing with dependency awareness)
 - **Checkpoint:** Type a mission, watch it decompose into 5-7 jobs tagged by operator team with status tracking
 
 ### PHASE 3: Operator Teams
-- **Status:** NOT STARTED
+- **Status:** COMPLETE ✅
 - **Goal:** Four specialist AI operators producing structured outputs
 - **Tasks:**
-  - [ ] Operator framework (base class with prompt, permissions, output schema)
-  - [ ] Content Strike Team operator (posts, hooks, scripts, captions, CTAs)
-  - [ ] Growth Operator (trend signals, market angles, topic scoring)
-  - [ ] Revenue Closer (offer mapping, CTA strategy, lead magnets)
-  - [ ] Brand Guardian (safety review, tone check, claim flagging)
-  - [ ] Operator output schemas (structured JSON per type)
-  - [ ] Operator execution pipeline (job → operator → output → store → flag)
-  - [ ] Operators page (view each team, activity, recent outputs)
+  - [x] Operator framework (base class with prompt, permissions, output schema) — BaseOperator abstract class
+  - [x] Content Strike Team operator (posts, hooks, scripts, captions, CTAs) — ContentStrikeOperator
+  - [x] Growth Operator (trend signals, market angles, topic scoring) — GrowthOperator
+  - [x] Revenue Closer (offer mapping, CTA strategy, lead magnets) — RevenueCloserOperator
+  - [x] Brand Guardian (safety review, tone check, claim flagging) — BrandGuardianOperator
+  - [x] Operator output schemas (structured JSON per type) — Zod schemas in ai/types.ts
+  - [x] Operator execution pipeline (job → operator → output → store → flag) — asset-pipeline.ts + execution-engine.ts
+  - [x] Operators page (view each team, activity, recent outputs) — live page with real-time stats, activity feed
+  - [x] Google OAuth sign-in — code complete, setup guide at scripts/setup-google-oauth.md
+  - [x] Operator API routes — /api/operators/stats, /api/operators/activity, /api/operators/[team]/jobs
+  - [x] Asset creation pipeline — auto-creates assets from job output, approval creation for Brand Guardian flags
 - **Checkpoint:** Mission jobs execute through operators, producing real structured content
 
 ### PHASE 4: Content Studio
-- **Status:** NOT STARTED
+- **Status:** COMPLETE ✅
 - **Goal:** Full asset management interface with editing, versioning, and platform targeting
 - **Tasks:**
-  - [ ] Asset list view (filterable by mission, operator, platform, type, status)
-  - [ ] Asset detail view (full content, metadata, confidence score, linked offer)
-  - [ ] Inline editor (edit copy, save new version)
-  - [ ] Version comparison (side-by-side diff)
-  - [ ] Status management (draft → review → approved → published → archived)
-  - [ ] Platform targeting (X, LinkedIn, Instagram, TikTok, YouTube)
-  - [ ] Bulk actions (approve, reject, duplicate, repurpose batch)
-  - [ ] Content type views (posts, threads, video concepts, CTAs, thumbnails)
-  - [ ] API routes: full CRUD for assets with filtering and pagination
+  - [x] Asset list view (filterable by mission, operator, platform, type, status)
+  - [x] Asset detail view (full content, metadata, confidence score, linked offer)
+  - [x] Inline editor (edit copy, save new version)
+  - [x] Version comparison (side-by-side diff)
+  - [x] Status management (draft → review → approved → published → archived)
+  - [x] Platform targeting (X, LinkedIn, Instagram, TikTok, YouTube)
+  - [x] Bulk actions (approve, reject, duplicate, repurpose batch)
+  - [x] Content type views (posts, threads, video concepts, CTAs, thumbnails)
+  - [x] API routes: full CRUD for assets with filtering and pagination
 - **Checkpoint:** All generated assets visible, filterable, editable, with version comparison and status management
 
 ### PHASE 5: Approval Queue
-- **Status:** NOT STARTED
+- **Status:** COMPLETE ✅
 - **Goal:** Safety and control layer — nothing executes without approval
 - **Tasks:**
-  - [ ] Approval queue page (pending items grouped by mission)
-  - [ ] Risk-based auto-flagging (Brand Guardian flags → queue)
-  - [ ] Approval actions (approve, reject, send back for revision)
-  - [ ] Batch approval (select multiple, approve/reject all)
-  - [ ] Preview mode (full preview before approving)
-  - [ ] Approval policies (configurable thresholds in brand_rules)
-  - [ ] Approval history (audit trail of all decisions)
-  - [ ] API routes: `GET /api/approvals`, `POST /api/approvals/{id}/decide`, `POST /api/approvals/batch`
-  - [ ] Post-approval triggers (approved → ready state for connectors)
+  - [x] Approval queue page (pending items grouped by mission)
+  - [x] Risk-based auto-flagging (Brand Guardian flags → queue)
+  - [x] Approval actions (approve, reject, send back for revision)
+  - [x] Batch approval (select multiple, approve/reject all)
+  - [x] Preview mode (full preview before approving)
+  - [x] Approval policies (configurable thresholds in brand_rules)
+  - [x] Approval history (audit trail of all decisions)
+  - [x] API routes: `GET /api/approvals`, `POST /api/approvals/{id}/decide`, `POST /api/approvals/batch`
+  - [x] Post-approval triggers (approved → ready state for connectors)
 - **Checkpoint:** Flagged items in clean queue, preview/approve/reject/batch, audit trail, approved items move to ready
 
 ---
@@ -248,25 +251,132 @@ OPENAI_API_KEY=           # For GPT-5 Nano, standard OpenAI API key
 ## Post-Core Expansion Phases (After Phase 5)
 
 ### PHASE 6: Video Packaging System
+- **Status:** COMPLETE ✅
 - Short-form content structure (title, hook, scene breakdown, thumbnail, caption, CTA)
+- **Tasks:**
+  - [x] DB migration `00016_create_video_packages.sql` — video_packages table, RLS, indexes, trigger
+  - [x] Supabase query helpers (`src/lib/supabase/queries/video-packages.ts`) — full CRUD
+  - [x] API routes: GET/POST `/api/video-packages`, GET/PATCH/DELETE `/api/video-packages/[id]`, POST `/api/video-packages/generate`
+  - [x] Domain types (`src/features/video-packaging/types.ts`) — VideoPackageInput/Output, VideoHook, VideoScene, ThumbnailConcept, VideoCTA + Zod schema
+  - [x] VideoPackageOperator (`src/features/video-packaging/video-package-operator.ts`) — generateVideoPackage (Claude), generateHookVariants (GPT-nano), refineThumbnailConcept (Claude)
+  - [x] Model router updated — VIDEO_PACKAGE job type → Claude (heavy creative)
+  - [x] React hooks: useVideoPackages, useVideoPackageDetail, useGenerateVideoPackage
+  - [x] UI components: VideoHookDisplay, SceneBreakdown, ThumbnailConceptCard, VideoPackageCard, VideoPackageFilters, GenerateVideoPackageModal
+  - [x] Pages: VideoPackagePage (list), VideoPackageDetailPage (4-tab detail)
+  - [x] App routes: `/app/video/page.tsx`, `/app/video/[id]/page.tsx`
+  - [x] Sidebar: "Video Studio" nav item (Film icon, between Content Studio + Operators)
+  - [x] TopBar: /video route metadata added
+- **Checkpoint:** Generate a video package → see hook variants, scene breakdown, thumbnail concept, caption, CTA; navigate to detail with 4-tab layout
 
 ### PHASE 7: Trend & Signal Engine
+- **Status:** COMPLETE ✅
 - Topic scoring, momentum tracking, opportunity board, web research integration
+- **Tasks:**
+  - [x] DB migration `00017_create_trend_signals.sql` — trend_signals table, signal_momentum enum, RLS, 6 indexes, realtime
+  - [x] Domain types (`src/features/growth-engine/types.ts`) — TrendSignal, TrendMarketAngle, TrendContentIdea, TrendScanInput/Result, OpportunityBoardItem
+  - [x] Supabase query helpers (`src/lib/supabase/queries/trend-signals.ts`) — getTrendSignals, getTrendSignal, createTrendSignal, updateTrendSignal, deleteTrendSignal, getTopOpportunities, getTrendingTopics
+  - [x] API routes: GET/POST `/api/trend-signals`, GET/PATCH/DELETE `/api/trend-signals/[id]`, POST `/api/trend-signals/scan`
+  - [x] JobType.TREND_SCAN added to ai/types.ts + CLAUDE_JOB_TYPES in model-router.ts
+  - [x] TrendScanner service (`src/features/growth-engine/services/trend-scanner.ts`) — scanTopics, scoreOneTopic, buildOpportunityBoard; wires GrowthOperator (analyzeTrends + scoreTopics + findMarketAngles in parallel)
+  - [x] React hooks: useTrendSignals, useOpportunities, useTrendScanner, useRealtimeSignals, index.ts
+  - [x] UI components: SignalCard, SignalFilters, OpportunityBoard, TopicScorer, TrendScanModal, MarketAnglesPanel
+  - [x] GrowthEnginePage full rebuild — hero header, 4 stat cards, 2-column layout, signal grid, opportunity board, market angles panel, topic scorer, scan modal, realtime updates
+  - [x] `src/app/growth/page.tsx` — Server Component passes workspaceId
+- **Checkpoint:** Launch Scan → enter topics → see signals populate grid with momentum colors, opportunity board ranked, market angles extracted, topic scorer queues single topics
 
 ### PHASE 8: Browser Agent Layer
-- Playwright automation, task-based execution, sandboxed browser tasks
+- **Status:** COMPLETE ✅
+- Playwright automation, AI-enhanced task execution, sandboxed browser tasks
+- **Tasks:**
+  - [x] DB migration `00018_create_browser_tasks.sql` — browser_tasks + browser_sessions tables, RLS, 7 indexes, realtime, operator_team enum updated
+  - [x] Supabase query helpers (`src/lib/supabase/queries/browser-tasks.ts`) — full CRUD + stats + pending queue
+  - [x] API routes: GET/POST `/api/browser-tasks`, GET/PATCH/DELETE `/api/browser-tasks/[id]`, POST `/api/browser-tasks/[id]/execute`, POST `/api/browser-tasks/[id]/cancel`, GET `/api/browser-tasks/stats`
+  - [x] Domain types (`src/features/browser-agent/types.ts`) — BrowserTaskType (8 types), BrowserTaskStatus, BrowserTaskConfig, BrowserTaskInput/Result, BrowserTask, BrowserTaskStats + Zod schemas
+  - [x] BrowserRunner (`src/features/browser-agent/browser-runner.ts`) — Playwright execution engine: scrape, screenshot, click, fill_form, navigate, extract_data, submit_form, monitor
+  - [x] TaskExecutor (`src/features/browser-agent/task-executor.ts`) — orchestration: retry logic, timeout handling, DB lifecycle management, batch execution
+  - [x] BrowserAgentOperator (`src/features/browser-agent/browser-agent-operator.ts`) — extends BaseOperator, maps BROWSER_* jobs → browser tasks, stores results as assets
+  - [x] JobType enum updated — 8 BROWSER_* job types added to `src/features/ai/types.ts`
+  - [x] OperatorTeam enum updated — BROWSER_AGENT added to `src/features/ai/types.ts`
+  - [x] Model router updated — all BROWSER_* types → Claude (heavy reasoning)
+  - [x] OperatorFactory updated — BrowserAgentOperator registered
+  - [x] ExecutionEngine updated — browser_agent team mapping + default job type
+  - [x] lib/supabase/types.ts updated — browser_agent added to operator_team enum
+  - [x] React hooks: useBrowserTasks, useBrowserTaskDetail, useExecuteBrowserTask, useCreateBrowserTask, useBrowserTaskStats, useRealtimeBrowserTasks
+  - [x] UI components: BrowserTaskCard, BrowserTaskFilters, BrowserTaskLog, BrowserTaskResult, CreateBrowserTaskModal, BrowserTaskDetailPage, BrowserAgentPage
+  - [x] App routes: `/browser/page.tsx`, `/browser/[id]/page.tsx`
+  - [x] Sidebar: "Browser Agent" nav item (Globe icon, after Growth Engine)
+  - [x] TopBar: /browser route metadata added
+- **Checkpoint:** Create a browser task → execute scrape on a URL → see text content, links, and page metadata; screenshot task captures page image; running tasks show live status; Mission Engine can decompose missions into browser tasks
+- **Remaining:** None
 
 ### PHASE 9: Connectors
-- OAuth/API integrations for X, LinkedIn, Instagram, YouTube, email, CRM
+- **Status:** COMPLETE ✅
+- OAuth/API integrations for X, LinkedIn, Instagram, YouTube, Email, Notion, Webhook
+- **Tasks:**
+  - [x] DB migration `00019_create_publishing_logs.sql` — publishing_logs table, RLS, 6 indexes, realtime
+  - [x] Supabase query helpers (`src/lib/supabase/queries/connectors.ts`) — full CRUD + stats + publishing logs
+  - [x] Domain types (`src/features/connectors/types.ts`) — ConnectorPlatform, ConnectorStatus, ConnectorCredentials, PublishInput, PublishResult, OAuthStartResult, PlatformCapabilities, PLATFORM_CAPABILITIES registry
+  - [x] BaseConnectorAdapter (`src/features/connectors/adapters/base-adapter.ts`) — abstract class with timedFetch, bearerAuth, failPublish/successPublish helpers
+  - [x] XAdapter (`src/features/connectors/adapters/x-adapter.ts`) — Twitter API v2, OAuth 2.0 PKCE, thread chaining via reply IDs
+  - [x] LinkedInAdapter (`src/features/connectors/adapters/linkedin-adapter.ts`) — LinkedIn UGC Posts API, person/org author
+  - [x] InstagramAdapter (`src/features/connectors/adapters/instagram-adapter.ts`) — Meta Graph API v20, 2-step container+publish
+  - [x] YouTubeAdapter (`src/features/connectors/adapters/youtube-adapter.ts`) — YouTube Data API v3 private draft creation
+  - [x] EmailAdapter (`src/features/connectors/adapters/email-adapter.ts`) — Resend API, HTML+text dual send
+  - [x] NotionAdapter (`src/features/connectors/adapters/notion-adapter.ts`) — Notion Pages API with rich_text chunking
+  - [x] WebhookAdapter (`src/features/connectors/adapters/webhook-adapter.ts`) — HMAC-SHA256 signed generic webhook
+  - [x] Adapter factory + barrel export (`src/features/connectors/adapters/index.ts`)
+  - [x] ConnectorPublisher service (`src/features/connectors/publisher.ts`) — orchestrates publish + log + token refresh + status updates
+  - [x] OAuthManager service (`src/features/connectors/oauth-manager.ts`) — initiateOAuth + exchangeCode for X/LinkedIn/Instagram/YouTube/Notion
+  - [x] API routes: GET/POST `/api/connectors`, GET/PATCH/DELETE `/api/connectors/[id]`
+  - [x] API routes: POST `/api/connectors/[id]/publish`, POST `/api/connectors/[id]/test`, POST `/api/connectors/[id]/disconnect`
+  - [x] API routes: GET `/api/connectors/[id]/logs`, GET `/api/connectors/stats`
+  - [x] OAuth routes: GET `/api/connectors/oauth/[platform]` (initiate + PKCE cookie), GET `/api/auth/callback/[platform]` (exchange + upsert connector)
+  - [x] React hooks: useConnectors, useConnectorDetail, useConnectorStats, usePublish, useRealtimeConnectors, index.ts
+  - [x] UI components: ConnectorCard, ConnectModal, DisconnectModal, PublishModal, PublishHistoryPanel, ConnectorStats, ConnectorFilters
+  - [x] ConnectorsPage full rebuild — live data, stats bar, filter pills, connector grid, skeleton loading, empty state, modal wiring, realtime updates
+  - [x] `src/app/connectors/page.tsx` — Server Component with Supabase auth + workspaceId prop pass
+- **Checkpoint:** Connect a platform via OAuth → see it in the grid as Connected → publish an asset → see publishing history with external URL
 
 ### PHASE 10: Revenue Lab
+- **Status:** COMPLETE ✅
 - Offer management, CTA logic, pricing ladders, conversion path builder
+- **Tasks:**
+  - [x] Supabase query helpers (`src/lib/supabase/queries/offers.ts`) — getOffers, getOffer, createOffer, updateOffer, deleteOffer, getActiveOffers, getOffersByType, setWorkspaceActiveOffer, getOfferStats, getPricingLadder
+  - [x] Domain types (`src/features/revenue-lab/types.ts`) — CTAVariant, PricingLadderTier, FunnelRule, ConversionPath, RevenueStats, GenerateCTAsInput/Result
+  - [x] CTAEngine service (`src/features/revenue-lab/cta-engine.ts`) — generateCTAs (gpt-4o-mini parallel fan-out), scoreOffer, parseCTAResponse
+  - [x] API routes: GET/POST `/api/offers`, GET/PATCH/DELETE `/api/offers/[id]`, POST `/api/offers/[id]/generate-ctas`, GET `/api/revenue/stats`
+  - [x] React hooks: useOffers, useOfferDetail, useCTAEngine, useRevenueStats, useCreateOffer, index.ts
+  - [x] UI components: OfferCard, OfferForm, OfferFilters, PricingLadder, CTABuilder, OfferStats
+  - [x] RevenueLabPage full rebuild — live data, 3-tab layout (Library / Pricing Ladder / CTA Builder), stats bar, form modal, filter pills, empty states
+  - [x] `src/app/revenue/page.tsx` — Server Component with auth + workspaceId prop pass
+- **Checkpoint:** Create offers, view pricing ladder, generate AI CTA variants per platform/content type
 
 ### PHASE 11: Launchpad
+- **Status:** COMPLETE ✅
 - Campaign orchestrator, sequenced launches, timeline calendar
+- **Tasks:**
+  - [x] Supabase query helpers (`src/lib/supabase/queries/campaigns.ts`) — getCampaigns, getCampaign, createCampaign, updateCampaign, deleteCampaign, getCampaignStats, addAssetsToCampaign, removeAssetFromCampaign, updateCampaignTimeline, getActiveCampaigns
+  - [x] API routes: GET/POST `/api/campaigns`, GET/PATCH/DELETE `/api/campaigns/[id]`, POST `/api/campaigns/[id]/launch`, POST/DELETE `/api/campaigns/[id]/assets`, GET `/api/campaigns/stats`
+  - [x] Domain types (`src/features/launchpad/types.ts`) — Campaign, TimelineMilestone, CampaignStats, CreateCampaignInput, UpdateCampaignInput
+  - [x] React hooks: useCampaigns, useCampaignDetail, useCampaignStats, useCreateCampaign, useLaunchCampaign, index.ts
+  - [x] UI components: CampaignStats, CampaignCard, CampaignForm, CampaignTimeline, LaunchModal, CampaignFilters
+  - [x] LaunchpadPage full rebuild — live data, stats bar, filter pills, campaign grid, detail panel (3-tab: Overview/Timeline/Assets), create modal, launch modal, realtime-ready
+  - [x] `src/app/launchpad/page.tsx` — Server Component with Supabase auth + workspaceId prop pass
+- **Checkpoint:** Create a campaign → stage assets → one-click launch → see status transition to active; timeline milestones visible; detail panel with 3-tab layout
 
 ### PHASE 12: Analytics & Feedback
+- **Status:** COMPLETE ✅
 - Event tracking, performance dashboard, feedback loop into Mission Engine
+- **Tasks:**
+  - [x] Supabase query helpers (`src/lib/supabase/queries/analytics.ts`) — getSystemStats, getMissionPerformance, getContentPerformance, getOperatorStats, getPublishingStats, listAnalyticsEvents, trackEvent
+  - [x] Domain types (`src/features/analytics/types.ts`) — TimeRange, SystemStats, MissionPerformance, ContentPerformance, OperatorStats, PublishingStats, AnalyticsEvent, FeedbackInsight, AnalyticsDashboard
+  - [x] API routes: GET `/api/analytics/stats`, GET+POST `/api/analytics/events`, GET `/api/analytics/missions`, GET `/api/analytics/content`, GET `/api/analytics/operators`, POST `/api/analytics/feedback`
+  - [x] React hooks: useAnalyticsStats, useAnalyticsEvents, useMissionPerformance, useContentPerformance, useOperatorStats, useTrackEvent, useFeedbackInsights, index.ts
+  - [x] UI components: TimeRangeSelector, StatsOverview, MissionPerformancePanel, ContentPerformancePanel, OperatorLeaderboard, EventFeed, FeedbackInsightsPanel, AnalyticsDashboard
+  - [x] `src/app/analytics/page.tsx` — Server Component with Supabase auth + workspaceId prop pass
+  - [x] Sidebar: Added /analytics nav item (BarChart2 icon) between Launchpad and Connectors
+  - [x] TopBar: Added /analytics route metadata
+- **Checkpoint:** /analytics page loads with KPI cards, 3-tab layout (Overview/Mission Intel/Content Studio), operator leaderboard, AI feedback insights generation
 
 ---
 

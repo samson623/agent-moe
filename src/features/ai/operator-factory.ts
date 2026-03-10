@@ -19,6 +19,7 @@ import { ContentStrikeOperator } from "@/features/ai/operators/content-strike-op
 import { GrowthOperator } from "@/features/ai/operators/growth-operator";
 import { RevenueCloserOperator } from "@/features/ai/operators/revenue-closer-operator";
 import { BrandGuardianOperator } from "@/features/ai/operators/brand-guardian-operator";
+import { BrowserAgentOperator } from "@/features/browser-agent/browser-agent-operator";
 
 // ---------------------------------------------------------------------------
 // Singleton cache — operators are stateless but their clients are shared
@@ -58,6 +59,7 @@ export class OperatorFactory {
       [OperatorTeam.GROWTH_OPERATOR]: OperatorFactory.create(OperatorTeam.GROWTH_OPERATOR),
       [OperatorTeam.REVENUE_CLOSER]: OperatorFactory.create(OperatorTeam.REVENUE_CLOSER),
       [OperatorTeam.BRAND_GUARDIAN]: OperatorFactory.create(OperatorTeam.BRAND_GUARDIAN),
+      [OperatorTeam.BROWSER_AGENT]: OperatorFactory.create(OperatorTeam.BROWSER_AGENT),
     };
   }
 
@@ -95,6 +97,7 @@ export class OperatorFactory {
       [OperatorTeam.GROWTH_OPERATOR]: _operatorCache.has(OperatorTeam.GROWTH_OPERATOR),
       [OperatorTeam.REVENUE_CLOSER]: _operatorCache.has(OperatorTeam.REVENUE_CLOSER),
       [OperatorTeam.BRAND_GUARDIAN]: _operatorCache.has(OperatorTeam.BRAND_GUARDIAN),
+      [OperatorTeam.BROWSER_AGENT]: _operatorCache.has(OperatorTeam.BROWSER_AGENT),
     };
   }
 
@@ -115,6 +118,9 @@ export class OperatorFactory {
 
       case OperatorTeam.BRAND_GUARDIAN:
         return new BrandGuardianOperator();
+
+      case OperatorTeam.BROWSER_AGENT:
+        return new BrowserAgentOperator();
 
       default: {
         // TypeScript exhaustiveness check — should never reach here

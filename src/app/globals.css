@@ -1,57 +1,122 @@
 @import "tailwindcss";
 
-:root {
-  /* ── Core Palette ─────────────────────────────────── */
-  --background: #0a0a0f;
-  --surface: #0f0f1a;
-  --surface-elevated: #141428;
-  --surface-hover: #1a1a30;
-  --border: #1a1a2e;
-  --border-subtle: #12122a;
+/* ═══════════════════════════════════════════════════════════════════════
+   AGENT MOE — Design System
+   Light + Dark themes · CSS custom properties · State-of-the-art UI
+   ═══════════════════════════════════════════════════════════════════════ */
 
-  /* ── Brand Colors ─────────────────────────────────── */
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-muted: #1e3a5f;
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-muted: #2d1f5f;
+/* ── Dark Theme (default) ────────────────────────────────────────────── */
+:root,
+html.dark {
+  color-scheme: dark;
 
-  /* ── Text ─────────────────────────────────────────── */
-  --text: #f0f0ff;
-  --text-secondary: #a0a0c0;
-  --text-muted: #6b7280;
-  --text-disabled: #374151;
+  /* Core surfaces — lifted from pure black for better readability */
+  --background: #0c0d14;
+  --surface: #12131d;
+  --surface-elevated: #181928;
+  --surface-hover: #1f2035;
+  --border: #252640;
+  --border-subtle: #1c1d32;
 
-  /* ── Semantic ─────────────────────────────────────── */
-  --success: #10b981;
-  --success-muted: #064e3b;
-  --warning: #f59e0b;
-  --warning-muted: #451a03;
-  --danger: #ef4444;
-  --danger-muted: #450a0a;
-  --info: #06b6d4;
-  --info-muted: #0c1a2e;
+  /* Brand */
+  --primary: #5b8def;
+  --primary-hover: #4a7de8;
+  --primary-muted: #1a2744;
+  --accent: #8b5cf6;
+  --accent-hover: #7c4deb;
+  --accent-muted: #271b4d;
 
-  /* ── Glow Effects ─────────────────────────────────── */
-  --glow-primary: 0 0 20px rgba(59, 130, 246, 0.15);
-  --glow-accent: 0 0 20px rgba(124, 58, 237, 0.15);
-  --glow-success: 0 0 12px rgba(16, 185, 129, 0.2);
+  /* Text — boosted contrast */
+  --text: #f4f4fb;
+  --text-secondary: #c0c1d8;
+  --text-muted: #8b8ea8;
+  --text-disabled: #555770;
 
-  /* ── Layout ───────────────────────────────────────── */
-  --sidebar-width: 240px;
-  --topbar-height: 56px;
+  /* Semantic */
+  --success: #34d399;
+  --success-muted: #0b2e22;
+  --warning: #fbbf24;
+  --warning-muted: #2e2008;
+  --danger: #f87171;
+  --danger-muted: #2e0e0e;
+  --info: #22d3ee;
+  --info-muted: #0c1e2e;
+
+  /* Glow effects */
+  --glow-primary: 0 0 20px rgba(91, 141, 239, 0.15);
+  --glow-accent: 0 0 20px rgba(139, 92, 246, 0.15);
+  --glow-success: 0 0 12px rgba(52, 211, 153, 0.2);
+
+  /* Skeleton */
+  --skeleton: rgba(255, 255, 255, 0.06);
+  --skeleton-shine: rgba(255, 255, 255, 0.1);
+
+  /* Scrollbar */
+  --scrollbar-track: var(--surface);
+  --scrollbar-thumb: var(--border);
+  --scrollbar-thumb-hover: var(--text-muted);
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --topbar-height: 72px;
   --radius: 8px;
-  --radius-sm: 4px;
+  --radius-sm: 6px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --spacing-page: 28px;
 
-  /* ── Animation ────────────────────────────────────── */
+  /* Animation */
   --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Base Reset & Global Styles ──────────────────────── */
+/* ── Light Theme ─────────────────────────────────────────────────────── */
+html.light {
+  color-scheme: light;
+
+  --background: #f5f6fa;
+  --surface: #ffffff;
+  --surface-elevated: #f0f1f5;
+  --surface-hover: #e8e9f0;
+  --border: #dfe0ea;
+  --border-subtle: #e8e9f0;
+
+  --primary: #3b6fd9;
+  --primary-hover: #2f5fc4;
+  --primary-muted: #e8eefc;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-muted: #ede8fc;
+
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-disabled: #9ca3af;
+
+  --success: #059669;
+  --success-muted: #d1fae5;
+  --warning: #d97706;
+  --warning-muted: #fef3c7;
+  --danger: #dc2626;
+  --danger-muted: #fee2e2;
+  --info: #0891b2;
+  --info-muted: #cffafe;
+
+  --glow-primary: 0 1px 3px rgba(59, 111, 217, 0.08);
+  --glow-accent: 0 1px 3px rgba(124, 58, 237, 0.08);
+  --glow-success: 0 1px 3px rgba(5, 150, 105, 0.08);
+
+  --skeleton: rgba(0, 0, 0, 0.06);
+  --skeleton-shine: rgba(0, 0, 0, 0.1);
+
+  --scrollbar-track: var(--background);
+  --scrollbar-thumb: var(--border);
+  --scrollbar-thumb-hover: var(--text-disabled);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Base Reset & Global Styles
+   ═══════════════════════════════════════════════════════════════════════ */
 
 *,
 *::before,
@@ -62,7 +127,6 @@
 }
 
 html {
-  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -72,18 +136,20 @@ body {
   background-color: var(--background);
   color: var(--text);
   font-family:
+    "Inter",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     system-ui,
     sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
   min-height: 100dvh;
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ── Scrollbar Styling ───────────────────────────────── */
+/* ── Scrollbar ────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 6px;
@@ -91,26 +157,26 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* ── Selection ───────────────────────────────────────── */
+/* ── Selection ────────────────────────────────────────────────────────── */
 
 ::selection {
   background-color: var(--primary-muted);
   color: var(--text);
 }
 
-/* ── Focus Visible ───────────────────────────────────── */
+/* ── Focus ────────────────────────────────────────────────────────────── */
 
 :focus-visible {
   outline: 2px solid var(--primary);
@@ -118,14 +184,11 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* ── Typography Helpers ──────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   Typography
+   ═══════════════════════════════════════════════════════════════════════ */
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   color: var(--text);
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -134,7 +197,7 @@ h6 {
 
 p {
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 a {
@@ -147,8 +210,11 @@ a:hover {
   color: var(--primary-hover);
 }
 
-/* ── Utility: Gradient Text ──────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   Utility Classes
+   ═══════════════════════════════════════════════════════════════════════ */
 
+/* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
@@ -156,46 +222,50 @@ a:hover {
   background-clip: text;
 }
 
-/* ── Utility: Glow Border ────────────────────────────── */
-
+/* Glow borders */
 .glow-border-primary {
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(91, 141, 239, 0.25);
   box-shadow: var(--glow-primary);
 }
 
 .glow-border-accent {
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  border: 1px solid rgba(139, 92, 246, 0.25);
   box-shadow: var(--glow-accent);
 }
 
-/* ── Utility: Surface Glass Effect ──────────────────── */
-
+/* Glass surface */
 .glass {
-  background: rgba(15, 15, 26, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
 }
 
-/* ── Utility: Grid Background ────────────────────────── */
-
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(26, 26, 46, 0.4) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 26, 46, 0.4) 1px, transparent 1px);
-  background-size: 24px 24px;
+html.dark .glass {
+  background: rgba(18, 19, 29, 0.85);
 }
 
-/* ── Animations ──────────────────────────────────────── */
+/* Subtle grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.5;
+}
+
+/* Skeleton shimmer — theme-aware */
+.skeleton-base {
+  background: var(--skeleton);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════════════════════════ */
 
 @keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 @keyframes fade-in {
@@ -220,6 +290,11 @@ a:hover {
   }
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease forwards;
 }
@@ -230,4 +305,15 @@ a:hover {
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Theme transition smoothing
+   ═══════════════════════════════════════════════════════════════════════ */
+
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important;
 }

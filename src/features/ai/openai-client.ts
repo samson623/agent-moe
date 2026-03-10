@@ -2,10 +2,9 @@
  * OpenAI Client — GPT-5 Nano Wrapper
  *
  * Handles all light, high-volume, low-cost tasks.
- * Current model: "gpt-4o-mini" — same cost profile as the forthcoming gpt-5-nano.
- * When gpt-5-nano is released, update GPT_NANO_MODEL below.
+ * Current model: "gpt-5-nano" — override with OPENAI_NANO_MODEL env var.
  *
- * Cost profile: ~$0.00025 per typical task (0.15/1M input, 0.60/1M output for gpt-4o-mini).
+ * Cost profile: ~$0.05/1M input, $0.40/1M output.
  *
  * These tasks are intentionally simple:
  * - No tool use (Claude handles tool-using tasks)
@@ -33,7 +32,7 @@ import {
  * GPT-5 Nano stand-in.
  * Update to "gpt-5-nano" when it becomes available on the OpenAI API.
  */
-const GPT_NANO_MODEL = process.env["OPENAI_NANO_MODEL"] ?? "gpt-4o-mini";
+const GPT_NANO_MODEL = process.env["OPENAI_NANO_MODEL"] ?? "gpt-5-nano";
 
 const DEFAULT_MAX_TOKENS = 1024;
 
