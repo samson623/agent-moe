@@ -30,12 +30,7 @@ function StatCard({
   pulse?: boolean
 }) {
   return (
-    <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 overflow-hidden">
-      <div
-        className="absolute -top-6 -right-6 w-16 h-16 rounded-full blur-2xl opacity-40"
-        style={{ background: color }}
-        aria-hidden="true"
-      />
+    <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] p-4 overflow-hidden">
       <p className="text-[11px] text-[var(--text-muted)] mb-1">{label}</p>
       <div className="flex items-center gap-2">
         <p className="text-2xl font-bold tabular-nums" style={{ color }}>
@@ -54,7 +49,7 @@ function StatCard({
 
 function SkeletonCard() {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 animate-pulse space-y-3">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] p-4 animate-pulse space-y-3">
       <div className="h-4 bg-[var(--border)] rounded w-3/4" />
       <div className="space-y-2">
         <div className="h-2 bg-[var(--border)] rounded" />
@@ -137,54 +132,25 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
   const totalPages = Math.ceil(total / LIMIT)
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Hero Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
-              'bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6]',
-              'shadow-[0_0_32px_rgba(59,130,246,0.35)]'
-            )}
-          >
-            <Globe size={20} className="text-white" />
-          </div>
-          <div>
-            <h2
-              className="text-xl font-bold"
-              style={{
-                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Browser Agent
-            </h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Playwright-powered web automation. Scrape, click, extract, monitor.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={refresh}
-            className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={14} />
-          </button>
-          <Button
-            onClick={() => setModalOpen(true)}
-            variant="accent"
-            size="sm"
-            className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-          >
-            <Plus size={14} />
+    <div className="space-y-6 p-6 md:p-8">
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={refresh}
+          className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw size={14} />
+        </button>
+        <Button
+          onClick={() => setModalOpen(true)}
+          variant="accent"
+          size="sm"
+          className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+        >
+          <Plus size={14} />
             New Task
           </Button>
-        </div>
       </div>
 
       {/* Stats */}
@@ -215,7 +181,7 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
         <div
           className={cn(
             'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
-            'bg-[var(--surface)] p-12 text-center overflow-hidden'
+            'bg-[var(--surface-solid)] p-12 text-center overflow-hidden'
           )}
         >
           <div

@@ -2,7 +2,6 @@
 
 import type { LucideIcon } from 'lucide-react'
 import {
-  Users,
   FileText,
   TrendingUp,
   DollarSign,
@@ -20,6 +19,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { StatCard } from '@/components/ui/stat-card'
 import { cn } from '@/lib/utils'
 import { useOperatorStats, type TeamStats } from '../hooks/use-operator-stats'
 import { useOperatorActivity, type ActivityItem } from '../hooks/use-operator-activity'
@@ -133,7 +133,7 @@ function StatsSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+          className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)]"
         >
           <Skeleton className="w-4 h-4 rounded-full" />
           <div className="space-y-1.5">
@@ -186,29 +186,6 @@ function ErrorAlert({ message, onRetry }: { message: string; onRetry: () => void
       <Button variant="ghost" size="sm" onClick={onRetry}>
         Retry
       </Button>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Quick Stat Card
-// ---------------------------------------------------------------------------
-
-function QuickStat({ label, value, icon: Icon }: { label: string; value: number; icon: LucideIcon }) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 p-4 rounded-[var(--radius-lg)]',
-        'border border-[var(--border)] bg-[var(--surface)]',
-      )}
-    >
-      <Icon size={16} className="text-[var(--primary)] shrink-0" />
-      <div>
-        <p className="text-lg font-bold text-[var(--text)] leading-none tabular-nums">
-          {value.toLocaleString()}
-        </p>
-        <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
-      </div>
     </div>
   )
 }
@@ -390,34 +367,15 @@ export function OperatorsPage({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <div className="p-7 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
-              'bg-gradient-to-br from-[var(--accent)] to-[var(--primary)]',
-              'shadow-[0_0_24px_rgba(124,58,237,0.4)]',
-            )}
-          >
-            <Users size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Operators</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Four specialized AI operator teams — Claude Agent SDK subagents
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={isLive ? 'success' : 'warning'}>
-            {isLive ? 'Live' : 'No Workspace'}
-          </Badge>
-          <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="Refresh">
-            <RefreshCw size={14} />
-          </Button>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        <Badge variant={isLive ? 'success' : 'warning'}>
+          {isLive ? 'Live' : 'No Workspace'}
+        </Badge>
+        <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="Refresh">
+          <RefreshCw size={14} />
+        </Button>
       </div>
 
       {/* Errors */}
@@ -429,10 +387,10 @@ export function OperatorsPage({ workspaceId }: { workspaceId: string }) {
         <StatsSkeleton />
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <QuickStat label="Total Jobs Executed" value={totalJobs} icon={Cpu} />
-          <QuickStat label="Active Jobs" value={activeJobs} icon={Activity} />
-          <QuickStat label="Jobs Completed" value={completedJobs} icon={CheckCircle2} />
-          <QuickStat label="Pending Queue" value={pendingJobs} icon={Clock} />
+          <StatCard title="Total Jobs Executed" value={totalJobs.toLocaleString()} icon={Cpu} accent="text-cyan-300" />
+          <StatCard title="Active Jobs" value={activeJobs.toLocaleString()} icon={Activity} accent="text-cyan-300" />
+          <StatCard title="Jobs Completed" value={completedJobs.toLocaleString()} icon={CheckCircle2} accent="text-cyan-300" />
+          <StatCard title="Pending Queue" value={pendingJobs.toLocaleString()} icon={Clock} accent="text-cyan-300" />
         </div>
       )}
 

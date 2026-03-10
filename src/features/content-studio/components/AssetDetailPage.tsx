@@ -175,7 +175,7 @@ export function AssetDetailPage({ initialAsset }: AssetDetailPageProps) {
   }
 
   return (
-    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in space-y-6 p-6 md:p-8">
       {/* Header */}
       <div className="space-y-4">
         <Link

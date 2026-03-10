@@ -27,7 +27,6 @@ interface NavItem {
   href: AppRoute;
   label: string;
   icon: LucideIcon;
-  badge?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -48,28 +47,22 @@ const NAV_ITEMS: NavItem[] = [
 
 function MoeLogo() {
   return (
-    <div className="flex items-center gap-3 px-5 h-[var(--topbar-height)] border-b border-[var(--border)] shrink-0">
+    <div className="flex items-center gap-3 px-4 pt-5 pb-4 shrink-0">
       <div
         className={cn(
-          "flex items-center justify-center w-9 h-9 rounded-lg",
-          "bg-gradient-to-br from-[var(--primary)] to-[var(--accent)]",
-          "shadow-[var(--glow-primary)]"
+          "flex items-center justify-center w-9 h-9 rounded-[var(--radius-sm)]",
+          "bg-[linear-gradient(135deg,var(--primary),var(--accent))]",
+          "shadow-[0_0_20px_rgba(94,234,212,0.15)]"
         )}
       >
-        <Zap size={18} className="text-white" />
+        <Zap size={16} className="text-[var(--text-inverse)]" />
       </div>
-      <div className="flex flex-col leading-none">
-        <span
-          className={cn(
-            "text-xl font-bold tracking-[0.06em]",
-            "bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]",
-            "bg-clip-text text-transparent"
-          )}
-        >
-          MOE
+      <div className="flex flex-col min-w-0">
+        <span className="text-[15px] font-semibold tracking-tight text-[var(--text)] truncate">
+          Agent MOE
         </span>
-        <span className="text-[10px] text-[var(--text-muted)] font-semibold tracking-[0.14em] uppercase">
-          AI Operator
+        <span className="text-[11px] text-[var(--text-muted)]">
+          AI Operator Platform
         </span>
       </div>
     </div>
@@ -83,79 +76,25 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
     <Link
       href={item.href}
       className={cn(
-        "group relative flex items-center gap-3 px-3 py-2.5 mx-2 rounded-[var(--radius)]",
-        "text-[14px] font-medium transition-all duration-150",
+        "group flex items-center gap-3 px-3 py-2 mx-2 rounded-[var(--radius-sm)]",
+        "text-[13px] font-medium transition-colors duration-150",
         isActive
           ? "bg-[var(--primary-muted)] text-[var(--primary)]"
-          : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)]"
+          : "text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)]"
       )}
       aria-current={isActive ? "page" : undefined}
     >
-      {isActive && (
-        <span
-          className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2",
-            "w-[3px] h-5 rounded-full",
-            "bg-[var(--primary)]"
-          )}
-          aria-hidden="true"
-        />
-      )}
-
       <Icon
-        size={17}
+        size={16}
         className={cn(
           "shrink-0 transition-colors duration-150",
           isActive
             ? "text-[var(--primary)]"
-            : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
+            : "text-[var(--text-muted)] group-hover:text-[var(--text)]"
         )}
       />
-
       <span className="truncate">{item.label}</span>
-
-      {item.badge && (
-        <span
-          className={cn(
-            "ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-            "bg-[var(--primary)] text-white leading-none"
-          )}
-        >
-          {item.badge}
-        </span>
-      )}
     </Link>
-  );
-}
-
-function SystemStatus() {
-  return (
-    <div
-      className={cn(
-        "mx-3 mb-3 px-4 py-3 rounded-[var(--radius)]",
-        "border border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
-      )}
-    >
-      <div className="flex items-center gap-2.5">
-        <span className="relative flex h-2 w-2 shrink-0">
-          <span
-            className={cn(
-              "animate-ping absolute inline-flex h-full w-full rounded-full",
-              "bg-[var(--success)] opacity-60"
-            )}
-          />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--success)]" />
-        </span>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-medium text-[var(--success)]">
-            System Online
-          </span>
-          <span className="text-[11px] text-[var(--text-muted)]">
-            All operators ready
-          </span>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -170,20 +109,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-40",
+        "fixed left-3 top-3 bottom-3 z-40 hidden lg:flex",
         "flex flex-col",
         "w-[var(--sidebar-width)]",
-        "bg-[var(--surface)] border-r border-[var(--border)]",
-        "overflow-hidden transition-colors duration-200"
+        "rounded-[var(--radius-lg)] overflow-hidden",
+        "border border-[var(--border)]",
+        "bg-[var(--surface-solid)]",
+        "transition-colors duration-200"
       )}
     >
       <MoeLogo />
-
-      <div className="px-5 pt-4 pb-2">
-        <span className="text-[11px] font-semibold text-[var(--text-disabled)] tracking-[0.14em] uppercase">
-          Navigation
-        </span>
-      </div>
 
       <nav className="flex-1 flex flex-col gap-0.5 overflow-y-auto py-1" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => (
@@ -191,7 +126,12 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <SystemStatus />
+      <div className="px-4 py-3 border-t border-[var(--border-subtle)]">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="text-[var(--text-muted)]">Execution policy</span>
+          <span className="text-[var(--success)] font-medium">Approval-first</span>
+        </div>
+      </div>
     </aside>
   );
 }

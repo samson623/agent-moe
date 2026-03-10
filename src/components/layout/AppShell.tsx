@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ThemeProvider } from "./ThemeProvider";
-import { cn } from "@/lib/utils";
 
 interface AppShellProps {
   children: ReactNode;
@@ -11,16 +10,13 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <ThemeProvider>
-      <div className="min-h-dvh bg-[var(--background)] transition-colors duration-200">
+      <div className="min-h-dvh transition-colors duration-200">
         <Sidebar />
-        <TopBar />
-        <main
-          className={cn(
-            "ml-[var(--sidebar-width)] pt-[var(--topbar-height)]",
-            "min-h-dvh overflow-y-auto"
-          )}
-        >
-          <div className="animate-fade-in">{children}</div>
+        <main className="min-h-dvh flex flex-col lg:ml-[calc(var(--sidebar-width)+24px)] lg:mr-3 lg:my-3">
+          <div className="flex-1 flex flex-col rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] overflow-hidden">
+            <TopBar />
+            <div className="flex-1 overflow-y-auto">{children}</div>
+          </div>
         </main>
       </div>
     </ThemeProvider>

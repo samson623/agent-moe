@@ -86,26 +86,9 @@ export function RevenueLabPage({ workspaceId }: RevenueLabPageProps) {
   const formOpen = showForm || editingOffer !== null
 
   return (
-    <div className="p-7 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
-              'bg-gradient-to-br from-[#f59e0b] to-[#ef4444]',
-              'shadow-[0_0_24px_rgba(245,158,11,0.4)]',
-            )}
-          >
-            <DollarSign size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Revenue Lab</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Offers, CTA logic, conversion paths
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-end gap-2">
         <Button
           onClick={() => setShowForm(true)}
           className={cn(

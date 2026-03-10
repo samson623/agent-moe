@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Activity, Zap, Target, CheckCircle2, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import {
   useMissions,
@@ -13,7 +15,6 @@ import {
 import { MissionInput } from './MissionInput';
 import { ActiveMissionsList } from './ActiveMissionsList';
 import { RecentAssetsFeed } from './RecentAssetsFeed';
-import { QuickStatsCards } from './QuickStatsCards';
 import { SystemHealthPanel } from './SystemHealthPanel';
 
 interface CommandCenterPageProps {
@@ -22,24 +23,52 @@ interface CommandCenterPageProps {
 
 function NoWorkspaceBanner() {
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div
         className={cn(
-          'flex items-center gap-4 px-6 py-5 rounded-[var(--radius-lg)]',
-          'bg-[var(--warning-muted)] border border-[rgba(245,158,11,0.2)]'
+          'flex items-center gap-4 rounded-[var(--radius)] border px-5 py-4',
+          'border-[var(--warning-muted)] bg-[var(--warning-subtle)]'
         )}
       >
-        <AlertTriangle size={20} className="text-[var(--warning)] shrink-0" />
+        <AlertTriangle size={18} className="shrink-0 text-[var(--warning)]" />
         <div>
-          <p className="text-sm font-medium text-[var(--text)]">
-            No workspace found
-          </p>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+          <p className="text-sm font-medium text-[var(--text)]">No workspace found</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
             Sign in and create a workspace to start using the Command Center.
-            Check your Supabase auth setup if you&apos;re already signed in.
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatBox({
+  label,
+  value,
+  icon: Icon,
+  tone = 'default',
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  tone?: 'default' | 'success' | 'warning' | 'accent';
+}) {
+  const toneStyles = {
+    default: 'text-[var(--primary)]',
+    success: 'text-[var(--success)]',
+    warning: 'text-[var(--warning)]',
+    accent: 'text-[var(--accent)]',
+  };
+
+  return (
+    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-solid)] p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon size={14} className={toneStyles[tone]} />
+        <span className="text-xs text-[var(--text-muted)]">{label}</span>
+      </div>
+      <p className="text-2xl font-semibold tracking-tight text-[var(--text)] tabular-nums">
+        {value}
+      </p>
     </div>
   );
 }
@@ -85,72 +114,81 @@ function CommandCenterContent({ workspaceId }: { workspaceId: string }) {
     [createMission, refetchStats],
   );
 
-  return (
-    <div className="p-7 space-y-8">
-      <QuickStatsCards stats={stats} isLoading={statsLoading} />
+  const healthStats = stats
+    ? {
+        missions_running: stats.missions_running,
+        total_jobs: stats.total_jobs,
+        pending_approvals: stats.pending_approvals,
+      }
+    : null;
 
+  return (
+    <div className="space-y-5 p-5 md:p-6">
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatBox
+          label="Total Missions"
+          value={statsLoading ? '...' : stats?.total_missions ?? 0}
+          icon={Target}
+        />
+        <StatBox
+          label="Running"
+          value={statsLoading ? '...' : stats?.missions_running ?? 0}
+          icon={Zap}
+          tone="success"
+        />
+        <StatBox
+          label="Total Jobs"
+          value={statsLoading ? '...' : stats?.total_jobs ?? 0}
+          icon={Activity}
+          tone="accent"
+        />
+        <StatBox
+          label="Pending Approvals"
+          value={approvalsLoading ? '...' : approvalCount}
+          icon={Clock}
+          tone={approvalCount > 0 ? 'warning' : 'default'}
+        />
+      </div>
+
+      {/* Mission input */}
       <MissionInput onSubmit={handleCreateMission} isSubmitting={isCreating} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-7">
-        <div className="lg:col-span-2 space-y-6">
-          <ActiveMissionsList missions={missions} isLoading={missionsLoading} />
-          <RecentAssetsFeed assets={assets} isLoading={assetsLoading} />
-        </div>
+      {/* System health */}
+      <SystemHealthPanel stats={healthStats} isLoading={statsLoading} />
 
-        <div className="space-y-6">
-          <SystemHealthPanel
-            stats={
-              stats
-                ? {
-                    missions_running: stats.missions_running,
-                    total_jobs: stats.total_jobs,
-                    pending_approvals: stats.pending_approvals,
-                  }
-                : null
-            }
-            isLoading={statsLoading}
-          />
-
-          <div
-            className={cn(
-              'rounded-[var(--radius)] border border-[var(--border)] p-4',
-              'bg-[var(--surface)]'
-            )}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-[var(--text)]">
-                Pending Approvals
-              </h3>
-              {!approvalsLoading && approvalCount > 0 && (
-                <span
-                  className={cn(
-                    'inline-flex items-center justify-center px-2 py-0.5 rounded-full',
-                    'text-xs font-bold',
-                    'bg-[var(--warning)] text-white'
-                  )}
-                >
-                  {approvalCount}
-                </span>
-              )}
-            </div>
-            {approvalsLoading ? (
-              <div className="space-y-2">
-                <div className="h-3 w-3/4 rounded bg-[var(--surface-elevated)] animate-pulse" />
-                <div className="h-3 w-1/2 rounded bg-[var(--surface-elevated)] animate-pulse" />
-              </div>
-            ) : approvalCount === 0 ? (
-              <p className="text-xs text-[var(--text-disabled)]">
-                No items waiting for approval.
-              </p>
-            ) : (
-              <p className="text-xs text-[var(--text-muted)]">
-                {approvalCount} item{approvalCount !== 1 ? 's' : ''} awaiting
-                your review. Head to the Approval Queue to review.
-              </p>
-            )}
-          </div>
-        </div>
+      {/* Two-column: missions + assets */}
+      <div className="grid gap-5 xl:grid-cols-2">
+        <ActiveMissionsList missions={missions} isLoading={missionsLoading} />
+        <RecentAssetsFeed assets={assets} isLoading={assetsLoading} />
       </div>
+
+      {/* Approval status */}
+      <Card>
+        <CardContent className="flex items-center justify-between gap-4 py-4 px-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-elevated)]">
+              <CheckCircle2
+                size={16}
+                className={approvalCount > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text)]">Approval Queue</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                {approvalsLoading
+                  ? 'Checking...'
+                  : approvalCount === 0
+                    ? 'No items waiting for approval'
+                    : `${approvalCount} item${approvalCount !== 1 ? 's' : ''} staged for review`}
+              </p>
+            </div>
+          </div>
+          <Badge variant={approvalCount > 0 ? 'warning' : 'success'}>
+            {approvalsLoading ? 'Syncing' : approvalCount > 0 ? `${approvalCount} pending` : 'Clear'}
+          </Badge>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart2, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TimeRange } from '@/features/analytics/types'
 import {
@@ -76,43 +76,22 @@ export function AnalyticsDashboard({ workspaceId }: AnalyticsDashboardProps) {
 
   return (
     <div className="flex flex-col gap-6 p-6 min-h-0">
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-[var(--radius-lg)] shrink-0"
-            style={{
-              backgroundColor: 'rgba(59,130,246,0.12)',
-              border: '1px solid rgba(59,130,246,0.2)',
-            }}
-            aria-hidden="true"
-          >
-            <BarChart2 size={16} style={{ color: 'var(--primary)' }} />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text)] leading-none">Analytics</h1>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              System-wide performance across all operators
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className={cn(
-              'flex items-center justify-center w-8 h-8 rounded-[var(--radius)] transition-colors duration-150',
-              'border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]',
-              'text-[var(--text-muted)] hover:text-[var(--text)]',
-            )}
-            aria-label="Refresh analytics"
-            title="Refresh"
-          >
-            <RefreshCw size={13} />
-          </button>
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-        </div>
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          className={cn(
+            'flex items-center justify-center w-8 h-8 rounded-[var(--radius)] transition-colors duration-150',
+            'border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]',
+            'text-[var(--text-muted)] hover:text-[var(--text)]',
+          )}
+          aria-label="Refresh analytics"
+          title="Refresh"
+        >
+          <RefreshCw size={13} />
+        </button>
+        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
 
       {/* Stats overview — full width */}

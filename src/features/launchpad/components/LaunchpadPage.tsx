@@ -70,7 +70,7 @@ const STATUS_LABEL: Record<CampaignStatus, string> = {
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
+    <div className="animate-pulse rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] p-4 space-y-3">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-[var(--radius)] bg-[var(--surface-elevated)]" />
         <div className="flex-1 space-y-2">
@@ -125,7 +125,7 @@ function DetailPanel({ campaignId, onClose, onLaunch, onDeleted }: DetailPanelPr
   return (
     <div
       className={cn(
-        'flex flex-col rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]',
+        'flex flex-col rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)]',
         'animate-fade-in',
       )}
     >
@@ -414,7 +414,7 @@ function EmptyState({ onCreateClick }: EmptyStateProps) {
     <div
       className={cn(
         'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
-        'bg-[var(--surface)] p-14 text-center overflow-hidden',
+        'bg-[var(--surface-solid)] p-14 text-center overflow-hidden',
       )}
     >
       <div
@@ -529,28 +529,9 @@ export function LaunchpadPage({ workspaceId }: LaunchpadPageProps) {
   const showDetailPanel = selectedCampaignId !== null
 
   return (
-    <div className="p-7 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
-              'bg-gradient-to-br from-[#7c3aed] to-[#f43f5e]',
-              'shadow-[0_0_24px_rgba(124,58,237,0.4)]',
-            )}
-            aria-hidden="true"
-          >
-            <Rocket size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Launchpad</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Grouped campaigns, sequenced launches, and timeline orchestration
-            </p>
-          </div>
-        </div>
-
+      <div className="flex items-center justify-end gap-2">
         <Button
           onClick={() => setShowCreateForm(true)}
           className="flex items-center gap-2"

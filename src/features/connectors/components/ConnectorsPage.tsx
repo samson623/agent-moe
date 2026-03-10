@@ -33,7 +33,7 @@ function SkeletonCard() {
     <div
       className={cn(
         "flex items-start gap-3 p-4 rounded-[var(--radius-lg)]",
-        "border border-[var(--border)] bg-[var(--surface)]",
+        "border border-[var(--border)] bg-[var(--surface-solid)]",
         "animate-pulse"
       )}
     >
@@ -93,49 +93,26 @@ export function ConnectorsPage({ workspaceId }: { workspaceId: string }) {
   }, [refetch])
 
   return (
-    <div className="p-7 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6 p-6 md:p-8">
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]",
-              "bg-gradient-to-br from-[#06b6d4] to-[#7c3aed]",
-              "shadow-[0_0_24px_rgba(6,182,212,0.4)]"
-            )}
-          >
-            <LinkIcon size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Connectors</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Linked platforms and external services
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {loading ? (
-            <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
-          ) : error ? (
-            <Badge variant="danger">
-              <AlertCircle size={10} className="mr-1" />
-              Error
-            </Badge>
-          ) : (
-            <Badge variant="success">
-              <CheckCircle2 size={10} className="mr-1" />
-              {connectedCount} Connected
-            </Badge>
-          )}
-          <Button
-            size="sm"
-            onClick={() => setConnectModalOpen(true)}
-            className="gap-1.5"
-          >
-            <Plus size={14} />
-            Add Connector
-          </Button>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        {loading ? (
+          <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
+        ) : error ? (
+          <Badge variant="danger">
+            <AlertCircle size={10} className="mr-1" />
+            Error
+          </Badge>
+        ) : (
+          <Badge variant="success">
+            <CheckCircle2 size={10} className="mr-1" />
+            {connectedCount} Connected
+          </Badge>
+        )}
+        <Button size="sm" onClick={() => setConnectModalOpen(true)} className="gap-1.5">
+          <Plus size={14} />
+          Add Connector
+        </Button>
       </div>
 
       {/* Stats row */}
@@ -186,7 +163,7 @@ export function ConnectorsPage({ workspaceId }: { workspaceId: string }) {
           <div
             className={cn(
               "flex flex-col items-center justify-center py-16 rounded-[var(--radius-lg)]",
-              "border border-dashed border-[var(--border)] bg-[var(--surface)]"
+              "border border-dashed border-[var(--border)] bg-[var(--surface-solid)]"
             )}
           >
             <LinkIcon size={32} className="text-[var(--text-muted)] mb-3 opacity-40" />

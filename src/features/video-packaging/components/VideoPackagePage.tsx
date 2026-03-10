@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Film,
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
@@ -80,7 +79,7 @@ function EmptyState({ onGenerate }: { onGenerate: () => void }) {
     <div
       className={cn(
         'relative rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--border)]',
-        'bg-[var(--surface)] p-16 text-center overflow-hidden',
+        'bg-[var(--surface-solid)] p-16 text-center overflow-hidden',
       )}
     >
       <div className="absolute inset-0 grid-bg opacity-50" aria-hidden="true" />
@@ -113,7 +112,7 @@ function QuickStat({ label, value, icon: Icon }: { label: string; value: number;
     <div
       className={cn(
         'flex items-center gap-3 p-3 rounded-[var(--radius-lg)]',
-        'border border-[var(--border)] bg-[var(--surface)]',
+        'border border-[var(--border)] bg-[var(--surface-solid)]',
       )}
     >
       <Icon size={14} className="text-[var(--primary)] shrink-0" />
@@ -157,26 +156,9 @@ export function VideoPackagePage({ workspaceId }: VideoPackagePageProps) {
   const reviewCount = packages.filter((p) => p.status === 'review').length
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* ── Header ──────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]',
-              'bg-gradient-to-br from-[var(--accent)] to-[var(--primary)]',
-              'shadow-[0_0_24px_rgba(124,58,237,0.4)]',
-            )}
-          >
-            <Film size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Video Studio</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              AI-generated short-form video packages
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6 p-6 md:p-8">
+      {/* ── Actions ─────────────────────────────────────── */}
+      <div className="flex items-center justify-end gap-2">
         <Button
           variant="accent"
           size="sm"

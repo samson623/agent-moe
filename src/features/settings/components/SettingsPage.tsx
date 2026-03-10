@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Settings,
   Shield,
   Cpu,
   DollarSign,
@@ -188,26 +187,9 @@ function SettingSectionCard({ section }: { section: SettingSection }) {
 
 export function SettingsPage() {
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex items-center justify-center w-11 h-11 rounded-[var(--radius-lg)]",
-              "bg-gradient-to-br from-[#6b7280] to-[#374151]",
-              "shadow-[0_0_24px_rgba(107,114,128,0.3)]"
-            )}
-          >
-            <Settings size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[var(--text)]">Settings</h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              Business rules, AI config, tone, approval thresholds
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-end gap-2">
         <Badge variant="muted">Phase 0 Active</Badge>
       </div>
 
