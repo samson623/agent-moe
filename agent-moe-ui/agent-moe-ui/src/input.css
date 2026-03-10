@@ -1,0 +1,20 @@
+/*
+ * Tailwind CSS entry file
+ *
+ * This file pulls in Tailwind's base styles, component classes and
+ * utility classes. The Tailwind CLI will process this file, resolve
+ * directives, purge unused styles based on the content paths defined
+ * in tailwind.config.js, and output a minified CSS bundle.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS classes can be defined here or in the HTML file using
+   the `@apply` directive if needed. For example:
+
+   .card {
+     @apply bg-white dark:bg-gray-800 shadow rounded-lg p-6;
+   }
+
+*/
