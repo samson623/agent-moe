@@ -206,7 +206,6 @@ export interface UpdateJobStatusExtras {
   model_used?: 'claude' | 'gpt5_nano'
   output_data?: Json
   error_message?: string
-  duration_ms?: number
 }
 
 /**
@@ -214,7 +213,7 @@ export interface UpdateJobStatusExtras {
  *
  * Lifecycle rules:
  * - Transitioning to 'running'            → sets started_at
- * - Transitioning to 'completed'|'failed' → sets completed_at (+ duration_ms if provided)
+ * - Transitioning to 'completed'|'failed' → sets completed_at
  */
 export async function updateJobStatus(
   client: TypedClient,
@@ -229,15 +228,13 @@ export async function updateJobStatus(
     ...(extras.model_used !== undefined ? { model_used: extras.model_used } : {}),
     ...(extras.output_data !== undefined ? { output_data: extras.output_data } : {}),
     ...(extras.error_message !== undefined ? { error_message: extras.error_message } : {}),
-    ...(extras.duration_ms !== undefined ? { duration_ms: extras.duration_ms } : {}),
   }
 
   if (status === 'running') {
     patch.started_at = now
   } else if (status === 'completed' || status === 'failed') {
     patch.completed_at = now
-    // If duration_ms not explicitly supplied, leave it to the caller to provide
-    // (ExecutionEngine measures wall-clock time and passes it as an extra)
+    // Duration is tracked in activity_logs, not on the job row itself
   }
 
   const { data, error } = await client

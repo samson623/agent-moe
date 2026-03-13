@@ -144,7 +144,6 @@ export class JobQueue {
     const client = createAdminClient()
     const { error } = await updateJobStatus(client, jobId, 'completed', {
       output_data: output as Json,
-      duration_ms: durationMs,
       model_used: modelUsed,
     })
     if (error) {
