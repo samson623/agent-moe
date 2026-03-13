@@ -16,11 +16,18 @@
  */
 
 import { createServerClient } from '@supabase/ssr'
+import type { CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/lib/supabase/types'
 
 /** Routes that are accessible without a session */
+type CookieToSet = {
+  name: string
+  value: string
+  options?: CookieOptions
+}
+
 const PUBLIC_ROUTES = [
   '/login',
   '/auth/callback',
@@ -56,7 +63,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           // First apply to the request so the server client can read them
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
 
