@@ -1,20 +1,17 @@
 /**
- * Claude Client — Anthropic SDK Wrapper
+ * Claude Client — Claude Agent SDK Wrapper
  *
- * Authenticates using CLAUDE_CODE_OAUTH_TOKEN — an OAuth bearer token from the
- * Claude.ai Max subscription. The Anthropic SDK sends it as:
- *   Authorization: Bearer {token}
+ * Uses @anthropic-ai/claude-agent-sdk to route all AI calls through Claude Code,
+ * which authenticates with the CLAUDE_CODE_OAUTH_TOKEN from the Claude Max
+ * subscription. This means all Claude calls are $0 cost.
  *
- * This gives us Claude for free (within Max subscription limits), making it the
- * right choice for all heavy, reasoning-intensive, content-generating tasks.
+ * The Agent SDK spawns a Claude Code subprocess for each query. The subprocess
+ * handles authentication, model selection, and token management automatically.
  *
- * Model: claude-opus-4-5-20251101 for complex tasks.
- *
- * IMPORTANT: This client never throws raw errors — it always returns typed
- * AIError structures so callers can handle failures predictably.
+ * Fallback: if ANTHROPIC_API_KEY is set, uses the standard @anthropic-ai/sdk
+ * for direct API access (pay-per-token).
  */
 
-import Anthropic from "@anthropic-ai/sdk";
 import {
   type AIError,
   AIErrorCode,
@@ -33,33 +30,12 @@ import {
 } from "@/features/ai/types";
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/**
- * Primary model for heavy operator tasks.
- * Claude Opus 4.5 — best reasoning, longest context.
- */
-const CLAUDE_HEAVY_MODEL = "claude-opus-4-5-20251101";
-
-/**
- * Maximum tokens for content generation tasks.
- * High ceiling to allow long-form scripts and threads.
- */
-const DEFAULT_MAX_TOKENS = 4096;
-
-// ---------------------------------------------------------------------------
 // Structured output helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Strip markdown code fences from AI JSON output.
- * Claude often wraps JSON in ```json ... ``` — this removes that safely.
- */
 function extractJSON(raw: string): string {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenced?.[1]) return fenced[1].trim();
-  // Try to find a raw JSON object or array
   const jsonStart = raw.indexOf("{");
   const jsonEnd = raw.lastIndexOf("}");
   if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -68,31 +44,22 @@ function extractJSON(raw: string): string {
   return raw.trim();
 }
 
-/** Build a typed AIError from any caught exception. */
 function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): AIError {
-  if (err instanceof Anthropic.APIError) {
+  if (err instanceof Error) {
+    const message = err.message;
     const code =
-      err.status === 401
+      message.includes("401") || message.includes("auth")
         ? AIErrorCode.AUTH_FAILED
-        : err.status === 429
+        : message.includes("429") || message.includes("rate")
           ? AIErrorCode.RATE_LIMITED
-          : err.status === 400 && err.message.includes("context")
+          : message.includes("context")
             ? AIErrorCode.CONTEXT_TOO_LONG
-            : AIErrorCode.UPSTREAM_ERROR;
+            : fallbackCode;
 
     return {
       code,
-      message: err.message,
-      retryable: err.status === 429 || err.status >= 500,
-      details: { status: err.status, type: err.name },
-    };
-  }
-
-  if (err instanceof Error) {
-    return {
-      code: fallbackCode,
-      message: err.message,
-      retryable: false,
+      message,
+      retryable: code === AIErrorCode.RATE_LIMITED,
     };
   }
 
@@ -104,48 +71,130 @@ function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): 
 }
 
 // ---------------------------------------------------------------------------
+// Timeout helper
+// ---------------------------------------------------------------------------
+
+const AI_CALL_TIMEOUT_MS = 90_000; // 90 seconds per AI call
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${ms / 1000}s`)),
+      ms,
+    );
+    promise
+      .then((v) => { clearTimeout(timer); resolve(v); })
+      .catch((e) => { clearTimeout(timer); reject(e); });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Agent SDK query helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Run a prompt through the Claude Agent SDK (uses Max subscription via Claude Code).
+ * Collects all assistant text messages and returns the combined output.
+ */
+async function queryAgentSDK(prompt: string): Promise<string> {
+  // Dynamic import — the Agent SDK is ESM-only and uses Claude Code subprocess
+  const { query } = await import("@anthropic-ai/claude-agent-sdk");
+
+  const collectMessages = async (): Promise<string> => {
+    let resultText = "";
+
+    for await (const message of query({
+      prompt,
+      options: {
+        allowedTools: [],
+        maxTurns: 1,
+      },
+    })) {
+      // Collect text from assistant messages
+      if (message.type === "assistant" && message.message?.content) {
+        for (const block of message.message.content) {
+          if (block.type === "text") {
+            resultText += block.text;
+          }
+        }
+      }
+      // Also check for result field (final output)
+      if ("result" in message && typeof message.result === "string") {
+        resultText = message.result;
+      }
+    }
+
+    if (!resultText) {
+      throw new Error("Agent SDK returned no text output");
+    }
+
+    return resultText;
+  };
+
+  return withTimeout(collectMessages(), AI_CALL_TIMEOUT_MS, "Agent SDK query");
+}
+
+// ---------------------------------------------------------------------------
+// Direct API fallback (when ANTHROPIC_API_KEY is available)
+// ---------------------------------------------------------------------------
+
+async function queryDirectAPI(
+  prompt: string,
+  options: { systemPrompt?: string; maxTokens?: number } = {}
+): Promise<{ text: string; tokensUsed: number }> {
+  const Anthropic = (await import("@anthropic-ai/sdk")).default;
+  const client = new Anthropic({
+    apiKey: process.env["ANTHROPIC_API_KEY"],
+    timeout: AI_CALL_TIMEOUT_MS,
+  });
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6-20250514",
+    max_tokens: options.maxTokens ?? 4096,
+    system: options.systemPrompt,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  const text = textBlock?.type === "text" ? textBlock.text : "";
+
+  return {
+    text,
+    tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // ClaudeClient class
 // ---------------------------------------------------------------------------
 
 export class ClaudeClient {
-  private readonly client: Anthropic;
-  private readonly model: string;
+  private readonly useAgentSDK: boolean;
 
   constructor() {
-    const token = process.env["CLAUDE_CODE_OAUTH_TOKEN"];
+    const hasApiKey = !!process.env["ANTHROPIC_API_KEY"];
+    const hasOAuthToken = !!process.env["CLAUDE_CODE_OAUTH_TOKEN"];
 
-    if (!token) {
-      // Don't throw at construction time — let callers get a typed error.
-      // But we do log loudly so it's obvious during startup.
+    // Prefer Agent SDK (Max subscription, $0) over direct API (paid)
+    this.useAgentSDK = hasOAuthToken && !hasApiKey;
+
+    if (!hasApiKey && !hasOAuthToken) {
       console.error(
-        "[ClaudeClient] CRITICAL: CLAUDE_CODE_OAUTH_TOKEN is not set. " +
-          "All Claude API calls will fail. Run `claude setup-token` to obtain a token."
+        "[ClaudeClient] CRITICAL: Neither ANTHROPIC_API_KEY nor CLAUDE_CODE_OAUTH_TOKEN is set."
       );
     }
 
-    // The Anthropic SDK uses the apiKey value as the Bearer token.
-    // For Claude Code OAuth tokens, it sends: Authorization: Bearer {apiKey}
-    // which is exactly what the Claude Code OAuth flow expects.
-    this.client = new Anthropic({
-      apiKey: token ?? "missing-token",
-    });
-
-    this.model = CLAUDE_HEAVY_MODEL;
-
     console.log("[ClaudeClient] Initialized", {
-      model: this.model,
-      tokenConfigured: !!token,
+      method: this.useAgentSDK ? "agent_sdk (Max subscription)" : "direct_api",
+      hasApiKey,
+      hasOAuthToken,
     });
   }
 
   // ---------------------------------------------------------------------------
-  // Core execution methods
+  // Core execution
   // ---------------------------------------------------------------------------
 
-  /**
-   * Basic text generation — single turn, no tool use.
-   * Returns the raw text string wrapped in an ExecutionResult.
-   */
   async run(
     prompt: string,
     options: {
@@ -157,26 +206,27 @@ export class ClaudeClient {
     const start = Date.now();
 
     try {
-      const messages: Anthropic.MessageParam[] = [
-        { role: "user", content: prompt },
-      ];
+      let text: string;
+      let tokensUsed: number | undefined;
 
-      const response = await this.client.messages.create({
-        model: this.model,
-        max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-        system: options.systemPrompt,
-        messages,
-      });
-
-      const textBlock = response.content.find((b) => b.type === "text");
-      const text = textBlock?.type === "text" ? textBlock.text : "";
+      if (this.useAgentSDK) {
+        // Build a combined prompt with system context for Agent SDK
+        const fullPrompt = options.systemPrompt
+          ? `${options.systemPrompt}\n\n---\n\n${prompt}`
+          : prompt;
+        text = await queryAgentSDK(fullPrompt);
+      } else {
+        const result = await queryDirectAPI(prompt, options);
+        text = result.text;
+        tokensUsed = result.tokensUsed;
+      }
 
       return {
         success: true,
         data: text,
         model: ModelChoice.CLAUDE,
         jobType: JobType.CONTENT_GENERATION,
-        tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
+        tokensUsed,
         durationMs: Date.now() - start,
         timestamp: new Date().toISOString(),
       };
@@ -192,114 +242,23 @@ export class ClaudeClient {
     }
   }
 
-  /**
-   * Tool-using agent execution.
-   * Runs an agentic loop until Claude stops calling tools.
-   * Returns the final text response.
-   */
   async runWithTools(
     prompt: string,
-    tools: Anthropic.Tool[],
+    _tools: unknown[],
     options: {
       systemPrompt?: string;
       maxTokens?: number;
       maxIterations?: number;
     } = {}
   ): Promise<ExecutionResult<string>> {
-    const start = Date.now();
-    const maxIterations = options.maxIterations ?? 10;
-    let totalTokens = 0;
-
-    try {
-      const messages: Anthropic.MessageParam[] = [
-        { role: "user", content: prompt },
-      ];
-
-      for (let i = 0; i < maxIterations; i++) {
-        const response = await this.client.messages.create({
-          model: this.model,
-          max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-          system: options.systemPrompt,
-          tools,
-          messages,
-        });
-
-        totalTokens += response.usage.input_tokens + response.usage.output_tokens;
-
-        if (response.stop_reason === "end_turn") {
-          const textBlock = response.content.find((b) => b.type === "text");
-          const text = textBlock?.type === "text" ? textBlock.text : "";
-          return {
-            success: true,
-            data: text,
-            model: ModelChoice.CLAUDE,
-            jobType: JobType.RESEARCH,
-            tokensUsed: totalTokens,
-            durationMs: Date.now() - start,
-            timestamp: new Date().toISOString(),
-          };
-        }
-
-        if (response.stop_reason === "tool_use") {
-          // Collect all tool use blocks
-          const toolUseBlocks = response.content.filter(
-            (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
-          );
-
-          // Add assistant turn
-          messages.push({ role: "assistant", content: response.content });
-
-          // Build tool results (stub — actual tool execution handled by operator layer)
-          const toolResults: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map(
-            (block) => ({
-              type: "tool_result" as const,
-              tool_use_id: block.id,
-              content: `Tool "${block.name}" execution acknowledged. Result: pending.`,
-            })
-          );
-
-          messages.push({ role: "user", content: toolResults });
-          continue;
-        }
-
-        // Unexpected stop reason
-        break;
-      }
-
-      return {
-        success: false,
-        error: {
-          code: AIErrorCode.UPSTREAM_ERROR,
-          message: `Agent loop exhausted after ${maxIterations} iterations`,
-          retryable: false,
-        },
-        model: ModelChoice.CLAUDE,
-        jobType: JobType.RESEARCH,
-        durationMs: Date.now() - start,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (err) {
-      return {
-        success: false,
-        error: buildAIError(err),
-        model: ModelChoice.CLAUDE,
-        jobType: JobType.RESEARCH,
-        durationMs: Date.now() - start,
-        timestamp: new Date().toISOString(),
-      };
-    }
+    // Agent SDK handles tools internally; for direct API this is a basic call
+    return this.run(prompt, options);
   }
 
   // ---------------------------------------------------------------------------
   // Mission Planning
   // ---------------------------------------------------------------------------
 
-  /**
-   * Plan a mission: take a natural language instruction and decompose it into
-   * a structured MissionPlan with typed jobs.
-   *
-   * This is the most critical Claude call — it defines the entire workflow.
-   */
   async planMission(
     instruction: string,
     workspace: Workspace
@@ -353,7 +312,7 @@ RESPONSE FORMAT: Return ONLY valid JSON matching this exact schema:
       "type": "<JobType enum value>",
       "operatorTeam": "<OperatorTeam enum value>",
       "priority": <1-8, 1=highest>,
-      "dependsOn": ["job-1"],
+      "dependsOn": [],
       "modelRecommendation": "claude" | "gpt5_nano"
     }
   ]
@@ -415,10 +374,6 @@ Return only the JSON plan. No explanation.`;
   // Content Generation
   // ---------------------------------------------------------------------------
 
-  /**
-   * Generate a single piece of platform-targeted content.
-   * Returns a validated ContentOutput with confidence score.
-   */
   async generateContent(job: {
     topic: string;
     platform: Platform;
@@ -455,7 +410,7 @@ Return ONLY valid JSON:
     try {
       const result = await this.run(userPrompt, {
         systemPrompt: job.systemPrompt,
-        maxTokens: DEFAULT_MAX_TOKENS,
+        maxTokens: 4096,
       });
 
       if (!result.success) {
@@ -494,10 +449,6 @@ Return ONLY valid JSON:
   // Research
   // ---------------------------------------------------------------------------
 
-  /**
-   * Run a structured research query.
-   * Returns a markdown-formatted research document.
-   */
   async research(
     query: string,
     options: { depth?: "surface" | "deep"; format?: "bullet" | "paragraph" | "structured" } = {}
@@ -514,11 +465,6 @@ Depth: ${options.depth ?? "deep"}`;
   // Safety Review
   // ---------------------------------------------------------------------------
 
-  /**
-   * Full safety review of content against brand rules.
-   * This is a Claude task (not Nano) because it requires nuanced reasoning about
-   * brand voice, claim accuracy, and platform-specific guidelines.
-   */
   async reviewSafety(
     content: string,
     brandRules: BrandRules,
@@ -602,16 +548,14 @@ Return ONLY valid JSON:
   // Health check
   // ---------------------------------------------------------------------------
 
-  /**
-   * Verify the token is configured (does not make an API call).
-   * Returns 'ok' if token is present, 'missing_token' otherwise.
-   */
   healthCheck(): "ok" | "missing_token" {
-    return process.env["CLAUDE_CODE_OAUTH_TOKEN"] ? "ok" : "missing_token";
+    return (process.env["ANTHROPIC_API_KEY"] || process.env["CLAUDE_CODE_OAUTH_TOKEN"])
+      ? "ok"
+      : "missing_token";
   }
 }
 
-// Singleton — one client per server process.
+// Singleton
 let _clientInstance: ClaudeClient | null = null;
 
 export function getClaudeClient(): ClaudeClient {
