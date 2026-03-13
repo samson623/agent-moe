@@ -122,6 +122,17 @@ export class JobQueue {
   // ---------------------------------------------------------------------------
 
   /**
+   * Resets a failed job back to pending for retry.
+   */
+  async markPending(jobId: string): Promise<void> {
+    const client = createAdminClient()
+    const { error } = await updateJobStatus(client, jobId, 'pending')
+    if (error) {
+      console.error(`[JobQueue] markPending failed for job ${jobId}: ${error}`)
+    }
+  }
+
+  /**
    * Marks a job as running and records started_at.
    */
   async markRunning(jobId: string): Promise<void> {

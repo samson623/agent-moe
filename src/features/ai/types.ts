@@ -503,8 +503,8 @@ export interface SafetyReview {
   riskLevel: RiskLevel;
   flags: SafetyFlag[];
   toneScore: number; // 0-1, how close to brand voice
-  revisedContent?: string;
-  revisionNotes?: string;
+  revisedContent?: string | null;
+  revisionNotes?: string | null;
   reviewedAt: string;
 }
 
@@ -599,8 +599,8 @@ export const SafetyReviewSchema = z.object({
     })
   ),
   toneScore: z.number().min(0).max(1),
-  revisedContent: z.string().optional(),
-  revisionNotes: z.string().optional(),
+  revisedContent: z.string().nullable().optional(),
+  revisionNotes: z.string().nullable().optional(),
   reviewedAt: z.string(),
 });
 

@@ -18,6 +18,8 @@
 
 import 'server-only'
 
+import { createAdminClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/supabase/queries/activity'
 import { OperatorFactory } from '@/features/ai/operator-factory'
 import {
   type Workspace,
@@ -170,6 +172,12 @@ function extractConfidenceScore(data: unknown): number | undefined {
   return undefined
 }
 
+function formatDurationForLog(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
+  return `${(ms / 60_000).toFixed(1)}m`
+}
+
 // ---------------------------------------------------------------------------
 // ExecutionEngine
 // ---------------------------------------------------------------------------
@@ -189,6 +197,9 @@ export class ExecutionEngine {
   async execute(options: ExecutionOptions = {}): Promise<ExecutionSummary> {
     const { maxJobs, dryRun = false } = options
     const engineStart = Date.now()
+
+    const MAX_RETRIES = 2
+    const retryCount = new Map<string, number>()
 
     let jobsExecuted = 0
     let jobsCompleted = 0
@@ -262,7 +273,19 @@ export class ExecutionEngine {
       if (updatedJob?.status === 'completed') {
         jobsCompleted++
       } else if (updatedJob?.status === 'failed') {
-        jobsFailed++
+        const attempts = (retryCount.get(dbJob.id) ?? 0) + 1
+        retryCount.set(dbJob.id, attempts)
+
+        if (attempts <= MAX_RETRIES) {
+          // Reset to pending so the engine retries this job
+          console.log(
+            `[ExecutionEngine] Job ${dbJob.id} failed (attempt ${attempts}/${MAX_RETRIES + 1}), retrying...`,
+          )
+          await queue.markPending(dbJob.id)
+          // Don't count as failed yet — give it another shot
+        } else {
+          jobsFailed++
+        }
       }
     }
 
@@ -315,8 +338,20 @@ export class ExecutionEngine {
     queue: JobQueue,
   ): Promise<void> {
     const jobStart = Date.now()
+    const client = createAdminClient()
 
     await queue.markRunning(dbJob.id)
+
+    // Log: job started
+    await logActivity(client, {
+      workspace_id: this.workspaceId,
+      actor_type: 'operator',
+      action: 'job.started',
+      entity_type: 'job',
+      entity_id: dbJob.id,
+      summary: `Running "${dbJob.title}" via ${dbJob.operator_team.replace('_', ' ')}`,
+      details: { mission_id: this.missionId, operator_team: dbJob.operator_team },
+    }).catch(() => {})
 
     let result: ExecutionResult<unknown>
 
@@ -333,6 +368,15 @@ export class ExecutionEngine {
         `[ExecutionEngine] Unexpected error executing job ${dbJob.id}: ${message}`,
       )
       await queue.markFailed(dbJob.id, `Unexpected execution error: ${message}`)
+      await logActivity(client, {
+        workspace_id: this.workspaceId,
+        actor_type: 'operator',
+        action: 'job.failed',
+        entity_type: 'job',
+        entity_id: dbJob.id,
+        summary: `"${dbJob.title}" failed: ${message}`,
+        details: { mission_id: this.missionId, error: message },
+      }).catch(() => {})
       return
     }
 
@@ -346,6 +390,17 @@ export class ExecutionEngine {
         durationMs,
         modelChoiceToDb(result.model),
       )
+
+      // Log: job completed
+      await logActivity(client, {
+        workspace_id: this.workspaceId,
+        actor_type: 'operator',
+        action: 'job.completed',
+        entity_type: 'job',
+        entity_id: dbJob.id,
+        summary: `"${dbJob.title}" completed in ${formatDurationForLog(durationMs)} via ${modelChoiceToDb(result.model)}`,
+        details: { mission_id: this.missionId, duration_ms: durationMs, model: modelChoiceToDb(result.model) },
+      }).catch(() => {})
 
       try {
         await createAssetFromJobOutput({
@@ -374,6 +429,16 @@ export class ExecutionEngine {
       }
     } else {
       await queue.markFailed(dbJob.id, result.error.message)
+      // Log: job failed
+      await logActivity(client, {
+        workspace_id: this.workspaceId,
+        actor_type: 'operator',
+        action: 'job.failed',
+        entity_type: 'job',
+        entity_id: dbJob.id,
+        summary: `"${dbJob.title}" failed: ${result.error.message}`,
+        details: { mission_id: this.missionId, error: result.error.message, code: result.error.code },
+      }).catch(() => {})
     }
   }
 
