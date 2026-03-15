@@ -29,6 +29,7 @@ export interface VideoScene {
   script: string;             // Spoken/text content for this scene
   visual_direction: string;   // What should be shown on screen
   duration_seconds: number;   // Estimated duration in seconds
+  image_url?: string;         // Optional exact image to render for this scene
 }
 
 /** Text-based thumbnail direction — no image generation, pure copy + visual brief. */
@@ -89,6 +90,7 @@ export const VideoSceneSchema = z.object({
   script: z.string().min(1),
   visual_direction: z.string().min(1),
   duration_seconds: z.number().positive(),
+  image_url: z.string().min(1).optional(),
 });
 
 export const ThumbnailConceptSchema = z.object({

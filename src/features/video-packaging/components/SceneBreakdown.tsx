@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { VideoScene } from '../hooks/use-video-packages'
 
@@ -48,6 +49,18 @@ export function SceneBreakdown({ scenes: rawScenes }: SceneBreakdownProps) {
                 {scene.duration_seconds}s
               </span>
             </div>
+
+            {scene.image_url && (
+              <div className="overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]">
+                <Image
+                  src={scene.image_url}
+                  alt={`${scene.title} scene image`}
+                  width={1280}
+                  height={720}
+                  className="w-full h-52 object-cover"
+                />
+              </div>
+            )}
 
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
               {scene.script}

@@ -35,6 +35,7 @@ const patchVideoPackageSchema = z.object({
         script: z.string().min(1),
         visual_direction: z.string().min(1),
         duration_seconds: z.number().nonnegative(),
+        image_url: z.string().min(1).optional(),
       }),
     )
     .optional(),

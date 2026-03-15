@@ -13,6 +13,22 @@ export interface UseVideoPackageDetailReturn {
   remove: () => Promise<boolean>
 }
 
+
+function normalizeScene(scene: VideoPackage['scenes'][number]): VideoPackage['scenes'][number] {
+  const raw = scene as VideoPackage['scenes'][number] & { imageUrl?: string }
+  return {
+    ...scene,
+    image_url: scene.image_url ?? raw.imageUrl,
+  }
+}
+
+function normalizeVideoPackage(pkg: VideoPackage): VideoPackage {
+  return {
+    ...pkg,
+    scenes: Array.isArray(pkg.scenes) ? pkg.scenes.map(normalizeScene) : [],
+  }
+}
+
 export function useVideoPackageDetail(
   id: string,
   workspaceId: string,
@@ -50,7 +66,7 @@ export function useVideoPackageDetail(
 
       const json = await res.json() as { data: VideoPackage }
 
-      setPkg(json.data ?? null)
+      setPkg(json.data ? normalizeVideoPackage(json.data) : null)
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Failed to load video package')
@@ -81,7 +97,7 @@ export function useVideoPackageDetail(
         }
 
         const json = await res.json() as { data: VideoPackage }
-        setPkg(json.data ?? null)
+        setPkg(json.data ? normalizeVideoPackage(json.data) : null)
         return true
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to update status')
@@ -108,7 +124,7 @@ export function useVideoPackageDetail(
         }
 
         const json = await res.json() as { data: VideoPackage }
-        setPkg(json.data ?? null)
+        setPkg(json.data ? normalizeVideoPackage(json.data) : null)
         return true
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to update title')
