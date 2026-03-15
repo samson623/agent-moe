@@ -13,6 +13,7 @@ export interface VideoScene {
   script: string
   visual_direction: string
   duration_seconds: number
+  image_url?: string
 }
 
 export interface ThumbnailConcept {
@@ -63,6 +64,22 @@ export interface UseVideoPackagesReturn {
   setPage: (page: number) => void
 }
 
+
+function normalizeScene(scene: VideoScene): VideoScene {
+  const raw = scene as VideoScene & { imageUrl?: string }
+  return {
+    ...scene,
+    image_url: scene.image_url ?? raw.imageUrl,
+  }
+}
+
+function normalizeVideoPackage(pkg: VideoPackage): VideoPackage {
+  return {
+    ...pkg,
+    scenes: Array.isArray(pkg.scenes) ? pkg.scenes.map(normalizeScene) : [],
+  }
+}
+
 export function useVideoPackages(
   workspaceId: string,
   filters?: VideoPackageFilters,
@@ -108,7 +125,7 @@ export function useVideoPackages(
 
       const json = await res.json() as { data: VideoPackage[]; total: number; page: number }
 
-      setPackages(json.data ?? [])
+      setPackages((json.data ?? []).map(normalizeVideoPackage))
       setTotal(json.total ?? 0)
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return

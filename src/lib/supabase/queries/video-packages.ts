@@ -46,6 +46,7 @@ export interface VideoPackageScene {
   script: string
   visual_direction: string
   duration_seconds: number
+  image_url?: string
 }
 
 export interface VideoPackageThumbnailConcept {
