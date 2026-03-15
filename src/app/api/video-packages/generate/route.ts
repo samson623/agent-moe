@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
         script: scene.script,
         visual_direction: scene.visual_direction,
         duration_seconds: scene.duration_seconds,
+        ...(scene.image_url ? { image_url: scene.image_url } : {}),
       })),
       thumbnail_concept: {
         headline: output.thumbnail_concept.headline,
