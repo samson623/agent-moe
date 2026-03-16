@@ -97,7 +97,7 @@ function ConfidenceBar({ score }: { score: number }) {
           style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
         />
       </div>
-      <span className={cn('text-[10px] font-medium tabular-nums', label)}>
+      <span className={cn('text-xs font-medium tabular-nums', label)}>
         {score}%
       </span>
     </div>
@@ -132,17 +132,17 @@ function AssetRow({ asset }: { asset: RecentAsset }) {
           {asset.title ?? 'Untitled Asset'}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          <Badge variant="muted" className="text-[10px] capitalize">
+          <Badge variant="muted" className="text-xs capitalize">
             {asset.asset_type}
           </Badge>
-          <Badge variant={platformVariant} className="text-[10px]">
+          <Badge variant={platformVariant} className="text-xs">
             {platformLabel}
           </Badge>
         </div>
       </div>
 
       <div className="flex flex-col items-end gap-1.5 shrink-0">
-        <span className="text-[10px] text-[var(--text-disabled)]">
+        <span className="text-xs text-[var(--text-disabled)]">
           {timeAgo(asset.created_at)}
         </span>
         {asset.confidence_score != null && (

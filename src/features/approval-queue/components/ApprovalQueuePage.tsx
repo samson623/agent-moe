@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { ShieldCheck } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { ApprovalStats } from './ApprovalStats'
 import { ApprovalFiltersBar } from './ApprovalFilters'
 import { ApprovalCard } from './ApprovalCard'
@@ -12,6 +12,8 @@ import {
   useBulkApprovals,
   useRealtimeApprovals,
 } from '@/features/approval-queue/hooks'
+import { PageWrapper, SectionHeader, EmptyState, GlassCard } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem, MotionFadeIn } from '@/components/nebula/motion'
 import { cn } from '@/lib/utils'
 import type { Approval } from '@/lib/supabase/types'
 
@@ -33,32 +35,6 @@ function SkeletonCard() {
         <div className="h-7 flex-1 bg-[var(--surface-hover)] rounded" />
         <div className="h-7 flex-1 bg-[var(--surface-hover)] rounded" />
       </div>
-    </div>
-  )
-}
-
-function EmptyState() {
-  return (
-    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-      <div className="p-4 rounded-full bg-emerald-500/10 mb-4">
-        <ShieldCheck size={32} className="text-emerald-400" />
-      </div>
-      <h3 className="text-base font-semibold text-[var(--text)] mb-1">Queue is clear</h3>
-      <p className="text-sm text-[var(--text-muted)]">All items have been reviewed</p>
-    </div>
-  )
-}
-
-function SectionHeader({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="col-span-full flex items-center gap-3 pb-1">
-      <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest">
-        {label}
-      </h2>
-      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--surface-hover)] text-[var(--text-muted)]">
-        {count}
-      </span>
-      <div className="flex-1 h-px bg-[var(--border)]" />
     </div>
   )
 }
@@ -103,91 +79,123 @@ export default function ApprovalQueuePage({ workspaceId }: ApprovalQueuePageProp
   const pendingIds = approvals.filter((a) => a.status === 'pending').map((a) => a.id)
 
   const renderCard = (approval: Approval) => (
-    <ApprovalCard
-      key={approval.id}
-      approval={approval}
-      isSelected={selected.has(approval.id)}
-      onSelect={toggle}
-      onDecide={handleDecide}
-      href={`/approvals/${approval.id}`}
-    />
+    <MotionStaggerItem key={approval.id}>
+      <ApprovalCard
+        approval={approval}
+        isSelected={selected.has(approval.id)}
+        onSelect={toggle}
+        onDecide={handleDecide}
+        href={`/approvals/${approval.id}`}
+      />
+    </MotionStaggerItem>
   )
 
   return (
-    <div className="space-y-6 pb-20">
+    <PageWrapper className="space-y-6 pb-20">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text)]">Approval Queue</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Review and control what ships</p>
-      </div>
+      <MotionFadeIn>
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Approval Queue</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Review and control what ships</p>
+        </div>
+      </MotionFadeIn>
 
       {/* Stats */}
-      <ApprovalStats stats={stats} isLoading={isLoading} />
+      <MotionFadeIn delay={0.05}>
+        <ApprovalStats stats={stats} isLoading={isLoading} />
+      </MotionFadeIn>
 
       {/* Filters */}
-      <ApprovalFiltersBar
-        filters={filters}
-        onStatusChange={(s) => { setFilter({ ...filters, status: s as never }) }}
-        onRiskChange={(r) => { setFilter({ ...filters, risk_level: r as never }) }}
-        activeCount={activeFilterCount}
-        onClear={() => { setFilter({}) }}
-      />
+      <MotionFadeIn delay={0.1}>
+        <ApprovalFiltersBar
+          filters={filters}
+          onStatusChange={(s) => { setFilter({ ...filters, status: s as never }) }}
+          onRiskChange={(r) => { setFilter({ ...filters, risk_level: r as never }) }}
+          activeCount={activeFilterCount}
+          onClear={() => { setFilter({}) }}
+        />
+      </MotionFadeIn>
 
       {/* Error */}
       {error && (
-        <div className="px-4 py-3 rounded-[var(--radius)] bg-red-500/10 border border-red-500/30 text-sm text-red-400">
-          {error}
-        </div>
+        <MotionFadeIn>
+          <GlassCard className="bg-red-500/10 border-red-500/30" padding="sm" hover={false}>
+            <span className="text-sm text-red-400">{error}</span>
+          </GlassCard>
+        </MotionFadeIn>
       )}
 
       {/* Select all pending banner */}
       {pendingIds.length > 0 && selected.size === 0 && !isLoading && (
-        <div className="flex items-center justify-between px-4 py-2 rounded-[var(--radius)] bg-[var(--surface-elevated)] border border-[var(--border)]">
-          <span className="text-xs text-[var(--text-muted)]">
-            {pendingIds.length} pending item{pendingIds.length !== 1 ? 's' : ''}
-          </span>
-          <button
-            type="button"
-            onClick={() => { pendingIds.forEach(toggle) }}
-            className="text-xs text-[var(--primary)] hover:underline"
-          >
-            Select all pending
-          </button>
-        </div>
+        <MotionFadeIn>
+          <GlassCard padding="sm" hover={false}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[var(--text-muted)]">
+                {pendingIds.length} pending item{pendingIds.length !== 1 ? 's' : ''}
+              </span>
+              <button
+                type="button"
+                onClick={() => { pendingIds.forEach(toggle) }}
+                className="text-xs text-[var(--primary)] hover:underline"
+              >
+                Select all pending
+              </button>
+            </div>
+          </GlassCard>
+        </MotionFadeIn>
       )}
 
       {/* Content grid */}
-      <div
-        className={cn(
-          'grid gap-4',
-          'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
-        )}
-      >
-        {isLoading ? (
-          <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </>
-        ) : approvals.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            {withMission.length > 0 && (
-              <>
-                <SectionHeader label="Mission Assets" count={withMission.length} />
-                {withMission.map(renderCard)}
-              </>
-            )}
-            {withoutMission.length > 0 && (
-              <>
-                <SectionHeader label="Standalone Assets" count={withoutMission.length} />
-                {withoutMission.map(renderCard)}
-              </>
-            )}
-          </>
-        )}
-      </div>
+      {isLoading ? (
+        <div
+          className={cn(
+            'grid gap-4',
+            'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
+          )}
+        >
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : approvals.length === 0 ? (
+        <MotionFadeIn>
+          <EmptyState
+            icon={CheckCircle}
+            title="All clear"
+            description="All items have been reviewed. Nothing in the queue."
+          />
+        </MotionFadeIn>
+      ) : (
+        <MotionStagger
+          className={cn(
+            'grid gap-4',
+            'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
+          )}
+        >
+          {withMission.length > 0 && (
+            <>
+              <MotionStaggerItem className="col-span-full">
+                <SectionHeader
+                  title="Mission Assets"
+                  description={`${withMission.length} item${withMission.length !== 1 ? 's' : ''}`}
+                />
+              </MotionStaggerItem>
+              {withMission.map(renderCard)}
+            </>
+          )}
+          {withoutMission.length > 0 && (
+            <>
+              <MotionStaggerItem className="col-span-full">
+                <SectionHeader
+                  title="Standalone Assets"
+                  description={`${withoutMission.length} item${withoutMission.length !== 1 ? 's' : ''}`}
+                />
+              </MotionStaggerItem>
+              {withoutMission.map(renderCard)}
+            </>
+          )}
+        </MotionStagger>
+      )}
 
       {/* Batch bar */}
       <BatchApprovalBar
@@ -197,6 +205,6 @@ export default function ApprovalQueuePage({ workspaceId }: ApprovalQueuePageProp
         onClear={clearSelection}
         isPending={isBatchPending || isDeciding}
       />
-    </div>
+    </PageWrapper>
   )
 }

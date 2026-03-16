@@ -9,6 +9,10 @@ import {
   Loader2,
   CheckCircle2,
   Sparkles,
+  FileText,
+  TrendingUp,
+  Wallet,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +24,24 @@ interface MissionInputProps {
 }
 
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
+
+/* ── Quick-prompt chips ──────────────────────────────── */
+const QUICK_PROMPTS = [
+  'Design a premium automation offer and create content to sell it.',
+  'Build a 7-day creator launch sequence with monetization hooks.',
+  'Find the strongest agent angle and package a 4-platform growth campaign.',
+  'Turn browser automation demand into leads, content, and offer assets.',
+];
+
+/* ── Operator team selector ──────────────────────────── */
+const TEAMS = [
+  { key: 'content-strike-team', label: 'Content Strike Team', icon: FileText },
+  { key: 'growth-operator', label: 'Growth Operator', icon: TrendingUp },
+  { key: 'revenue-closer', label: 'Revenue Closer', icon: Wallet },
+  { key: 'brand-guardian', label: 'Brand Guardian', icon: Shield },
+] as const;
+
+type TeamKey = (typeof TEAMS)[number]['key'];
 
 const PRIORITIES: { value: Priority; label: string; color: string; ring: string }[] = [
   {
@@ -52,6 +74,7 @@ export function MissionInput({ onSubmit, isSubmitting }: MissionInputProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('normal');
+  const [selectedTeam, setSelectedTeam] = useState<TeamKey | null>(null);
   const [showDescription, setShowDescription] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -61,12 +84,19 @@ export function MissionInput({ onSubmit, isSubmitting }: MissionInputProps) {
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
     try {
-      await onSubmit(title.trim(), description.trim() || undefined);
+      // Append selected team to description if one is chosen
+      const teamSuffix = selectedTeam
+        ? `\n[Team: ${TEAMS.find((t) => t.key === selectedTeam)?.label}]`
+        : '';
+      const finalDescription = (description.trim() + teamSuffix).trim() || undefined;
+
+      await onSubmit(title.trim(), finalDescription);
       setShowSuccess(true);
       setTimeout(() => {
         setTitle('');
         setDescription('');
         setPriority('normal');
+        setSelectedTeam(null);
         setShowDescription(false);
         setShowSuccess(false);
         titleRef.current?.focus();
@@ -74,7 +104,7 @@ export function MissionInput({ onSubmit, isSubmitting }: MissionInputProps) {
     } catch {
       // Error handling delegated to parent
     }
-  }, [canSubmit, title, description, onSubmit]);
+  }, [canSubmit, title, description, selectedTeam, onSubmit]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && canSubmit) {
@@ -200,6 +230,71 @@ export function MissionInput({ onSubmit, isSubmitting }: MissionInputProps) {
           )}
         </div>
 
+        {/* ── Quick-Prompt Chips ──────────────────────────── */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+            Quick Prompts
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => {
+                  setTitle(prompt);
+                  titleRef.current?.focus();
+                }}
+                disabled={isSubmitting || showSuccess}
+                className={cn(
+                  'px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-medium border',
+                  'border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-secondary)]',
+                  'transition-all duration-150 cursor-pointer text-left',
+                  'hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary-muted)]',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
+                  'disabled:opacity-40 disabled:cursor-not-allowed',
+                  title === prompt && 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary-muted)]'
+                )}
+              >
+                <Sparkles size={10} className="inline mr-1 -mt-px opacity-60" />
+                {prompt.length > 60 ? prompt.slice(0, 57) + '...' : prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Operator Team Selector ─────────────────────── */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+            Operator Team
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {TEAMS.map((team) => {
+              const Icon = team.icon;
+              const isActive = selectedTeam === team.key;
+              return (
+                <button
+                  key={team.key}
+                  type="button"
+                  onClick={() => setSelectedTeam(isActive ? null : team.key)}
+                  disabled={isSubmitting || showSuccess}
+                  className={cn(
+                    'flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius)] border text-left',
+                    'transition-all duration-150 cursor-pointer',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
+                    isActive
+                      ? 'border-[var(--primary)] bg-[var(--primary-muted)] text-[var(--primary)] shadow-sm'
+                      : 'border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-secondary)] hover:border-[var(--border-hover)] hover:text-[var(--text)]',
+                    'disabled:opacity-40 disabled:cursor-not-allowed'
+                  )}
+                >
+                  <Icon size={14} className={isActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'} />
+                  <span className="text-xs font-medium truncate">{team.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
             Priority
@@ -231,15 +326,18 @@ export function MissionInput({ onSubmit, isSubmitting }: MissionInputProps) {
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <span className="text-[10px] text-[var(--text-disabled)]">
+          <span className="text-xs text-[var(--text-disabled)]">
+            {title.length > 1500 && (
+              <span className="text-[var(--danger)] mr-3">{title.length}/2000</span>
+            )}
             {title.trim().length > 0 && (
               <>
                 <Sparkles size={10} className="inline mr-1 -mt-px" />
-                <kbd className="text-[10px] px-1 py-0.5 rounded bg-[var(--surface-elevated)] border border-[var(--border-subtle)]">
+                <kbd className="text-xs px-1 py-0.5 rounded bg-[var(--surface-elevated)] border border-[var(--border-subtle)]">
                   ⌘
                 </kbd>
                 {' + '}
-                <kbd className="text-[10px] px-1 py-0.5 rounded bg-[var(--surface-elevated)] border border-[var(--border-subtle)]">
+                <kbd className="text-xs px-1 py-0.5 rounded bg-[var(--surface-elevated)] border border-[var(--border-subtle)]">
                   Enter
                 </kbd>
                 {' to launch'}

@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { Check, X, RotateCcw } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { GlassCard, StatusBadge } from '@/components/nebula'
 import { RiskBadge } from './RiskBadge'
 import { cn } from '@/lib/utils'
 import type { Approval, ApprovalStatus } from '@/lib/supabase/types'
@@ -19,6 +19,12 @@ function relativeTime(dateStr: string): string {
   return `${days}d ago`
 }
 
+function extractVideoUrl(notes: string | null): string | null {
+  if (!notes || !notes.includes('Video Factory render')) return null
+  const match = notes.match(/URL:\s*(\S+)/)
+  return match?.[1] ?? null
+}
+
 interface ApprovalCardProps {
   approval: Approval
   isSelected: boolean
@@ -27,11 +33,11 @@ interface ApprovalCardProps {
   href: string
 }
 
-const STATUS_STYLES: Record<ApprovalStatus, string> = {
-  pending: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  approved: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
-  revision_requested: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+const STATUS_VARIANT: Record<ApprovalStatus, 'warning' | 'success' | 'danger' | 'primary'> = {
+  pending: 'warning',
+  approved: 'success',
+  rejected: 'danger',
+  revision_requested: 'primary',
 }
 
 const STATUS_LABELS: Record<ApprovalStatus, string> = {
@@ -45,13 +51,12 @@ export function ApprovalCard({ approval, isSelected, onSelect, onDecide, href }:
   const isPending = approval.status === 'pending'
 
   return (
-    <div
+    <GlassCard
+      padding="none"
       className={cn(
-        'relative rounded-[var(--radius)] border transition-all duration-150',
-        'bg-[var(--surface-elevated)]',
         isSelected
           ? 'border-[var(--primary)] shadow-[0_0_0_1px_var(--primary-muted)]'
-          : 'border-[var(--border)] hover:border-[var(--border-subtle)]',
+          : '',
       )}
     >
       {/* Checkbox */}
@@ -73,16 +78,14 @@ export function ApprovalCard({ approval, isSelected, onSelect, onDecide, href }:
         {/* Top row */}
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <RiskBadge risk_level={approval.risk_level} />
-          <Badge variant="outline" className="text-[10px] uppercase tracking-wide border-[var(--border)] text-[var(--text-muted)]">
-            asset
-          </Badge>
-          <Badge
-            variant="outline"
-            className={cn('text-[10px] border', STATUS_STYLES[approval.status])}
-          >
-            {STATUS_LABELS[approval.status]}
-          </Badge>
-          <span className="ml-auto text-[11px] text-[var(--text-disabled)]">
+          <StatusBadge label="asset" variant="default" size="sm" />
+          <StatusBadge
+            label={STATUS_LABELS[approval.status]}
+            variant={STATUS_VARIANT[approval.status]}
+            pulse={approval.status === 'pending'}
+            size="sm"
+          />
+          <span className="ml-auto text-xs md:text-sm text-[var(--text-disabled)]">
             {relativeTime(approval.created_at)}
           </span>
         </div>
@@ -92,16 +95,32 @@ export function ApprovalCard({ approval, isSelected, onSelect, onDecide, href }:
           Asset: {approval.asset_id?.slice(0, 16) ?? 'N/A'}…
         </div>
 
+        {/* Video preview for Video Factory approvals */}
+        {(() => {
+          const videoUrl = extractVideoUrl(approval.notes)
+          if (!videoUrl) return null
+          return (
+            <div className="mb-3" onClick={(e) => e.preventDefault()}>
+              <video
+                src={videoUrl}
+                controls
+                preload="metadata"
+                className="w-full rounded-[var(--radius)] bg-black aspect-[9/16] max-h-48 object-contain"
+              />
+            </div>
+          )
+        })()}
+
         {/* Risk flags */}
         {approval.risk_flags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {approval.risk_flags.map((flag) => (
-              <span
+              <StatusBadge
                 key={flag}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20"
-              >
-                {flag}
-              </span>
+                label={flag}
+                variant="danger"
+                size="sm"
+              />
             ))}
           </div>
         )}
@@ -146,6 +165,6 @@ export function ApprovalCard({ approval, isSelected, onSelect, onDecide, href }:
           </Button>
         </div>
       )}
-    </div>
+    </GlassCard>
   )
 }

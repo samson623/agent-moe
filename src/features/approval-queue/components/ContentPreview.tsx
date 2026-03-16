@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/nebula'
 import type { Asset, Mission, Job } from '@/lib/supabase/types'
 
 interface ContentPreviewProps {
@@ -66,16 +66,10 @@ export function ContentPreview({ assetId, missionId }: ContentPreviewProps) {
       <div className="space-y-4">
         {/* Badges row */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-[10px] text-[var(--text-muted)] border-[var(--border)]">
-            {asset.type}
-          </Badge>
-          <Badge variant="outline" className="text-[10px] text-[var(--text-muted)] border-[var(--border)]">
-            {asset.platform}
-          </Badge>
+          <StatusBadge label={asset.type} variant="default" size="sm" />
+          <StatusBadge label={asset.platform} variant="default" size="sm" />
           {asset.operator_team && (
-            <Badge variant="outline" className="text-[10px] text-[var(--text-muted)] border-[var(--border)]">
-              {asset.operator_team}
-            </Badge>
+            <StatusBadge label={asset.operator_team} variant="primary" size="sm" />
           )}
         </div>
 

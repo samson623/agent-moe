@@ -44,7 +44,7 @@ function FilterPill({
     <button
       onClick={onClick}
       className={cn(
-        'px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-150 whitespace-nowrap',
+        'px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 whitespace-nowrap',
         active
           ? 'bg-[var(--primary)] text-white'
           : 'bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text)] border border-[var(--border)]'
@@ -65,7 +65,7 @@ export function ConnectorFilters({
     <div className="flex flex-col gap-2">
       {/* Status filters */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] text-[var(--text-muted)] font-medium mr-1">Status:</span>
+        <span className="text-xs text-[var(--text-muted)] font-medium mr-1">Status:</span>
         {STATUS_OPTIONS.map((s) => (
           <FilterPill
             key={s}
@@ -78,7 +78,7 @@ export function ConnectorFilters({
 
       {/* Platform filters */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] text-[var(--text-muted)] font-medium mr-1">Platform:</span>
+        <span className="text-xs text-[var(--text-muted)] font-medium mr-1">Platform:</span>
         {PLATFORM_OPTIONS.map((p) => (
           <FilterPill
             key={p}

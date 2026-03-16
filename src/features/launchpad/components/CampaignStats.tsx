@@ -65,7 +65,7 @@ export function CampaignStats({ stats, loading }: CampaignStatsProps) {
                 <p className="text-lg font-bold text-[var(--text)] leading-none tabular-nums">
                   {value}
                 </p>
-                <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{label}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
               </>
             )}
           </div>

@@ -102,7 +102,7 @@ export function CTABuilder({ offer }: CTABuilderProps) {
   }
 
   const CHIP_BASE =
-    'px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-150 whitespace-nowrap'
+    'px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 whitespace-nowrap'
   const CHIP_ACTIVE = 'bg-[var(--primary)] text-white'
   const CHIP_INACTIVE =
     'bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:text-[var(--text)]'
@@ -129,7 +129,7 @@ export function CTABuilder({ offer }: CTABuilderProps) {
 
       {/* Platform chips */}
       <div className="space-y-2">
-        <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wide">
+        <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
           Platforms
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -148,7 +148,7 @@ export function CTABuilder({ offer }: CTABuilderProps) {
 
       {/* Content type chips */}
       <div className="space-y-2">
-        <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wide">
+        <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
           Content Types
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -218,7 +218,7 @@ export function CTABuilder({ offer }: CTABuilderProps) {
                 >
                   {v.urgency_level} urgency
                 </Badge>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color: v.confidence >= 80 ? 'var(--success)' : 'var(--warning)' }}>
+                <span className="text-xs font-bold tabular-nums" style={{ color: v.confidence >= 80 ? 'var(--success)' : 'var(--warning)' }}>
                   {v.confidence}%
                 </span>
               </div>
@@ -238,7 +238,7 @@ export function CTABuilder({ offer }: CTABuilderProps) {
                 type="button"
                 onClick={() => handleCopy(v.button_text, v.id)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium',
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
                   'border transition-all duration-150',
                   copiedId === v.id
                     ? 'bg-[var(--success-muted)] text-[var(--success)] border-[rgba(16,185,129,0.3)]'

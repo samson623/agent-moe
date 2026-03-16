@@ -11,6 +11,7 @@ import { useBrowserTaskStats } from '../hooks/use-browser-task-stats'
 import { useRealtimeBrowserTasks } from '../hooks/use-realtime-browser-tasks'
 import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
 import { useRouter } from 'next/navigation'
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 
 interface BrowserAgentPageProps {
   workspaceId: string
@@ -31,7 +32,7 @@ function StatCard({
 }) {
   return (
     <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] p-4 overflow-hidden">
-      <p className="text-[11px] text-[var(--text-muted)] mb-1">{label}</p>
+      <p className="text-xs md:text-sm text-[var(--text-muted)] mb-1">{label}</p>
       <div className="flex items-center gap-2">
         <p className="text-2xl font-bold tabular-nums" style={{ color }}>
           {value}
@@ -134,34 +135,37 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
   return (
     <div className="space-y-6 p-6 md:p-8">
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={refresh}
-          className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw size={14} />
-        </button>
-        <Button
-          onClick={() => setModalOpen(true)}
-          variant="accent"
-          size="sm"
-          className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-        >
-          <Plus size={14} />
-            New Task
-          </Button>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={refresh}
+            className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw size={14} />
+          </button>
+          <Button
+            onClick={() => setModalOpen(true)}
+            variant="accent"
+            size="sm"
+            className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+          >
+            <Plus size={14} />
+              New Task
+            </Button>
+        </div>
+      </MotionFadeIn>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Tasks"    value={stats?.total ?? 0}          color="#6366f1" />
-        <StatCard label="Running"        value={stats?.running ?? 0}         color="#3b82f6" pulse={(stats?.running ?? 0) > 0} />
-        <StatCard label="Completed Today" value={stats?.completed_today ?? 0} color="#10b981" />
-        <StatCard label="Failed"         value={stats?.failed ?? 0}          color="#ef4444" />
-      </div>
+      <MotionStagger className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MotionStaggerItem><StatCard label="Total Tasks"    value={stats?.total ?? 0}          color="#6366f1" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Running"        value={stats?.running ?? 0}         color="#3b82f6" pulse={(stats?.running ?? 0) > 0} /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Completed Today" value={stats?.completed_today ?? 0} color="#10b981" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Failed"         value={stats?.failed ?? 0}          color="#ef4444" /></MotionStaggerItem>
+      </MotionStagger>
 
       {/* Filters */}
+      <MotionFadeIn delay={0.05}>
       <BrowserTaskFilters
         status={status}
         taskType={taskType}
@@ -171,6 +175,7 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
         onUrlSearchChange={(v) => { setUrlSearch(v); setPage(1) }}
         activeCount={activeFilterCount}
       />
+      </MotionFadeIn>
 
       {/* Task grid */}
       {isLoading ? (
@@ -211,16 +216,17 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <MotionStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {tasks.map((task) => (
-              <BrowserTaskCard
-                key={task.id}
-                task={task}
-                onClick={() => router.push(`/browser/${task.id}`)}
-                onActionComplete={refresh}
-              />
+              <MotionStaggerItem key={task.id}>
+                <BrowserTaskCard
+                  task={task}
+                  onClick={() => router.push(`/browser/${task.id}`)}
+                  onActionComplete={refresh}
+                />
+              </MotionStaggerItem>
             ))}
-          </div>
+          </MotionStagger>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">

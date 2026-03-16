@@ -169,7 +169,7 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
                     )}
                   >
                     <div
-                      className="flex items-center justify-center w-8 h-8 rounded-[var(--radius)] text-[10px] font-bold"
+                      className="flex items-center justify-center w-8 h-8 rounded-[var(--radius)] text-xs font-bold"
                       style={{
                         background: `${opt.color}18`,
                         border: `1px solid ${opt.color}35`,
@@ -199,7 +199,7 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
 
               <div className="flex items-center gap-2">
                 <div
-                  className="flex items-center justify-center w-8 h-8 rounded-[var(--radius)] text-[10px] font-bold"
+                  className="flex items-center justify-center w-8 h-8 rounded-[var(--radius)] text-xs font-bold"
                   style={{
                     background: `${selected.color}18`,
                     border: `1px solid ${selected.color}35`,
@@ -210,7 +210,7 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[var(--text)]">{selected.displayName}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">
+                  <p className="text-xs text-[var(--text-muted)]">
                     {selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce' ? 'OAuth 2.0' :
                      selected.authType === 'api_key' ? 'API Key' : 'Webhook'}
                   </p>

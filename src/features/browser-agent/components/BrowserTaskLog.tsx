@@ -124,7 +124,7 @@ export function BrowserTaskLog({ task }: BrowserTaskLogProps) {
               {step.label}
             </p>
             {step.detail && (
-              <p className="text-[10px] text-[var(--text-muted)] mt-0.5 break-all">{step.detail}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5 break-all">{step.detail}</p>
             )}
           </div>
         </div>
@@ -132,7 +132,7 @@ export function BrowserTaskLog({ task }: BrowserTaskLogProps) {
 
       {/* Retry indicator */}
       {task.retry_count > 0 && task.status !== 'completed' && (
-        <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[var(--text-muted)]">
+        <div className="flex items-center gap-1.5 pt-1 text-xs text-[var(--text-muted)]">
           <RefreshCw size={9} />
           <span>Attempt {task.retry_count + 1} of {task.max_retries + 1}</span>
         </div>

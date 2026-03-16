@@ -161,7 +161,7 @@ export function CreateBrowserTaskModal({
                     )}
                   >
                     <span className="font-semibold block">{t.label}</span>
-                    <span className="text-[10px] opacity-70 leading-tight">{t.description}</span>
+                    <span className="text-xs opacity-70 leading-tight">{t.description}</span>
                   </button>
                 ))}
               </div>

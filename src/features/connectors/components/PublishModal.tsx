@@ -68,7 +68,7 @@ export function PublishModal({ open, connector, onClose, onSuccess }: PublishMod
     { value: 'thread', label: 'Thread' },
     { value: 'script', label: 'Script' },
     { value: 'caption', label: 'Caption' },
-    { value: 'video_concept', label: 'Video' },
+    { value: 'video_concept', label: 'Video Draft' },
     { value: 'cta', label: 'CTA' },
   ]
 
@@ -84,7 +84,7 @@ export function PublishModal({ open, connector, onClose, onSuccess }: PublishMod
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <div>
             <h3 className="text-sm font-semibold text-[var(--text)]">Publish to {connector.name}</h3>
-            <p className="text-[10px] text-[var(--text-muted)] capitalize">{connector.platform}</p>
+            <p className="text-xs text-[var(--text-muted)] capitalize">{connector.platform}</p>
           </div>
           <button onClick={handleClose} className="text-[var(--text-muted)] hover:text-[var(--text)]">
             <X size={16} />
@@ -123,7 +123,7 @@ export function PublishModal({ open, connector, onClose, onSuccess }: PublishMod
                       key={value}
                       onClick={() => setContentType(value)}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-[10px] font-medium transition-all',
+                        'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
                         contentType === value
                           ? 'bg-[var(--primary)] text-white'
                           : 'bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:text-[var(--text)]'
@@ -151,6 +151,11 @@ export function PublishModal({ open, connector, onClose, onSuccess }: PublishMod
                       'focus:outline-none focus:border-[var(--primary)]'
                     )}
                   />
+                  {contentType === 'video_concept' && connector.platform === 'youtube' && (
+                    <p className="mt-1 text-xs text-[var(--warning)]">
+                      This creates a private YouTube draft with title and description only. It does not upload the rendered MP4 file.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -169,7 +174,7 @@ export function PublishModal({ open, connector, onClose, onSuccess }: PublishMod
                     'focus:outline-none focus:border-[var(--primary)]'
                   )}
                 />
-                <p className="text-[10px] text-[var(--text-muted)] mt-1">{content.length} characters</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{content.length} characters</p>
               </div>
 
               {/* Hashtags */}

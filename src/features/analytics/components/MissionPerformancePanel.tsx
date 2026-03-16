@@ -2,6 +2,8 @@
 
 import { cn } from '@/lib/utils'
 import type { MissionPerformance } from '@/features/analytics/types'
+import { GlassCard, SectionHeader, StatusBadge } from '@/components/nebula'
+import { MotionFadeIn } from '@/components/nebula/motion'
 
 interface MissionPerformancePanelProps {
   data: MissionPerformance | null
@@ -36,30 +38,25 @@ function formatTeamName(team: string): string {
 
 export function MissionPerformancePanel({ data, isLoading }: MissionPerformancePanelProps) {
   return (
-    <div
-      className={cn(
-        'p-5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]',
-        'space-y-5',
-      )}
-    >
-      <h3 className="text-sm font-semibold text-[var(--text)]">Mission Performance</h3>
+    <GlassCard hover={false}>
+      <SectionHeader title="Mission Performance" />
 
       {isLoading ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-12 w-1/3 bg-[var(--surface-elevated)] rounded" />
-          <div className="h-2 w-full bg-[var(--surface-elevated)] rounded-full" />
+          <div className="h-12 w-1/3 bg-[var(--skeleton)] rounded" />
+          <div className="h-2 w-full bg-[var(--skeleton)] rounded-full" />
           <div className="space-y-3 mt-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="h-3 w-28 bg-[var(--surface-elevated)] rounded" />
-                <div className="flex-1 h-1.5 bg-[var(--surface-elevated)] rounded-full" />
-                <div className="h-3 w-8 bg-[var(--surface-elevated)] rounded" />
+                <div className="h-3 w-28 bg-[var(--skeleton)] rounded" />
+                <div className="flex-1 h-1.5 bg-[var(--skeleton)] rounded-full" />
+                <div className="h-3 w-8 bg-[var(--skeleton)] rounded" />
               </div>
             ))}
           </div>
         </div>
       ) : data ? (
-        <>
+        <MotionFadeIn>
           {/* Completion rate hero */}
           <div className="space-y-2">
             <div className="flex items-end gap-3">
@@ -71,62 +68,67 @@ export function MissionPerformancePanel({ data, isLoading }: MissionPerformanceP
               </span>
             </div>
             <ProgressBar value={data.completion_rate} color="var(--primary)" height="h-2" />
-            <div className="flex items-center gap-4 text-[10px] text-[var(--text-muted)]">
-              <span>{data.completed} completed</span>
-              <span>{data.failed} failed</span>
-              <span>{data.active} active</span>
-              <span>{data.pending} pending</span>
-              <span>avg {data.avg_jobs_per_mission} jobs/mission</span>
+            <div className="flex items-center gap-3 flex-wrap mt-1">
+              <StatusBadge label={`${data.completed} completed`} variant="success" size="sm" />
+              <StatusBadge label={`${data.failed} failed`} variant="danger" size="sm" />
+              <StatusBadge label={`${data.active} active`} variant="primary" size="sm" />
+              <StatusBadge label={`${data.pending} pending`} variant="default" size="sm" />
+              <span className="text-xs text-[var(--text-muted)]">
+                avg {data.avg_jobs_per_mission} jobs/mission
+              </span>
             </div>
           </div>
 
           {/* Per-operator breakdown */}
           {data.by_operator.length > 0 && (
-            <div className="space-y-3 pt-1 border-t border-[var(--border)]">
-              <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
+            <div className="space-y-3 pt-4 mt-4 border-t border-[var(--border)]">
+              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 By Operator
               </p>
-              {data.by_operator.map((item) => (
-                <div key={item.operator_team} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-[var(--text)]">
-                      {formatTeamName(item.operator_team)}
-                    </span>
-                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
-                      <span>{item.missions} missions</span>
-                      <span
-                        className="font-semibold tabular-nums"
-                        style={{
-                          color:
-                            item.success_rate >= 80
-                              ? 'var(--success)'
-                              : item.success_rate >= 60
-                              ? 'var(--warning)'
-                              : 'var(--danger)',
-                        }}
-                      >
-                        {item.success_rate}%
+              {data.by_operator.map((item) => {
+                const successVariant =
+                  item.success_rate >= 80
+                    ? 'success' as const
+                    : item.success_rate >= 60
+                    ? 'warning' as const
+                    : 'danger' as const
+
+                return (
+                  <div key={item.operator_team} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-[var(--text)]">
+                        {formatTeamName(item.operator_team)}
                       </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[var(--text-muted)]">
+                          {item.missions} missions
+                        </span>
+                        <StatusBadge
+                          label={`${item.success_rate}%`}
+                          variant={successVariant}
+                          size="sm"
+                        />
+                      </div>
                     </div>
+                    <ProgressBar
+                      value={item.success_rate}
+                      color={
+                        item.success_rate >= 80
+                          ? 'var(--success)'
+                          : item.success_rate >= 60
+                          ? 'var(--warning)'
+                          : 'var(--danger)'
+                      }
+                    />
                   </div>
-                  <ProgressBar
-                    value={item.success_rate}
-                    color={
-                      item.success_rate >= 80
-                        ? 'var(--success)'
-                        : item.success_rate >= 60
-                        ? 'var(--warning)'
-                        : 'var(--danger)'
-                    }
-                  />
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
-        </>
+        </MotionFadeIn>
       ) : (
         <p className="text-sm text-[var(--text-muted)]">No mission data available.</p>
       )}
-    </div>
+    </GlassCard>
   )
 }

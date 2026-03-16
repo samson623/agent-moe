@@ -22,16 +22,17 @@ import {
   Clock,
   FileBarChart,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { GlassCard, StatCard, SectionHeader, StatusBadge, EmptyState, PageWrapper } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem, MotionFadeIn } from '@/components/nebula/motion'
+import type { Asset } from '@/lib/supabase/types'
 import { useAssets } from '../hooks/use-assets'
 import { useBulkActions } from '../hooks/use-bulk-actions'
 import { AssetCard } from './AssetCard'
 import { AssetFilters } from './AssetFilters'
 import { BulkActionBar } from './BulkActionBar'
+import { ContentPreviewPanel } from './ContentPreviewPanel'
 
 // ---------------------------------------------------------------------------
 // Content type tab config
@@ -73,9 +74,9 @@ function Skeleton({ className }: { className?: string }) {
 
 function AssetCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
+    <GlassCard hover={false} padding="none">
       <Skeleton className="h-0.5 w-full rounded-none" />
-      <CardContent className="p-4 space-y-3">
+      <div className="p-4 space-y-3">
         <div className="flex items-center gap-2.5">
           <Skeleton className="w-5 h-5 rounded-[3px]" />
           <Skeleton className="w-7 h-7 rounded-[var(--radius-sm)]" />
@@ -94,27 +95,8 @@ function AssetCardSkeleton() {
         </div>
         <Skeleton className="h-1 w-full rounded-full" />
         <Skeleton className="h-3 w-16" />
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatsSkeleton() {
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)]"
-        >
-          <Skeleton className="w-4 h-4 rounded-full" />
-          <div className="space-y-1">
-            <Skeleton className="h-5 w-8" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        </div>
-      ))}
-    </div>
+      </div>
+    </GlassCard>
   )
 }
 
@@ -135,64 +117,12 @@ function ErrorAlert({ message, onRetry }: { message: string; onRetry: () => void
 }
 
 // ---------------------------------------------------------------------------
-// Quick stat
-// ---------------------------------------------------------------------------
-
-function QuickStat({ label, value, icon: Icon }: { label: string; value: number; icon: LucideIcon }) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 p-3 rounded-[var(--radius-lg)]',
-        'border border-[var(--border)] bg-[var(--surface-solid)]',
-      )}
-    >
-      <Icon size={14} className="text-[var(--primary)] shrink-0" />
-      <div>
-        <p className="text-base font-bold text-[var(--text)] leading-none tabular-nums">
-          {value.toLocaleString()}
-        </p>
-        <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
-
-function EmptyState() {
-  return (
-    <div
-      className={cn(
-        'relative rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--border)]',
-        'bg-[var(--surface-solid)] p-16 text-center overflow-hidden',
-      )}
-    >
-      <div className="absolute inset-0 grid-bg opacity-50" aria-hidden="true" />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, var(--accent) 0%, var(--primary) 100%)' }}
-        aria-hidden="true"
-      />
-      <div className="relative flex flex-col items-center gap-3">
-        <Inbox size={36} className="text-[var(--text-disabled)]" />
-        <h3 className="text-lg font-bold text-[var(--text)]">No assets yet</h3>
-        <p className="text-sm text-[var(--text-muted)] max-w-xs mx-auto leading-relaxed">
-          Assets created by operator teams will appear here. Submit a mission to generate content.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Main Page Component
 // ---------------------------------------------------------------------------
 
 export function ContentStudioPage({ workspaceId }: { workspaceId: string }) {
-  const router = useRouter()
   const [activeType, setActiveType] = useState<string>('')
+  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
 
   const {
     assets,
@@ -224,8 +154,12 @@ export function ContentStudioPage({ workspaceId }: { workspaceId: string }) {
   }
 
   const handleAssetClick = (id: string) => {
-    router.push(`/content/${id}`)
+    const asset = assets.find((a) => a.id === id)
+    if (asset) {
+      setPreviewAsset((prev) => (prev?.id === id ? null : asset))
+    }
   }
+
 
   // Derive quick stats from current data
   const statusCounts = assets.reduce<Record<string, number>>((acc, a) => {
@@ -234,131 +168,171 @@ export function ContentStudioPage({ workspaceId }: { workspaceId: string }) {
   }, {})
 
   return (
-    <div className="space-y-6 p-6 md:p-8">
-      {/* ── Header ──────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-2">
-        <Badge variant={isLive ? 'success' : 'warning'}>
-          {isLive ? 'Live' : 'No Workspace'}
-        </Badge>
-        <Button variant="ghost" size="icon-sm" onClick={refresh} title="Refresh">
-          <RefreshCw size={14} />
-        </Button>
-      </div>
-
-      {/* ── Errors ──────────────────────────────────── */}
-      {error && <ErrorAlert message={error} onRetry={refresh} />}
-      {bulkError && <ErrorAlert message={bulkError} onRetry={() => {}} />}
-
-      {/* ── Content type tabs ───────────────────────── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {CONTENT_TABS.map((tab) => {
-          const isActive = activeType === tab.value
-          const TabIcon = tab.icon
-          return (
-            <button
-              key={tab.value || '__all'}
-              onClick={() => handleTypeChange(tab.value)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium transition-all duration-150',
-                isActive
-                  ? 'text-white shadow-[0_0_14px_rgba(59,130,246,0.3)]'
-                  : 'bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--text)]',
-              )}
-              style={isActive ? { background: tab.value ? tab.color : 'var(--primary)' } : undefined}
-            >
-              <TabIcon size={13} />
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── Filter bar ──────────────────────────────── */}
-      <Card>
-        <CardContent className="py-4 px-4">
-          <AssetFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            assetCount={totalCount}
+    <PageWrapper>
+      <div className="space-y-6">
+        {/* ── Header ──────────────────────────────────── */}
+        <MotionFadeIn>
+          <SectionHeader
+            title="Content Studio"
+            description="Manage and review all AI-generated content assets"
+            action={
+              <div className="flex items-center gap-2">
+                <StatusBadge
+                  label={isLive ? 'Live' : 'No Workspace'}
+                  variant={isLive ? 'success' : 'warning'}
+                  pulse={isLive}
+                />
+                <Button variant="ghost" size="icon-sm" onClick={refresh} title="Refresh">
+                  <RefreshCw size={14} />
+                </Button>
+              </div>
+            }
           />
-        </CardContent>
-      </Card>
+        </MotionFadeIn>
 
-      {/* ── Quick stats row ─────────────────────────── */}
-      {loading ? (
-        <StatsSkeleton />
-      ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <QuickStat label="Total Assets" value={totalCount} icon={Layers} />
-          <QuickStat label="Drafts" value={statusCounts['draft'] ?? 0} icon={FileBarChart} />
-          <QuickStat label="In Review" value={statusCounts['review'] ?? 0} icon={Clock} />
-          <QuickStat label="Approved" value={statusCounts['approved'] ?? 0} icon={CheckCircle2} />
-          <QuickStat label="Published" value={statusCounts['published'] ?? 0} icon={Activity} />
-        </div>
-      )}
+        {/* ── Errors ──────────────────────────────────── */}
+        {error && <ErrorAlert message={error} onRetry={refresh} />}
+        {bulkError && <ErrorAlert message={bulkError} onRetry={() => {}} />}
 
-      {/* ── Asset grid ──────────────────────────────── */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <AssetCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : assets.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {assets.map((asset) => (
-            <AssetCard
-              key={asset.id}
-              asset={asset}
-              isSelected={selectedIds.has(asset.id)}
-              onSelect={toggleSelect}
-              onClick={handleAssetClick}
+        {/* ── Content type tabs ───────────────────────── */}
+        <MotionFadeIn delay={0.05}>
+          <div className="flex items-center gap-2 flex-wrap">
+            {CONTENT_TABS.map((tab) => {
+              const isActive = activeType === tab.value
+              const TabIcon = tab.icon
+              return (
+                <button
+                  key={tab.value || '__all'}
+                  onClick={() => handleTypeChange(tab.value)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-medium transition-all duration-150',
+                    isActive
+                      ? 'text-white shadow-[0_0_14px_rgba(59,130,246,0.3)]'
+                      : 'bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--text)]',
+                  )}
+                  style={isActive ? { background: tab.value ? tab.color : 'var(--primary)' } : undefined}
+                >
+                  <TabIcon size={13} />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </MotionFadeIn>
+
+        {/* ── Filter bar ──────────────────────────────── */}
+        <MotionFadeIn delay={0.1}>
+          <GlassCard padding="sm">
+            <AssetFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              assetCount={totalCount}
             />
-          ))}
-        </div>
-      )}
+          </GlassCard>
+        </MotionFadeIn>
 
-      {/* ── Pagination ──────────────────────────────── */}
-      {!loading && assets.length > 0 && (
-        <div className="flex items-center justify-center gap-4 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-            className="gap-1"
-          >
-            <ChevronLeft size={14} />
-            Previous
-          </Button>
-          <span className="text-sm text-[var(--text-muted)] tabular-nums">
-            Page {page} of {pageCount}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= pageCount}
-            onClick={() => setPage(page + 1)}
-            className="gap-1"
-          >
-            Next
-            <ChevronRight size={14} />
-          </Button>
-        </div>
-      )}
+        {/* ── Quick stats row ─────────────────────────── */}
+        <MotionFadeIn delay={0.15}>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <StatCard label="Total Assets" value={totalCount.toLocaleString()} icon={Layers} tone="primary" loading={loading} />
+            <StatCard label="Drafts" value={(statusCounts['draft'] ?? 0).toLocaleString()} icon={FileBarChart} tone="default" loading={loading} />
+            <StatCard label="In Review" value={(statusCounts['review'] ?? 0).toLocaleString()} icon={Clock} tone="warning" loading={loading} />
+            <StatCard label="Approved" value={(statusCounts['approved'] ?? 0).toLocaleString()} icon={CheckCircle2} tone="success" loading={loading} />
+            <StatCard label="Published" value={(statusCounts['published'] ?? 0).toLocaleString()} icon={Activity} tone="accent" loading={loading} />
+          </div>
+        </MotionFadeIn>
 
-      {/* ── Bulk action bar ─────────────────────────── */}
-      <BulkActionBar
-        selectionCount={selectedIds.size}
-        onAction={async (action) => {
-          const ok = await executeBulkAction(action, workspaceId)
-          if (ok) refresh()
-        }}
-        onClear={clearSelection}
-        loading={bulkLoading}
-      />
-    </div>
+        {/* ── Asset grid + preview ─────────────────────── */}
+        <div className={cn('grid gap-6', previewAsset ? 'xl:grid-cols-[1fr_380px]' : '')}>
+          <div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <AssetCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : assets.length === 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title="No assets yet"
+                description="Assets created by operator teams will appear here. Submit a mission to generate content."
+              />
+            ) : (
+              <MotionStagger className={cn(
+                'grid gap-5',
+                previewAsset
+                  ? 'grid-cols-1 md:grid-cols-2'
+                  : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
+              )}>
+                {assets.map((asset) => (
+                  <MotionStaggerItem key={asset.id}>
+                    <AssetCard
+                      asset={asset}
+                      isSelected={selectedIds.has(asset.id)}
+                      onSelect={toggleSelect}
+                      onClick={handleAssetClick}
+                    />
+                  </MotionStaggerItem>
+                ))}
+              </MotionStagger>
+            )}
+          </div>
+
+          {/* Preview panel */}
+          {previewAsset && (
+            <div className="hidden xl:block">
+              <div className="sticky top-20">
+                <ContentPreviewPanel
+                  asset={previewAsset}
+                  onClose={() => setPreviewAsset(null)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Pagination ──────────────────────────────── */}
+        {!loading && assets.length > 0 && (
+          <MotionFadeIn delay={0.1}>
+            <div className="flex items-center justify-center gap-4 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                className="gap-1"
+              >
+                <ChevronLeft size={14} />
+                Previous
+              </Button>
+              <span className="text-sm text-[var(--text-muted)] tabular-nums">
+                Page {page} of {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= pageCount}
+                onClick={() => setPage(page + 1)}
+                className="gap-1"
+              >
+                Next
+                <ChevronRight size={14} />
+              </Button>
+            </div>
+          </MotionFadeIn>
+        )}
+
+        {/* ── Bulk action bar ─────────────────────────── */}
+        <BulkActionBar
+          selectionCount={selectedIds.size}
+          onAction={async (action) => {
+            const ok = await executeBulkAction(action, workspaceId)
+            if (ok) refresh()
+          }}
+          onClear={clearSelection}
+          loading={bulkLoading}
+        />
+      </div>
+    </PageWrapper>
   )
 }

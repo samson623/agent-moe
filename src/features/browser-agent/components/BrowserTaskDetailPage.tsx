@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { MotionFadeIn } from '@/components/nebula/motion'
 import { useBrowserTaskDetail } from '../hooks/use-browser-task-detail'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
 import { useRealtimeBrowserTasks } from '../hooks/use-realtime-browser-tasks'
@@ -83,7 +84,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
   const isRunning = task.status === 'running'
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <MotionFadeIn className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
@@ -107,7 +108,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                 {task.task_type.replace('_', ' ')}
               </h2>
               <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
                 style={{ color: statusColor, background: `${statusColor}18`, border: `1px solid ${statusColor}30` }}
               >
                 {task.status}
@@ -182,7 +183,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">Task Config</p>
-                  <pre className="text-[11px] text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-auto font-mono">
+                  <pre className="text-xs md:text-sm text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-auto font-mono">
                     {JSON.stringify(task.config, null, 2)}
                   </pre>
                 </div>
@@ -190,13 +191,13 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                   {task.mission_id && (
                     <div>
                       <p className="text-[var(--text-muted)]">Mission ID</p>
-                      <p className="text-[var(--text)] font-mono text-[10px]">{task.mission_id}</p>
+                      <p className="text-[var(--text)] font-mono text-xs">{task.mission_id}</p>
                     </div>
                   )}
                   {task.job_id && (
                     <div>
                       <p className="text-[var(--text-muted)]">Job ID</p>
-                      <p className="text-[var(--text)] font-mono text-[10px]">{task.job_id}</p>
+                      <p className="text-[var(--text)] font-mono text-xs">{task.job_id}</p>
                     </div>
                   )}
                   <div>
@@ -261,6 +262,6 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
           )}
         </div>
       </div>
-    </div>
+    </MotionFadeIn>
   )
 }

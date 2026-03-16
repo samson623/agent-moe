@@ -64,7 +64,7 @@ export function TopicScorer({ workspaceId, onScanQueued }: TopicScorerProps) {
           </div>
           <div>
             <CardTitle className="text-sm">Topic Scorer</CardTitle>
-            <p className="text-[11px] text-[var(--text-muted)]">
+            <p className="text-xs md:text-sm text-[var(--text-muted)]">
               Drop any topic — queue it for AI signal scoring
             </p>
           </div>
@@ -76,12 +76,12 @@ export function TopicScorer({ workspaceId, onScanQueued }: TopicScorerProps) {
             <div className="w-2 h-2 rounded-full bg-[var(--success)] mt-1.5 shrink-0 animate-pulse" />
             <div className="flex-1">
               <p className="text-xs font-semibold text-[var(--success)] mb-0.5">Scan queued</p>
-              <p className="text-[11px] text-[var(--text-muted)]">
+              <p className="text-xs md:text-sm text-[var(--text-muted)]">
                 &ldquo;{topic}&rdquo; has been queued for analysis. Check back in ~30 seconds — the signal will appear in your board when ready.
               </p>
               <button
                 onClick={handleReset}
-                className="text-[11px] text-[var(--accent)] mt-2 hover:underline"
+                className="text-xs md:text-sm text-[var(--accent)] mt-2 hover:underline"
               >
                 Score another topic
               </button>

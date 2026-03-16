@@ -56,9 +56,9 @@ export function OpportunityBoard({ signals, isLoading, onSignalClick }: Opportun
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Opportunity Board</CardTitle>
-          <Badge variant="muted" className="text-[10px]">Top {Math.min(signals.length, 10)}</Badge>
+          <Badge variant="muted" className="text-xs">Top {Math.min(signals.length, 10)}</Badge>
         </div>
-        <p className="text-[11px] text-[var(--text-muted)]">Ranked by AI opportunity score</p>
+        <p className="text-xs md:text-sm text-[var(--text-muted)]">Ranked by AI opportunity score</p>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
@@ -111,7 +111,7 @@ export function OpportunityBoard({ signals, isLoading, onSignalClick }: Opportun
                     </div>
 
                     {firstAngle && (
-                      <p className="text-[10px] text-[var(--text-muted)] truncate">
+                      <p className="text-xs text-[var(--text-muted)] truncate">
                         {firstAngle.angle.slice(0, 60)}{firstAngle.angle.length > 60 ? '…' : ''}
                       </p>
                     )}
@@ -124,7 +124,7 @@ export function OpportunityBoard({ signals, isLoading, onSignalClick }: Opportun
                           style={{ width: `${signal.opportunity_score}%`, backgroundColor: barColor }}
                         />
                       </div>
-                      <span className="text-[10px] font-bold tabular-nums" style={{ color: barColor }}>
+                      <span className="text-xs font-bold tabular-nums" style={{ color: barColor }}>
                         {signal.opportunity_score}
                       </span>
                     </div>

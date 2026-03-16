@@ -38,8 +38,9 @@ export function useGenerateVideoPackage(workspaceId: string): UseGenerateVideoPa
         })
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({})) as { error?: string }
-          throw new Error(body.error ?? `Generation failed (${res.status})`)
+          const body = await res.json().catch(() => ({})) as { error?: string; details?: string }
+          const message = [body.error, body.details].filter(Boolean).join(': ')
+          throw new Error(message || `Generation failed (${res.status})`)
         }
 
         const json = await res.json() as { data: VideoPackage }

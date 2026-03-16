@@ -129,7 +129,7 @@ export function VersionHistory({
         <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
           Versions
         </span>
-        <Badge variant="muted" className="text-[10px]">
+        <Badge variant="muted" className="text-xs">
           {versions.length}
         </Badge>
       </div>
@@ -158,7 +158,7 @@ export function VersionHistory({
               >
                 <span
                   className={cn(
-                    'flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0',
+                    'flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0',
                     isCurrent
                       ? 'bg-[var(--primary)] text-white'
                       : 'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
@@ -175,7 +175,7 @@ export function VersionHistory({
                   >
                     {isCurrent ? 'Current' : version.title ?? `Version ${version.version}`}
                   </p>
-                  <p className="text-[10px] text-[var(--text-disabled)]">
+                  <p className="text-xs text-[var(--text-disabled)]">
                     {formatTimestamp(version.created_at)}
                   </p>
                 </div>
@@ -188,7 +188,7 @@ export function VersionHistory({
       {/* Diff view */}
       {showDiff && selectedAsset && currentAsset && selectedAsset.id !== currentAsset.id && (
         <div className="space-y-2 pt-2 border-t border-[var(--border)]">
-          <p className="text-[10px] text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)]">
             Comparing v{selectedAsset.version} → v{currentAsset.version}
           </p>
           <DiffView oldBody={selectedAsset.body} newBody={currentAsset.body} />

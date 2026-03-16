@@ -53,7 +53,7 @@ export function VideoHookDisplay({ hook }: VideoHookDisplayProps) {
     <div className="space-y-4">
       {/* Primary hook */}
       <div>
-        <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
           Primary Hook
         </p>
         <div
@@ -76,7 +76,7 @@ export function VideoHookDisplay({ hook }: VideoHookDisplayProps) {
       {/* Variants */}
       {hook.variants.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+          <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
             Variants
           </p>
           <div className="space-y-2">
@@ -90,7 +90,7 @@ export function VideoHookDisplay({ hook }: VideoHookDisplayProps) {
                 )}
               >
                 <span
-                  className="text-[11px] font-bold shrink-0 mt-0.5 px-1.5 py-0.5 rounded-full"
+                  className="text-xs md:text-sm font-bold shrink-0 mt-0.5 px-1.5 py-0.5 rounded-full"
                   style={{
                     background: 'var(--accent-muted)',
                     color: '#a78bfa',

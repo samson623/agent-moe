@@ -12,6 +12,8 @@ import {
   useOperatorStats,
   useFeedbackInsights,
 } from '@/features/analytics/hooks'
+import { PageWrapper } from '@/components/nebula'
+import { MotionFadeIn } from '@/components/nebula/motion'
 
 import { TimeRangeSelector } from './TimeRangeSelector'
 import { StatsOverview } from './StatsOverview'
@@ -75,85 +77,97 @@ export function AnalyticsDashboard({ workspaceId }: AnalyticsDashboardProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 min-h-0">
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={handleRefresh}
-          className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-[var(--radius)] transition-colors duration-150',
-            'border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]',
-            'text-[var(--text-muted)] hover:text-[var(--text)]',
-          )}
-          aria-label="Refresh analytics"
-          title="Refresh"
-        >
-          <RefreshCw size={13} />
-        </button>
-        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-      </div>
-
-      {/* Stats overview — full width */}
-      <StatsOverview stats={stats?.system ?? null} isLoading={statsLoading} />
-
-      {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-[var(--border)]">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id
-          return (
+    <PageWrapper>
+      <div className="flex flex-col gap-6 min-h-0">
+        {/* Actions */}
+        <MotionFadeIn>
+          <div className="flex items-center justify-end gap-2">
             <button
-              key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={handleRefresh}
               className={cn(
-                'px-4 py-2 text-sm font-medium transition-colors duration-150',
-                'border-b-2 -mb-px',
-                isActive
-                  ? 'border-[var(--primary)] text-[var(--text)]'
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]',
+                'flex items-center justify-center w-8 h-8 rounded-[var(--radius)] transition-colors duration-150',
+                'border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]',
+                'text-[var(--text-muted)] hover:text-[var(--text)]',
               )}
+              aria-label="Refresh analytics"
+              title="Refresh"
             >
-              {tab.label}
+              <RefreshCw size={13} />
             </button>
-          )
-        })}
-      </div>
+            <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          </div>
+        </MotionFadeIn>
 
-      {/* Tab content */}
-      {activeTab === 'overview' && (
-        <div className="flex flex-col gap-5">
-          {/* Leaderboard + Insights side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div className="lg:col-span-2">
-              <OperatorLeaderboard data={operatorData} isLoading={operatorsLoading} />
-            </div>
-            <div className="lg:col-span-1">
-              <FeedbackInsightsPanel
-                insights={insights}
-                isLoading={insightsLoading}
-                onGenerate={generateInsights}
-                workspaceId={workspaceId}
+        {/* Stats overview — full width */}
+        <StatsOverview stats={stats?.system ?? null} isLoading={statsLoading} />
+
+        {/* Tab bar */}
+        <MotionFadeIn delay={0.1}>
+          <div className="flex items-center gap-1 border-b border-[var(--border)]">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium transition-colors duration-150',
+                    'border-b-2 -mb-px',
+                    isActive
+                      ? 'border-[var(--primary)] text-[var(--text)]'
+                      : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]',
+                  )}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </MotionFadeIn>
+
+        {/* Tab content */}
+        {activeTab === 'overview' && (
+          <MotionFadeIn delay={0.15}>
+            <div className="flex flex-col gap-5">
+              {/* Leaderboard + Insights side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="lg:col-span-2">
+                  <OperatorLeaderboard data={operatorData} isLoading={operatorsLoading} />
+                </div>
+                <div className="lg:col-span-1">
+                  <FeedbackInsightsPanel
+                    insights={insights}
+                    isLoading={insightsLoading}
+                    onGenerate={generateInsights}
+                    workspaceId={workspaceId}
+                  />
+                </div>
+              </div>
+
+              {/* Event feed — full width */}
+              <EventFeed
+                events={events}
+                isLoading={eventsLoading}
+                onLoadMore={events.length >= eventsOffset + 20 ? handleLoadMoreEvents : undefined}
               />
             </div>
-          </div>
+          </MotionFadeIn>
+        )}
 
-          {/* Event feed — full width */}
-          <EventFeed
-            events={events}
-            isLoading={eventsLoading}
-            onLoadMore={events.length >= eventsOffset + 20 ? handleLoadMoreEvents : undefined}
-          />
-        </div>
-      )}
+        {activeTab === 'missions' && (
+          <MotionFadeIn delay={0.15}>
+            <MissionPerformancePanel data={missionData} isLoading={missionsLoading} />
+          </MotionFadeIn>
+        )}
 
-      {activeTab === 'missions' && (
-        <MissionPerformancePanel data={missionData} isLoading={missionsLoading} />
-      )}
-
-      {activeTab === 'content' && (
-        <ContentPerformancePanel data={contentData} isLoading={contentLoading} />
-      )}
-    </div>
+        {activeTab === 'content' && (
+          <MotionFadeIn delay={0.15}>
+            <ContentPerformancePanel data={contentData} isLoading={contentLoading} />
+          </MotionFadeIn>
+        )}
+      </div>
+    </PageWrapper>
   )
 }

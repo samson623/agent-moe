@@ -13,9 +13,8 @@ import {
   Mail,
   FileBarChart,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { GlassCard, StatusBadge } from '@/components/nebula'
 import type { Asset, AssetType, AssetStatus, Platform, OperatorTeam } from '@/lib/supabase/types'
 
 // ---------------------------------------------------------------------------
@@ -35,23 +34,23 @@ const ASSET_TYPE_CONFIG: Record<AssetType, { icon: LucideIcon; color: string; la
   report: { icon: FileBarChart, color: '#14b8a6', label: 'Report' },
 }
 
-const STATUS_BADGE_VARIANT: Record<AssetStatus, 'muted' | 'warning' | 'success' | 'info' | 'danger'> = {
-  draft: 'muted',
+const STATUS_VARIANT: Record<AssetStatus, 'default' | 'warning' | 'success' | 'info' | 'danger'> = {
+  draft: 'default',
   review: 'warning',
   approved: 'success',
   published: 'info',
   rejected: 'danger',
-  archived: 'muted',
+  archived: 'default',
 }
 
 const PLATFORM_LABELS: Record<Platform, string> = {
-  x: '𝕏',
+  x: '\u{1d54f}',
   linkedin: 'in',
   instagram: 'IG',
   tiktok: 'TT',
   youtube: 'YT',
-  email: '✉',
-  universal: '🌐',
+  email: '\u2709',
+  universal: '\uD83C\uDF10',
 }
 
 const TEAM_LABELS: Record<OperatorTeam, string> = {
@@ -79,7 +78,7 @@ function formatTimeAgo(date: string): string {
 
 function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text
-  return text.slice(0, maxLen).trimEnd() + '…'
+  return text.slice(0, maxLen).trimEnd() + '\u2026'
 }
 
 // ---------------------------------------------------------------------------
@@ -100,127 +99,128 @@ export function AssetCard({ asset, isSelected, onSelect, onClick }: AssetCardPro
   const confidence = asset.confidence_score
 
   return (
-    <Card
+    <GlassCard
+      padding="none"
       className={cn(
-        'overflow-hidden group cursor-pointer transition-all duration-200',
-        'hover:border-[var(--primary)]/40 hover:shadow-[0_0_16px_rgba(59,130,246,0.1)]',
-        isSelected && 'border-[var(--primary)] shadow-[0_0_20px_rgba(59,130,246,0.15)]',
+        'overflow-hidden group cursor-pointer',
+        isSelected && 'border-[var(--primary)] shadow-[0_0_20px_rgba(139,92,246,0.15)]',
       )}
-      onClick={() => onClick(asset.id)}
     >
-      <div
-        className="h-0.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${typeConfig.color}, ${typeConfig.color}40)` }}
-      />
+      <div onClick={() => onClick(asset.id)}>
+        <div
+          className="h-0.5 w-full"
+          style={{ background: `linear-gradient(90deg, ${typeConfig.color}, ${typeConfig.color}40)` }}
+        />
 
-      <CardContent className="p-4 space-y-3">
-        {/* Top row: checkbox + type badge */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <button
-              className={cn(
-                'flex items-center justify-center w-5 h-5 rounded-[3px] border transition-colors shrink-0',
-                isSelected
-                  ? 'bg-[var(--primary)] border-[var(--primary)]'
-                  : 'border-[var(--border)] hover:border-[var(--primary)]',
-              )}
-              onClick={(e) => {
-                e.stopPropagation()
-                onSelect(asset.id)
-              }}
-              aria-label={isSelected ? 'Deselect asset' : 'Select asset'}
-            >
-              {isSelected && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
+        <div className="p-4 space-y-3">
+          {/* Top row: checkbox + type badge */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <button
+                className={cn(
+                  'flex items-center justify-center w-5 h-5 rounded-[3px] border transition-colors shrink-0',
+                  isSelected
+                    ? 'bg-[var(--primary)] border-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)]',
+                )}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelect(asset.id)
+                }}
+                aria-label={isSelected ? 'Deselect asset' : 'Select asset'}
+              >
+                {isSelected && (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
 
-            <div
-              className="flex items-center justify-center w-7 h-7 rounded-[var(--radius-sm)]"
-              style={{ background: `${typeConfig.color}18`, border: `1px solid ${typeConfig.color}30` }}
-            >
-              <TypeIcon size={14} style={{ color: typeConfig.color }} />
+              <div
+                className="flex items-center justify-center w-7 h-7 rounded-[var(--radius-sm)]"
+                style={{ background: `${typeConfig.color}18`, border: `1px solid ${typeConfig.color}30` }}
+              >
+                <TypeIcon size={14} style={{ color: typeConfig.color }} />
+              </div>
+              <StatusBadge label={typeConfig.label} variant="default" size="sm" />
             </div>
-            <Badge variant="outline" className="text-[10px]">
-              {typeConfig.label}
-            </Badge>
+
+            <StatusBadge
+              label={asset.status}
+              variant={STATUS_VARIANT[asset.status]}
+              size="sm"
+            />
           </div>
 
-          <Badge variant={STATUS_BADGE_VARIANT[asset.status]} className="text-[10px]">
-            {asset.status}
-          </Badge>
-        </div>
+          {/* Title */}
+          <p className="text-sm font-medium text-[var(--text)] leading-tight line-clamp-1">
+            {displayTitle}
+          </p>
 
-        {/* Title */}
-        <p className="text-sm font-medium text-[var(--text)] leading-tight line-clamp-1">
-          {displayTitle}
-        </p>
+          {/* Body preview */}
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-3">
+            {asset.body}
+          </p>
 
-        {/* Body preview */}
-        <p className="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-3">
-          {asset.body}
-        </p>
-
-        {/* Platform + team row */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className={cn(
-              'text-[10px] font-bold px-2 py-0.5 rounded-full',
-              'bg-[var(--surface-elevated)] text-[var(--text-secondary)]',
-              'border border-[var(--border-subtle)]',
-            )}
-          >
-            {PLATFORM_LABELS[asset.platform]}
-          </span>
-          {asset.operator_team && (
+          {/* Platform + team row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span
               className={cn(
-                'text-[10px] font-medium px-2 py-0.5 rounded-full',
-                'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
+                'text-xs font-bold px-2 py-0.5 rounded-full',
+                'bg-[var(--surface-elevated)] text-[var(--text-secondary)]',
                 'border border-[var(--border-subtle)]',
               )}
             >
-              {TEAM_LABELS[asset.operator_team]}
+              {PLATFORM_LABELS[asset.platform]}
             </span>
-          )}
-          <span className="text-[10px] text-[var(--text-muted)] ml-auto tabular-nums">
-            v{asset.version}
-          </span>
-        </div>
-
-        {/* Confidence bar */}
-        {confidence !== null && confidence !== undefined && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
-              <span>Confidence</span>
-              <span className="tabular-nums">{(confidence * 100).toFixed(0)}%</span>
-            </div>
-            <div className="h-1 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${confidence * 100}%`,
-                  background:
-                    confidence > 0.7
-                      ? 'var(--success)'
-                      : confidence > 0.4
-                        ? 'var(--warning)'
-                        : 'var(--danger)',
-                }}
-              />
-            </div>
+            {asset.operator_team && (
+              <span
+                className={cn(
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
+                  'border border-[var(--border-subtle)]',
+                )}
+              >
+                {TEAM_LABELS[asset.operator_team]}
+              </span>
+            )}
+            <span className="text-xs text-[var(--text-muted)] ml-auto tabular-nums">
+              v{asset.version}
+            </span>
           </div>
-        )}
 
-        {/* Footer: timestamp */}
-        <div className="flex items-center justify-between pt-1 border-t border-[var(--border-subtle)]">
-          <span className="text-[10px] text-[var(--text-muted)] tabular-nums">
-            {formatTimeAgo(asset.created_at)}
-          </span>
+          {/* Confidence bar */}
+          {confidence !== null && confidence !== undefined && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-[var(--text-muted)]">
+                <span>Confidence</span>
+                <span className="tabular-nums">{(confidence * 100).toFixed(0)}%</span>
+              </div>
+              <div className="h-1 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${confidence * 100}%`,
+                    background:
+                      confidence > 0.7
+                        ? 'var(--success)'
+                        : confidence > 0.4
+                          ? 'var(--warning)'
+                          : 'var(--danger)',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer: timestamp */}
+          <div className="flex items-center justify-between pt-1 border-t border-[var(--border-subtle)]">
+            <span className="text-xs text-[var(--text-muted)] tabular-nums">
+              {formatTimeAgo(asset.created_at)}
+            </span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   )
 }

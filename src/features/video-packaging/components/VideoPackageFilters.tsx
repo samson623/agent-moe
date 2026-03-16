@@ -67,7 +67,7 @@ export function VideoPackageFilters({ filters, onChange }: VideoPackageFiltersPr
     <div className="space-y-3">
       {/* Platform row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-semibold text-[var(--text-disabled)] uppercase tracking-widest w-14 shrink-0">
+        <span className="text-xs font-semibold text-[var(--text-disabled)] uppercase tracking-widest w-14 shrink-0">
           Platform
         </span>
         {PLATFORMS.map((p) => (
@@ -82,7 +82,7 @@ export function VideoPackageFilters({ filters, onChange }: VideoPackageFiltersPr
 
       {/* Status row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-semibold text-[var(--text-disabled)] uppercase tracking-widest w-14 shrink-0">
+        <span className="text-xs font-semibold text-[var(--text-disabled)] uppercase tracking-widest w-14 shrink-0">
           Status
         </span>
         {STATUSES.map((s) => (

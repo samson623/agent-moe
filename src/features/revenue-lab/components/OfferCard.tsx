@@ -88,7 +88,7 @@ export function OfferCard({ offer, onEdit, onDelete, onSelect, selected }: Offer
           {formatPrice(offer.price_cents, offer.currency)}
         </span>
         {offer.cta_text && (
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-xs">
             {offer.cta_text}
           </Badge>
         )}
@@ -96,7 +96,7 @@ export function OfferCard({ offer, onEdit, onDelete, onSelect, selected }: Offer
 
       {/* Right: status + actions */}
       <div className="flex items-center gap-1.5 shrink-0">
-        <Badge variant={statusVariant} className="capitalize text-[10px]">
+        <Badge variant={statusVariant} className="capitalize text-xs">
           {offer.status}
         </Badge>
 
