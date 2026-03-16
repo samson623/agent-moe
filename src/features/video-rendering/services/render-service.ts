@@ -59,6 +59,7 @@ const BUNDLE_DIR = path.join(process.cwd(), 'remotion-bundle')
 const RENDER_DIR = path.join(process.cwd(), 'public', 'renders')
 
 let cachedBundlePath: string | null = null
+let bundlePromise: Promise<string> | null = null
 
 /**
  * Bundle Remotion compositions. Cached after first invocation.
@@ -66,6 +67,10 @@ let cachedBundlePath: string | null = null
 async function ensureBundle(): Promise<string> {
   if (cachedBundlePath && fs.existsSync(cachedBundlePath)) {
     return cachedBundlePath
+  }
+
+  if (bundlePromise) {
+    return bundlePromise
   }
 
   const { bundle } = await import('@remotion/bundler')
@@ -79,13 +84,17 @@ async function ensureBundle(): Promise<string> {
     'index.ts',
   )
 
-  cachedBundlePath = await bundle({
+  bundlePromise = bundle({
     entryPoint,
     outDir: BUNDLE_DIR,
-    publicDir: PUBLIC_DIR,
   })
 
-  return cachedBundlePath
+  try {
+    cachedBundlePath = await bundlePromise
+    return cachedBundlePath
+  } finally {
+    bundlePromise = null
+  }
 }
 
 /**
@@ -94,6 +103,7 @@ async function ensureBundle(): Promise<string> {
  */
 export function invalidateBundle(): void {
   cachedBundlePath = null
+  bundlePromise = null
 }
 
 /**
@@ -109,8 +119,10 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
     fs.mkdirSync(RENDER_DIR, { recursive: true })
   }
 
-  // Bundle Remotion project
+  // Bundle Remotion project (rebuilds if remotion-bundle/ was deleted)
+  console.log('[render-service] Bundling Remotion compositions…')
   const serveUrl = await ensureBundle()
+  console.log('[render-service] Bundle ready at:', serveUrl)
 
   // Select composition for the target platform
   const compositionId = `video-package-${options.platform}`
@@ -139,13 +151,17 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
         options.platform,
       )
       const customSceneImages = options.customSceneImages ?? []
+      const resolvedSceneImages = sceneImages.map((url) => resolveImageUrl(url, serveUrl))
 
       console.log(
         '[render-service] Custom scene images from metadata:',
         JSON.stringify(customSceneImages),
       )
 
-      options.inputProps.sceneImages = sceneImages
+      // We explicitly copy local public assets into the bundle. This avoids
+      // Remotion re-copying the entire public directory, which races with
+      // concurrent renders on Windows when /public/renders already contains MP4s.
+      options.inputProps.sceneImages = resolvedSceneImages
 
       // Build sceneImageGroups in sorted-scene order so the composition can use
       // narrationImageGroups[index] directly against its own sortedScenes[index].
@@ -157,7 +173,7 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
           return customGroup.map((url) => resolveImageUrl(url, serveUrl))
         }
 
-        const fallbackImage = sceneImages[sortedIndex + 2]
+        const fallbackImage = resolvedSceneImages[sortedIndex + 2]
         return fallbackImage ? [fallbackImage] : []
       })
 
@@ -165,10 +181,24 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
         '[render-service] Final sceneImageGroups:',
         JSON.stringify(options.inputProps.sceneImageGroups),
       )
+
+      // Log per-scene breakdown for debugging
+      sortedScenes.forEach((scene, i) => {
+        const group = options.inputProps.sceneImageGroups?.[i] ?? []
+        const source = (customSceneImages[scene.order - 1] ?? []).length > 0 ? 'CUSTOM' : 'STOCK'
+        console.log(
+          `[render-service]   Scene ${scene.order} "${scene.title}": ${group.length} image(s) [${source}]`,
+          group,
+        )
+      })
     } catch (err) {
       console.warn('[render-service] Failed to fetch scene images, proceeding without:', err)
     }
   }
+
+  console.log('[render-service] Starting renderMedia with inputProps keys:', Object.keys(options.inputProps))
+  console.log('[render-service]   sceneImages count:', options.inputProps.sceneImages?.length ?? 0)
+  console.log('[render-service]   sceneImageGroups count:', options.inputProps.sceneImageGroups?.length ?? 0)
 
   const outputPath = path.join(RENDER_DIR, `${options.videoPackageId}.mp4`)
 
