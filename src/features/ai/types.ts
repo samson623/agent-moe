@@ -330,6 +330,10 @@ export interface PlannedJob {
   priority: number;
   dependsOn: string[]; // references localId
   modelRecommendation: ModelChoice;
+  /** Target platform for content/script/caption jobs */
+  platform?: Platform;
+  /** Duration in seconds for script jobs */
+  durationSeconds?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -556,6 +560,8 @@ export const MissionPlanSchema = z.object({
         priority: z.number().int().min(1),
         dependsOn: z.array(z.string()),
         modelRecommendation: z.nativeEnum(ModelChoice),
+        platform: z.nativeEnum(Platform).optional(),
+        durationSeconds: z.number().positive().optional(),
       })
     )
     .min(1)

@@ -8,6 +8,8 @@ import {
 import { logActivity } from '@/lib/supabase/queries/activity'
 import type { SignalMomentum } from '@/features/growth-engine/types'
 
+export const dynamic = 'force-dynamic'
+
 const CreateSignalSchema = z.object({
   workspace_id: z.string().uuid(),
   topic: z.string().min(1).max(500),

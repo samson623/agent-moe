@@ -4,6 +4,8 @@ import { getConnector, updateConnectorStatus } from '@/lib/supabase/queries/conn
 import { createAdapter } from '@/features/connectors/adapters'
 import type { ConnectorCredentials } from '@/features/connectors/types'
 
+export const dynamic = 'force-dynamic'
+
 type Params = { params: Promise<{ id: string }> }
 
 export async function POST(_req: Request, { params }: Params) {

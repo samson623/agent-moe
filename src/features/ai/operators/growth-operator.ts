@@ -32,6 +32,7 @@ import {
   type TrendJobInput,
 } from "@/features/ai/types";
 import { BaseOperator } from "@/features/ai/operators/base-operator";
+import { normalizePlatformFields } from "@/features/ai/utils/platform-normalization";
 
 // ---------------------------------------------------------------------------
 // Zod schemas for Growth Operator outputs
@@ -260,7 +261,9 @@ Return ONLY valid JSON:
         return { ...result, jobType: JobType.TREND_ANALYSIS } as ExecutionResult<{ signals: GrowthSignal[] }>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizePlatformFields(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, TrendOutputSchema);
 
       this.log("trends_analyzed", { signalCount: validated.signals.length });

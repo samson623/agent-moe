@@ -27,6 +27,7 @@ import {
   MissionPlanSchema,
   ModelChoice,
   Platform,
+  type PlannedJob,
   RiskLevel,
   type Workspace,
   type AIError,
@@ -183,7 +184,7 @@ Return ONLY valid JSON. No explanation before or after the JSON.`;
         status: JobStatus.PENDING,
         priority: pj.priority,
         dependsOn: resolvedDependencies,
-        input: this.buildDefaultInput(pj.type, plan.instruction),
+        input: this.buildDefaultInput(pj.type, plan.instruction, pj),
         createdAt: new Date().toISOString(),
       };
     });
@@ -248,6 +249,16 @@ PLANNING PRINCIPLES:
 5. Jobs at the same priority level can run in parallel
 6. Use dependsOn to encode the dependency graph (localIds only)
 
+CRITICAL — PLATFORM AND JOB TYPE RULES:
+- When the user mentions a specific platform (TikTok, Instagram, YouTube, LinkedIn, X/Twitter), set "platform" to the correct value
+- Platform enum values: "x", "linkedin", "instagram", "tiktok", "youtube", "email", "generic"
+- For TikTok reels, Instagram reels, or YouTube shorts → use type "script_generation" (NOT "content_generation")
+- For Twitter/X threads → use type "thread_generation"
+- For Instagram/TikTok captions → use type "caption_generation"
+- For regular posts → use type "content_generation"
+- For video scripts, include "durationSeconds" (e.g. 30, 45, 60, 90)
+- The safety_review job should use the SAME platform as the content it reviews
+
 RESPONSE FORMAT — return ONLY valid JSON:
 {
   "missionId": "<uuid>",
@@ -265,7 +276,9 @@ RESPONSE FORMAT — return ONLY valid JSON:
       "operatorTeam": "<exact OperatorTeam enum value>",
       "priority": <1-8, lower = higher priority>,
       "dependsOn": [],
-      "modelRecommendation": "claude" | "gpt5_nano"
+      "modelRecommendation": "claude" | "gpt5_nano",
+      "platform": "<platform enum value — REQUIRED for content/script/caption/safety jobs>",
+      "durationSeconds": <number — REQUIRED for script_generation jobs>
     }
   ]
 }`;
@@ -300,100 +313,127 @@ RESPONSE FORMAT — return ONLY valid JSON:
   }
 
   /**
-   * Build a minimal default job input for each job type.
-   * In practice, the caller should override this with real context.
-   * This default keeps the decompose() method functional without requiring
-   * the caller to manually build every input object.
+   * Build a job input using the planned job's context (platform, description, duration).
+   * Falls back to sensible defaults when the plan doesn't specify a field.
    */
   private buildDefaultInput(
     jobType: JobType,
-    instruction: string
+    instruction: string,
+    plannedJob?: PlannedJob,
   ): Job["input"] {
-    // Map job types to their default input shapes
-    const contentTypes: JobType[] = [
-      JobType.CONTENT_GENERATION,
-      JobType.THREAD_GENERATION,
-      JobType.SCRIPT_GENERATION,
-      JobType.CAPTION_GENERATION,
-      JobType.CONTENT_REPURPOSING,
-      JobType.CTA_GENERATION,
-    ];
+    const platform = plannedJob?.platform ?? this.inferPlatform(instruction);
+    const topic = plannedJob?.description || instruction;
 
-    const trendTypes: JobType[] = [
-      JobType.TREND_ANALYSIS,
-      JobType.MARKET_ANGLE_FINDING,
-      JobType.AUDIENCE_ANALYSIS,
-      JobType.OPPORTUNITY_GENERATION,
-    ];
+    switch (jobType) {
+      // ── Script jobs (TikTok reels, YouTube Shorts, IG Reels) ───────
+      case JobType.SCRIPT_GENERATION:
+        return {
+          kind: "script",
+          topic,
+          platform: platform as Platform.TIKTOK | Platform.YOUTUBE | Platform.INSTAGRAM,
+          durationSeconds: plannedJob?.durationSeconds ?? 60,
+        };
 
-    const researchTypes: JobType[] = [
-      JobType.RESEARCH,
-    ];
+      // ── Caption jobs (Instagram, TikTok) ───────────────────────────
+      case JobType.CAPTION_GENERATION:
+        return {
+          kind: "caption",
+          topic,
+          platform: platform as Platform.INSTAGRAM | Platform.TIKTOK,
+        };
 
-    const offerTypes: JobType[] = [
-      JobType.OFFER_MAPPING,
-      JobType.FUNNEL_DESIGN,
-      JobType.LEAD_MAGNET_CREATION,
-      JobType.PRICING_STRATEGY,
-    ];
+      // ── Thread jobs (X/Twitter) ────────────────────────────────────
+      case JobType.THREAD_GENERATION:
+        return {
+          kind: "thread",
+          topic,
+        };
 
-    const safetyTypes: JobType[] = [
-      JobType.SAFETY_REVIEW,
-      JobType.SAFETY_TONE_CHECK,
-      JobType.CLAIM_FLAGGING,
-      JobType.TONAL_ALIGNMENT_CHECK,
-    ];
+      // ── Post / CTA / Repurpose jobs ────────────────────────────────
+      case JobType.CONTENT_GENERATION:
+      case JobType.CTA_GENERATION:
+      case JobType.CONTENT_REPURPOSING:
+        return {
+          kind: "content",
+          topic,
+          platform,
+        };
 
-    if (contentTypes.includes(jobType)) {
-      return {
-        kind: "content",
-        topic: instruction,
-        platform: Platform.X,
-      };
+      // ── Content formatting ─────────────────────────────────────────
+      case JobType.CONTENT_FORMATTING:
+        return {
+          kind: "formatting",
+          content: topic,
+          targetPlatform: platform,
+        };
+
+      // ── Trend / research ───────────────────────────────────────────
+      case JobType.TREND_ANALYSIS:
+      case JobType.MARKET_ANGLE_FINDING:
+      case JobType.AUDIENCE_ANALYSIS:
+      case JobType.OPPORTUNITY_GENERATION:
+        return {
+          kind: "trend",
+          niche: instruction,
+        };
+
+      case JobType.RESEARCH:
+        return {
+          kind: "research",
+          query: instruction,
+        };
+
+      // ── Offer / funnel ─────────────────────────────────────────────
+      case JobType.OFFER_MAPPING:
+      case JobType.FUNNEL_DESIGN:
+      case JobType.LEAD_MAGNET_CREATION:
+      case JobType.PRICING_STRATEGY:
+        return {
+          kind: "offer",
+          contentSummary: instruction,
+        };
+
+      // ── Safety ─────────────────────────────────────────────────────
+      case JobType.SAFETY_REVIEW:
+      case JobType.SAFETY_TONE_CHECK:
+      case JobType.CLAIM_FLAGGING:
+      case JobType.TONAL_ALIGNMENT_CHECK:
+        return {
+          kind: "safety",
+          content: instruction,
+          platform,
+          brandRules: {
+            allowedTone: ["professional", "friendly"],
+            blockedPhrases: [],
+            blockedClaims: [],
+            requiresDisclaimer: false,
+            maxRiskLevel: RiskLevel.MEDIUM,
+          },
+        };
+
+      // ── Scoring / formatting fallback ──────────────────────────────
+      default:
+        return {
+          kind: "scoring",
+          items: [{ id: "item-1", text: instruction }],
+          criteria: "relevance and quality",
+        };
     }
+  }
 
-    if (trendTypes.includes(jobType)) {
-      return {
-        kind: "trend",
-        niche: instruction,
-      };
-    }
-
-    if (researchTypes.includes(jobType)) {
-      return {
-        kind: "research",
-        query: instruction,
-      };
-    }
-
-    if (offerTypes.includes(jobType)) {
-      return {
-        kind: "offer",
-        contentSummary: instruction,
-      };
-    }
-
-    if (safetyTypes.includes(jobType)) {
-      return {
-        kind: "safety",
-        content: instruction,
-        platform: Platform.X,
-        brandRules: {
-          allowedTone: ["professional", "friendly"],
-          blockedPhrases: [],
-          blockedClaims: [],
-          requiresDisclaimer: false,
-          maxRiskLevel: RiskLevel.MEDIUM,
-        },
-      };
-    }
-
-    // Scoring / formatting fallback
-    return {
-      kind: "scoring",
-      items: [{ id: "item-1", text: instruction }],
-      criteria: "relevance and quality",
-    };
+  /**
+   * Infer the target platform from the mission instruction text.
+   * Falls back to Platform.GENERIC if no platform is detected.
+   */
+  private inferPlatform(instruction: string): Platform {
+    const lower = instruction.toLowerCase();
+    if (lower.includes("tiktok") || lower.includes("tik tok") || lower.includes("reel")) return Platform.TIKTOK;
+    if (lower.includes("instagram") || lower.includes("ig ")) return Platform.INSTAGRAM;
+    if (lower.includes("youtube") || lower.includes("yt ") || lower.includes("shorts")) return Platform.YOUTUBE;
+    if (lower.includes("linkedin")) return Platform.LINKEDIN;
+    if (lower.includes("twitter") || lower.includes(" x post") || lower.includes("tweet")) return Platform.X;
+    if (lower.includes("email") || lower.includes("newsletter")) return Platform.EMAIL;
+    return Platform.GENERIC;
   }
 
   private buildError(err: unknown): AIError {

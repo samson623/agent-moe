@@ -110,17 +110,31 @@ async function queryAgentSDK(prompt: string): Promise<string> {
         maxTurns: 1,
       },
     })) {
-      // Collect text from assistant messages
-      if (message.type === "assistant" && message.message?.content) {
-        for (const block of message.message.content) {
-          if (block.type === "text") {
-            resultText += block.text;
+      // Check for assistant-level errors (auth failures, rate limits, etc.)
+      if (message.type === "assistant") {
+        if (message.error) {
+          throw new Error(`Agent SDK assistant error: ${message.error}`);
+        }
+        if (message.message?.content) {
+          for (const block of message.message.content) {
+            if (block.type === "text") {
+              resultText += block.text;
+            }
           }
         }
       }
-      // Also check for result field (final output)
-      if ("result" in message && typeof message.result === "string") {
-        resultText = message.result;
+
+      // Handle result messages (final output from the SDK)
+      if (message.type === "result") {
+        if (message.is_error || message.subtype !== "success") {
+          const errors = "errors" in message && Array.isArray(message.errors)
+            ? message.errors.join("; ")
+            : `SDK error: ${message.subtype}`;
+          throw new Error(`Agent SDK execution failed: ${errors}`);
+        }
+        if ("result" in message && typeof message.result === "string") {
+          resultText = message.result;
+        }
       }
     }
 
@@ -296,6 +310,16 @@ MODEL RECOMMENDATIONS:
   status_summary, tag_assignment, confidence_scoring, content_classification, claim_flagging,
   tonal_alignment_check
 
+CRITICAL — PLATFORM AND JOB TYPE RULES:
+- When the user mentions a platform (TikTok, Instagram, YouTube, LinkedIn, X/Twitter), set "platform" to the correct value
+- Platform enum values: "x", "linkedin", "instagram", "tiktok", "youtube", "email", "generic"
+- For TikTok reels, Instagram reels, YouTube shorts → use type "script_generation" (NOT "content_generation")
+- For Twitter/X threads → use type "thread_generation"
+- For Instagram/TikTok captions → use type "caption_generation"
+- For regular posts → use type "content_generation"
+- For video scripts, include "durationSeconds" (e.g. 30, 45, 60, 90)
+- The safety_review job should use the SAME platform as the content it reviews
+
 RESPONSE FORMAT: Return ONLY valid JSON matching this exact schema:
 {
   "missionId": "<string>",
@@ -313,7 +337,9 @@ RESPONSE FORMAT: Return ONLY valid JSON matching this exact schema:
       "operatorTeam": "<OperatorTeam enum value>",
       "priority": <1-8, 1=highest>,
       "dependsOn": [],
-      "modelRecommendation": "claude" | "gpt5_nano"
+      "modelRecommendation": "claude" | "gpt5_nano",
+      "platform": "<platform enum value — REQUIRED for content/script/caption/safety jobs>",
+      "durationSeconds": <number — REQUIRED for script_generation jobs>
     }
   ]
 }`;

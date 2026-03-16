@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createAdminClient } from '@/lib/supabase/server'
-import { getMissions, createMission } from '@/lib/supabase/queries/missions'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { getMissions, createMission, updateMissionStatus } from '@/lib/supabase/queries/missions'
 import { logActivity } from '@/lib/supabase/queries/activity'
+import { planAndExecuteMission } from '@/features/mission-engine/services/orchestrator'
 import type { MissionStatus, MissionPriority } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ const MISSION_STATUSES: MissionStatus[] = [
 
 const createMissionSchema = z.object({
   workspace_id: z.string().uuid(),
-  title: z.string().min(1).max(500),
+  title: z.string().min(1).max(2000),
   description: z.string().max(5000).optional().default(''),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).optional().default('normal'),
 })
@@ -27,6 +28,15 @@ export async function GET(request: NextRequest) {
     if (!workspaceId) {
       return NextResponse.json(
         { error: 'workspace_id query parameter is required' },
+        { status: 400 },
+      )
+    }
+
+    // Validate UUID format
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!UUID_RE.test(workspaceId)) {
+      return NextResponse.json(
+        { error: `Invalid workspace_id format: "${workspaceId}"` },
         { status: 400 },
       )
     }
@@ -80,12 +90,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null)
+    console.log('[POST /api/missions] body:', JSON.stringify(body))
     if (!body) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
     const parsed = createMissionSchema.safeParse(body)
     if (!parsed.success) {
+      console.error('[POST /api/missions] 400 — validation failed:', JSON.stringify(parsed.error.flatten().fieldErrors))
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
         { status: 400 },
@@ -94,12 +106,26 @@ export async function POST(request: NextRequest) {
 
     const { workspace_id, title, description, priority } = parsed.data
 
+    if (!workspace_id) {
+      return NextResponse.json(
+        { error: 'No workspace found. Please log in and ensure a workspace is set up.' },
+        { status: 400 },
+      )
+    }
+
+    // Get the authenticated user's ID
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized — session expired. Please log in again.' }, { status: 401 })
+    }
+
     const client = createAdminClient()
     const { data: mission, error } = await createMission(client, {
       workspace_id,
-      user_id: 'system',
+      user_id: user.id,
       title,
-      instruction: description ?? '',
+      instruction: description?.trim() || title,
       priority,
     })
 
@@ -114,6 +140,13 @@ export async function POST(request: NextRequest) {
       entity_type: 'mission',
       entity_id: mission!.id,
       summary: `Mission created: ${title}`,
+    })
+
+    // Autonomous pipeline: plan + execute entirely server-side.
+    // Fire-and-forget — the response returns immediately so the UI stays snappy.
+    planAndExecuteMission(mission!.id, workspace_id).catch((err) => {
+      console.error(`[POST /api/missions] Autonomous pipeline failed for ${mission!.id}:`, err)
+      updateMissionStatus(client, mission!.id, 'failed').catch(() => {})
     })
 
     return NextResponse.json({ mission }, { status: 201 })

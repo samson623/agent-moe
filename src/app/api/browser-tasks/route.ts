@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getBrowserTasks, createBrowserTask } from '@/lib/supabase/queries/browser-tasks'
 import { BrowserTaskInputSchema } from '@/features/browser-agent/types'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl

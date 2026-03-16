@@ -83,8 +83,15 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
+  const isApiRoute = pathname.startsWith('/api/')
 
   if (!user && !isPublicRoute(pathname)) {
+    if (isApiRoute) {
+      return NextResponse.json(
+        { error: 'Unauthorized - session expired. Please log in again.' },
+        { status: 401 },
+      )
+    }
     // Not authenticated → send to login, preserving the intended destination
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'

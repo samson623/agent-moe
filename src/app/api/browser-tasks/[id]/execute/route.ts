@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getBrowserTask, updateBrowserTask } from '@/lib/supabase/queries/browser-tasks'
 import { TaskExecutor } from '@/features/browser-agent/task-executor'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

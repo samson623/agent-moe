@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getConnectors, createConnector } from '@/lib/supabase/queries/connectors'
 import type { ConnectorPlatform } from '@/lib/supabase/queries/connectors'
 
+export const dynamic = 'force-dynamic'
+
 async function getWorkspaceId(): Promise<{ workspaceId: string | null; error: NextResponse | null }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
