@@ -50,9 +50,14 @@ function getExtensionForMimeType(mimeType: string): string | null {
   }
 }
 
-function resolveSceneIndex(sceneOrder: number, sceneCount: number): number | null {
+/**
+ * Resolve a 1-based scene_order to a 0-based slot index.
+ * Full slot layout: [hook(0), thumbnail(1), narration scenes(2..n+1), cta(n+2)]
+ * Total slots = narrationSceneCount + 3
+ */
+function resolveSceneIndex(sceneOrder: number, totalSlots: number): number | null {
   const index = sceneOrder - 1
-  return index >= 0 && index < sceneCount ? index : null
+  return index >= 0 && index < totalSlots ? index : null
 }
 
 function localFilePathFromPublicUrl(url: string): string | null {
@@ -151,12 +156,12 @@ export async function POST(
       return errorResponse!
     }
 
-    const sceneIndex = resolveSceneIndex(sceneOrder, pkg.scenes.length)
+    const sceneIndex = resolveSceneIndex(sceneOrder, pkg.scenes.length + 3)
     if (sceneIndex === null) {
       return NextResponse.json({ error: 'scene_order is out of range' }, { status: 400 })
     }
 
-    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length)
+    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length + 3)
 
     await fs.mkdir(path.join(UPLOAD_ROOT, id), { recursive: true })
 
@@ -210,7 +215,7 @@ export async function PATCH(
       return errorResponse!
     }
 
-    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length)
+    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length + 3)
 
     // set_scene_urls doesn't need auto-generated images — handle it early
     if (action === 'set_scene_urls') {
@@ -218,7 +223,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'scene_order is required' }, { status: 400 })
       }
 
-      const sceneIndex = resolveSceneIndex(scene_order, pkg.scenes.length)
+      const sceneIndex = resolveSceneIndex(scene_order, pkg.scenes.length + 3)
       if (sceneIndex === null) {
         return NextResponse.json({ error: 'scene_order is out of range' }, { status: 400 })
       }
@@ -247,7 +252,7 @@ export async function PATCH(
       pkg.platform,
     )
 
-    const generatedSceneImages = autoImages.slice(2, 2 + pkg.scenes.length)
+    const generatedSceneImages = autoImages.slice(2, 2 + pkg.scenes.length + 3)
 
     if (action === 'auto_fill_all') {
       currentImages.forEach((group) => {
@@ -273,7 +278,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'scene_order is required' }, { status: 400 })
     }
 
-    const sceneIndex = resolveSceneIndex(scene_order, pkg.scenes.length)
+    const sceneIndex = resolveSceneIndex(scene_order, pkg.scenes.length + 3)
     if (sceneIndex === null) {
       return NextResponse.json({ error: 'scene_order is out of range' }, { status: 400 })
     }
@@ -324,12 +329,12 @@ export async function DELETE(
       return errorResponse!
     }
 
-    const sceneIndex = resolveSceneIndex(sceneOrder, pkg.scenes.length)
+    const sceneIndex = resolveSceneIndex(sceneOrder, pkg.scenes.length + 3)
     if (sceneIndex === null) {
       return NextResponse.json({ error: 'scene_order is out of range' }, { status: 400 })
     }
 
-    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length)
+    const currentImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length + 3)
     await Promise.all((currentImages[sceneIndex] ?? []).map((url) => removeLocalUpload(url)))
     currentImages[sceneIndex] = []
     const metadata = writeCustomSceneImages(pkg.metadata, currentImages)

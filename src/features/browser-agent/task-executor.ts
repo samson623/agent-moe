@@ -12,11 +12,13 @@ import { getBrowserTask, updateBrowserTask, getPendingBrowserTasks } from '@/lib
 import type { Database } from '@/lib/supabase/types'
 import { BrowserRunner } from './browser-runner'
 import type { BrowserTaskResult } from './types'
+import type { Screencast } from './screencast'
 
 type TypedClient = SupabaseClient<Database>
 
 export class TaskExecutor {
   private readonly runner: BrowserRunner
+  private activeScreencast: Screencast | null = null
 
   constructor(browserType: 'chromium' | 'firefox' | 'webkit' = 'chromium') {
     this.runner = new BrowserRunner(browserType)
@@ -48,12 +50,18 @@ export class TaskExecutor {
     try {
       await this.runner.launch()
 
-      const executeWithTimeout = this.withTimeout(
-        this.runner.executeTask(task),
-        task.timeout_ms,
-      )
+      // If live view is enabled, the BrowserRunner will create a screencast
+      // during executeTask(). We capture a reference to it after execution starts.
 
-      const result = await executeWithTimeout
+      const executePromise = this.runner.executeTask(task)
+
+      // Capture screencast reference once BrowserRunner starts it
+      // Small delay to let executeTask set up the screencast before we grab it
+      setTimeout(() => {
+        this.activeScreencast = this.runner.getScreencast()
+      }, 100)
+
+      const result = await this.withTimeout(executePromise, task.timeout_ms)
 
       // Success
       await updateBrowserTask(supabase, taskId, {
@@ -92,10 +100,20 @@ export class TaskExecutor {
         })
       }
     } finally {
+      this.activeScreencast = null
       await this.runner.close().catch((e: unknown) => {
         console.error('[TaskExecutor] Error closing browser:', e)
       })
     }
+  }
+
+  /**
+   * Get the active screencast instance for the currently running task.
+   * Returns null if no task is running or live view is not enabled.
+   * Used by WebSocket server / recorder to subscribe to frames.
+   */
+  getActiveScreencast(): Screencast | null {
+    return this.activeScreencast
   }
 
   /**

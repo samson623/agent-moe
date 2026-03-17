@@ -139,11 +139,18 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
   const totalSeconds = calculateTotalDuration(sceneDurations)
   composition.durationInFrames = Math.ceil(totalSeconds * platformConfig.fps)
 
-  // Resolve background images. Custom scene uploads override auto-selected
-  // scene visuals, while hook / thumbnail / CTA still come from the stock flow.
+  // Resolve background images. Custom scene uploads override ALL slots:
+  // hook, thumbnail, narration scenes, and CTA.
+  //
+  // customSceneImages layout (indexed by scene order - 1, covering ALL slots):
+  //   [0] = hook image(s)
+  //   [1] = thumbnail image(s)
+  //   [2 .. n-1] = narration scene image(s), in scene order
+  //   [n] = CTA image(s)
+  //
+  // Stock images are used as fallback only when no custom image exists for a slot.
   if (!options.inputProps.sceneImages) {
     try {
-      // Sort scenes by order so they align with the composition's sortedScenes.
       const sortedScenes = [...options.inputProps.scenes].sort((a, b) => a.order - b.order)
 
       const sceneImages = await prepareSceneImages(
@@ -151,32 +158,53 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
         options.platform,
       )
       const customSceneImages = options.customSceneImages ?? []
-      const resolvedSceneImages = sceneImages.map((url) => resolveImageUrl(url, serveUrl))
+      const resolvedStockImages = sceneImages.map((url) => resolveImageUrl(url, serveUrl))
 
       console.log(
         '[render-service] Custom scene images from metadata:',
         JSON.stringify(customSceneImages),
       )
 
-      // We explicitly copy local public assets into the bundle. This avoids
-      // Remotion re-copying the entire public directory, which races with
-      // concurrent renders on Windows when /public/renders already contains MP4s.
-      options.inputProps.sceneImages = resolvedSceneImages
+      // Build the final sceneImages array: [hook, thumbnail, ...narration, cta]
+      // For each slot, prefer custom images over stock.
+      const finalSceneImages = resolvedStockImages.map((stockUrl, slotIndex) => {
+        const customGroup = (customSceneImages[slotIndex] ?? []).filter(Boolean)
+        if (customGroup.length > 0) {
+          const resolved = resolveImageUrl(customGroup[0]!, serveUrl)
+          console.log(`[render-service]   Slot ${slotIndex}: CUSTOM → ${resolved}`)
+          return resolved
+        }
+        return stockUrl
+      })
 
-      // Build sceneImageGroups in sorted-scene order so the composition can use
-      // narrationImageGroups[index] directly against its own sortedScenes[index].
-      // customSceneImages is indexed by sceneOrder - 1 (set at upload time via resolveSceneIndex).
+      options.inputProps.sceneImages = finalSceneImages
+
+      // Build sceneImageGroups for narration scenes (allows multi-image cycling).
+      // Narration scenes start at sceneImages index 2.
       options.inputProps.sceneImageGroups = sortedScenes.map((scene, sortedIndex) => {
-        const sceneIndex = scene.order - 1
-        const customGroup = (customSceneImages[sceneIndex] ?? []).filter(Boolean)
+        // Custom images for narration scenes are stored at index (sortedIndex + 2)
+        // in the full customSceneImages array, matching the sceneImages layout.
+        const fullSlotIndex = sortedIndex + 2
+        const customGroup = (customSceneImages[fullSlotIndex] ?? []).filter(Boolean)
         if (customGroup.length > 0) {
           return customGroup.map((url) => resolveImageUrl(url, serveUrl))
         }
 
-        const fallbackImage = resolvedSceneImages[sortedIndex + 2]
+        // Also check legacy layout where narration images were indexed by scene.order - 1
+        const legacyIndex = scene.order - 1
+        const legacyGroup = (customSceneImages[legacyIndex] ?? []).filter(Boolean)
+        if (legacyGroup.length > 0) {
+          return legacyGroup.map((url) => resolveImageUrl(url, serveUrl))
+        }
+
+        const fallbackImage = resolvedStockImages[fullSlotIndex]
         return fallbackImage ? [fallbackImage] : []
       })
 
+      console.log(
+        '[render-service] Final sceneImages:',
+        JSON.stringify(options.inputProps.sceneImages),
+      )
       console.log(
         '[render-service] Final sceneImageGroups:',
         JSON.stringify(options.inputProps.sceneImageGroups),
@@ -185,7 +213,10 @@ export async function renderVideoPackage(options: RenderOptions): Promise<Render
       // Log per-scene breakdown for debugging
       sortedScenes.forEach((scene, i) => {
         const group = options.inputProps.sceneImageGroups?.[i] ?? []
-        const source = (customSceneImages[scene.order - 1] ?? []).length > 0 ? 'CUSTOM' : 'STOCK'
+        const fullSlotIndex = i + 2
+        const hasCustom = (customSceneImages[fullSlotIndex] ?? []).filter(Boolean).length > 0
+          || (customSceneImages[scene.order - 1] ?? []).filter(Boolean).length > 0
+        const source = hasCustom ? 'CUSTOM' : 'STOCK'
         console.log(
           `[render-service]   Scene ${scene.order} "${scene.title}": ${group.length} image(s) [${source}]`,
           group,

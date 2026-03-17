@@ -13,7 +13,10 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCreateBrowserTask } from '../hooks/use-create-browser-task'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
+import { useCreateBrowserTaskSchedule } from '../hooks/use-create-browser-task-schedule'
 import type { BrowserTaskType } from '../types'
+import { SchedulePicker, buildScheduleFromPicker } from './SchedulePicker'
+import type { ExecutionMode } from './SchedulePicker'
 
 interface CreateBrowserTaskModalProps {
   workspaceId: string
@@ -51,14 +54,24 @@ export function CreateBrowserTaskModal({
   const [instructions, setInstructions] = useState('')
   const [priority, setPriority] = useState(5)
   const [timeoutMs, setTimeoutMs] = useState(30000)
-  const [executeImmediately, setExecuteImmediately] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [enableLiveView, setEnableLiveView] = useState(false)
   const [isDone, setIsDone] = useState(false)
+
+  // Schedule picker state
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>('immediate')
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [recurringType, setRecurringType] = useState<'daily' | 'weekly' | 'custom_cron'>('daily')
+  const [scheduleTime, setScheduleTime] = useState('09:00')
+  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState(1)
+  const [customCron, setCustomCron] = useState('')
+  const [scheduleName, setScheduleName] = useState('')
 
   const { create, isCreating, error: createError } = useCreateBrowserTask()
   const { execute, isExecuting } = useExecuteBrowserTask()
+  const { create: createSchedule, isCreating: isCreatingSchedule, error: scheduleError } = useCreateBrowserTaskSchedule()
 
-  const isSubmitting = isCreating || isExecuting
+  const isSubmitting = isCreating || isExecuting || isCreatingSchedule
 
   function reset() {
     setUrl('')
@@ -66,9 +79,16 @@ export function CreateBrowserTaskModal({
     setInstructions('')
     setPriority(5)
     setTimeoutMs(30000)
-    setExecuteImmediately(true)
     setShowAdvanced(false)
+    setEnableLiveView(false)
     setIsDone(false)
+    setExecutionMode('immediate')
+    setScheduledAt('')
+    setRecurringType('daily')
+    setScheduleTime('09:00')
+    setScheduleDayOfWeek(1)
+    setCustomCron('')
+    setScheduleName('')
   }
 
   function handleClose() {
@@ -79,28 +99,73 @@ export function CreateBrowserTaskModal({
   async function handleSubmit() {
     if (!url || !instructions) return
 
-    const task = await create({
-      workspace_id: workspaceId,
-      task_type: taskType,
-      url,
-      instructions,
-      priority,
-      timeout_ms: timeoutMs,
-    })
+    if (executionMode === 'immediate') {
+      // Existing flow: create task + optionally execute
+      const task = await create({
+        workspace_id: workspaceId,
+        task_type: taskType,
+        url,
+        instructions,
+        priority,
+        timeout_ms: timeoutMs,
+        config: enableLiveView ? { enable_live_view: true } : undefined,
+      })
 
-    if (!task) return
-
-    if (executeImmediately) {
+      if (!task) return
       await execute(task.id)
+    } else {
+      // Schedule flow: create a schedule
+      if (!scheduleName) return
+
+      const scheduleConfig = buildScheduleFromPicker({
+        mode: executionMode,
+        recurringType,
+        scheduleTime,
+        scheduleDayOfWeek,
+        customCron,
+        scheduledAt,
+      })
+
+      const schedule = await createSchedule({
+        workspace_id: workspaceId,
+        name: scheduleName,
+        schedule_type: scheduleConfig.schedule_type,
+        cron_expression: scheduleConfig.cron_expression,
+        scheduled_at: scheduleConfig.scheduled_at,
+        task_type: taskType,
+        url,
+        instructions,
+        priority,
+        timeout_ms: timeoutMs,
+      })
+
+      if (!schedule) return
     }
 
     setIsDone(true)
     onCreated?.()
   }
 
+  const displayError = createError || scheduleError
+
+  const isFormValid = url && instructions && (
+    executionMode === 'immediate' ||
+    (scheduleName && (
+      executionMode === 'scheduled_once' ? scheduledAt : true
+    ) && (
+      executionMode === 'recurring' && recurringType === 'custom_cron' ? customCron : true
+    ))
+  )
+
+  const submitLabel = executionMode === 'immediate'
+    ? 'Create & Execute'
+    : executionMode === 'scheduled_once'
+      ? 'Schedule Task'
+      : 'Create Recurring Schedule'
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Browser Task</DialogTitle>
           <DialogDescription>
@@ -117,9 +182,15 @@ export function CreateBrowserTaskModal({
               <span className="text-2xl">✓</span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-[var(--text)]">Task created!</p>
+              <p className="text-sm font-semibold text-[var(--text)]">
+                {executionMode === 'immediate' ? 'Task created!' : 'Schedule created!'}
+              </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                {executeImmediately ? 'Task is queued for execution.' : 'Task is pending. Execute it from the task list.'}
+                {executionMode === 'immediate'
+                  ? 'Task is queued for execution.'
+                  : executionMode === 'scheduled_once'
+                    ? 'Task will run at the scheduled time.'
+                    : 'Tasks will run on the configured schedule.'}
               </p>
             </div>
             <div className="flex gap-2 justify-center pt-1">
@@ -173,7 +244,7 @@ export function CreateBrowserTaskModal({
               <textarea
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Describe what you want the agent to do on this page…"
+                placeholder="Describe what you want the agent to do on this page..."
                 rows={3}
                 className={cn(
                   'w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]',
@@ -221,6 +292,24 @@ export function CreateBrowserTaskModal({
               </div>
             </div>
 
+            {/* Schedule Picker */}
+            <SchedulePicker
+              mode={executionMode}
+              onModeChange={setExecutionMode}
+              scheduledAt={scheduledAt}
+              onScheduledAtChange={setScheduledAt}
+              recurringType={recurringType}
+              onRecurringTypeChange={setRecurringType}
+              scheduleTime={scheduleTime}
+              onScheduleTimeChange={setScheduleTime}
+              scheduleDayOfWeek={scheduleDayOfWeek}
+              onScheduleDayOfWeekChange={setScheduleDayOfWeek}
+              customCron={customCron}
+              onCustomCronChange={setCustomCron}
+              scheduleName={scheduleName}
+              onScheduleNameChange={setScheduleName}
+            />
+
             {/* Advanced toggle */}
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
@@ -230,35 +319,43 @@ export function CreateBrowserTaskModal({
             </button>
 
             {showAdvanced && (
-              <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-elevated)] p-3 text-xs text-[var(--text-muted)]">
-                Advanced config (selectors, form data) can be set via API or edited after creation.
+              <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-elevated)] p-3 space-y-3">
+                {/* Live View Toggle */}
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-xs font-medium text-[var(--text)]">Live Browser View</p>
+                    <p className="text-xs text-[var(--text-muted)]">Watch the browser in real-time as it executes</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={enableLiveView}
+                    onClick={() => setEnableLiveView(!enableLiveView)}
+                    className={cn(
+                      'relative inline-flex h-5 w-9 shrink-0 rounded-full border transition-colors',
+                      enableLiveView
+                        ? 'bg-[var(--accent)] border-[var(--accent)]'
+                        : 'bg-[var(--surface)] border-[var(--border)]'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                        enableLiveView ? 'translate-x-4' : 'translate-x-0'
+                      )}
+                    />
+                  </button>
+                </label>
+
+                <p className="text-xs text-[var(--text-muted)]">
+                  Advanced config (selectors, form data) can be set via API or edited after creation.
+                </p>
               </div>
             )}
 
-            {/* Execute immediately toggle */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setExecuteImmediately(!executeImmediately)}
-                className={cn(
-                  'relative w-9 h-5 rounded-full transition-colors border',
-                  executeImmediately
-                    ? 'bg-[var(--primary)] border-[var(--primary)]'
-                    : 'bg-[var(--surface-elevated)] border-[var(--border)]'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm',
-                    executeImmediately ? 'translate-x-4' : 'translate-x-0.5'
-                  )}
-                />
-              </button>
-              <label className="text-xs text-[var(--text)]">Execute immediately after creating</label>
-            </div>
-
-            {createError && (
+            {displayError && (
               <p className="text-xs text-[var(--danger)] bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] rounded-[var(--radius)] px-3 py-2">
-                {createError}
+                {displayError}
               </p>
             )}
 
@@ -270,13 +367,13 @@ export function CreateBrowserTaskModal({
                 variant="accent"
                 size="sm"
                 onClick={handleSubmit}
-                disabled={!url || !instructions || isSubmitting}
+                disabled={!isFormValid || isSubmitting}
                 className="flex-1"
               >
                 {isSubmitting ? (
-                  <><Loader2 size={12} className="animate-spin mr-1.5" />Creating…</>
+                  <><Loader2 size={12} className="animate-spin mr-1.5" />Creating...</>
                 ) : (
-                  executeImmediately ? 'Create & Execute' : 'Create Task'
+                  submitLabel
                 )}
               </Button>
             </div>

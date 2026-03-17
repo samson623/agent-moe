@@ -19,7 +19,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
 export const HOOK_DURATION_SECONDS = 3;
 export const CTA_DURATION_SECONDS = 4;
 export const THUMBNAIL_DURATION_SECONDS = 2;
-export const TRANSITION_DURATION_FRAMES = 15; // 0.5s at 30fps
+export const TRANSITION_DURATION_FRAMES = 24; // 0.8s at 30fps — smooth modern crossfade
 
 export function getPlatformConfig(platform: string): PlatformConfig {
   return PLATFORM_CONFIGS[platform] ?? PLATFORM_CONFIGS.universal!;

@@ -75,6 +75,12 @@ export async function middleware(request: NextRequest) {
     },
   )
 
+  // Allow CLI / service-role access via Bearer token (e.g. from Claude Code)
+  const authHeader = request.headers.get('authorization')
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const isServiceAuth =
+    serviceKey && authHeader === `Bearer ${serviceKey}`
+
   // IMPORTANT: Do not add any logic between createServerClient and
   // getUser(). A simple mistake will make it very hard to debug issues
   // with users being randomly logged out.
@@ -85,7 +91,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isApiRoute = pathname.startsWith('/api/')
 
-  if (!user && !isPublicRoute(pathname)) {
+  if (!user && !isServiceAuth && !isPublicRoute(pathname)) {
     if (isApiRoute) {
       return NextResponse.json(
         { error: 'Unauthorized - session expired. Please log in again.' },

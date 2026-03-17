@@ -1,10 +1,11 @@
 import React from 'react';
-import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
-import { springOpacity, slideUp, pulseScale } from '../lib/text-animations';
+import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
+import { springOpacity, slideUp } from '../lib/text-animations';
 import { hexToRgba } from '../lib/color-parser';
 
 const CTA_TYPE_LABELS: Record<string, string> = {
   subscribe: 'Subscribe',
+  follow: 'Follow',
   link_in_bio: 'Link in Bio',
   dm: 'DM Me',
   comment: 'Drop a Comment',
@@ -22,14 +23,13 @@ interface CTASceneProps {
   backgroundImage?: string;
 }
 
-// Floating particle config — 6 particles with staggered animations
 const PARTICLES = [
-  { left: '15%', size: 6, delay: 0, speed: 0.8 },
-  { left: '30%', size: 4, delay: 12, speed: 1.0 },
-  { left: '50%', size: 5, delay: 6, speed: 0.9 },
-  { left: '65%', size: 3, delay: 18, speed: 1.1 },
-  { left: '80%', size: 7, delay: 3, speed: 0.7 },
-  { left: '42%', size: 4, delay: 24, speed: 1.0 },
+  { left: '12%', size: 5, delay: 0, speed: 0.8 },
+  { left: '28%', size: 3, delay: 10, speed: 1.0 },
+  { left: '48%', size: 4, delay: 5, speed: 0.9 },
+  { left: '65%', size: 6, delay: 16, speed: 0.7 },
+  { left: '82%', size: 3, delay: 8, speed: 1.1 },
+  { left: '38%', size: 5, delay: 22, speed: 0.85 },
 ];
 
 export const CTAScene: React.FC<CTASceneProps> = ({
@@ -46,14 +46,28 @@ export const CTAScene: React.FC<CTASceneProps> = ({
 
   const textOpacity = springOpacity(frame, fps, 5);
   const textY = slideUp(frame, fps, 5);
-  const badgeOpacity = springOpacity(frame, fps, 12);
-  const badgeY = slideUp(frame, fps, 12);
+  const badgeOpacity = springOpacity(frame, fps, 14);
+  const badgeY = slideUp(frame, fps, 14);
 
-  // More noticeable pulse for the badge
+  // Badge pulse
   const pulseCycle = ((frame % (fps * 1.2)) / (fps * 1.2));
   const badgePulse = 1 + 0.06 * Math.sin(pulseCycle * Math.PI * 2);
 
-  const pulse = pulseScale(frame, fps);
+  // Ken Burns on background
+  const bgScale = backgroundImage
+    ? interpolate(frame, [0, durationInFrames], [1.0, 1.12], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      })
+    : 1;
+
+  // Cinematic letterbox bars
+  const barProgress = spring({
+    frame: frame - 2,
+    fps,
+    config: { damping: 18, mass: 0.8, stiffness: 60, overshootClamping: true },
+  });
+  const barHeight = interpolate(barProgress, [0, 1], [0, 70]);
 
   return (
     <AbsoluteFill
@@ -61,42 +75,46 @@ export const CTAScene: React.FC<CTASceneProps> = ({
         background: backgroundImage
           ? '#000'
           : `radial-gradient(ellipse at center, ${hexToRgba(primaryColor, 0.2)} 0%, ${backgroundColor} 70%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '32px',
       }}
     >
-      {/* Background image — dimmed */}
+      {/* Background image with Ken Burns */}
       {backgroundImage && (
-        <Img
-          src={backgroundImage}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
-        />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+          <Img
+            src={backgroundImage}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              transform: `scale(${bgScale})`,
+              willChange: 'transform',
+            }}
+          />
+        </div>
       )}
 
       {/* Dark overlay */}
       {backgroundImage && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          }}
-        />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)' }} />
       )}
+
+      {/* Vignette */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Letterbox bars */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${barHeight}px`, background: '#000', zIndex: 10 }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: `${barHeight}px`, background: '#000', zIndex: 10 }} />
 
       {/* Floating particles */}
       {PARTICLES.map((p, i) => {
@@ -122,7 +140,7 @@ export const CTAScene: React.FC<CTASceneProps> = ({
               height: `${p.size}px`,
               borderRadius: '50%',
               background: hexToRgba(accentColor, 0.7),
-              boxShadow: `0 0 ${p.size * 2}px ${hexToRgba(accentColor, 0.4)}`,
+              boxShadow: `0 0 ${p.size * 3}px ${hexToRgba(accentColor, 0.4)}`,
               opacity: particleOpacity,
               pointerEvents: 'none',
             }}
@@ -131,82 +149,78 @@ export const CTAScene: React.FC<CTASceneProps> = ({
       })}
 
       {/* CTA Text */}
-      <div
-        style={{
-          opacity: textOpacity,
-          transform: `translateY(${textY}px) scale(${pulse})`,
-          textAlign: 'center',
-          maxWidth: '80%',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        <p
-          style={{
-            fontSize: '64px',
-            fontWeight: 900,
-            color: '#ffffff',
-            fontFamily: 'system-ui, sans-serif',
-            lineHeight: 1.15,
-            margin: 0,
-            letterSpacing: '-0.01em',
-            textShadow: `0 0 20px ${hexToRgba(accentColor, 0.6)}, 0 0 60px ${hexToRgba(accentColor, 0.3)}, 0 4px 30px rgba(0,0,0,0.5)`,
-          }}
-        >
-          {ctaText}
-        </p>
-      </div>
-
-      {/* CTA type badge — pulsing */}
-      <div
-        style={{
-          opacity: badgeOpacity,
-          transform: `translateY(${badgeY}px) scale(${badgePulse})`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '12px',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+      <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '32px' }}>
         <div
           style={{
-            padding: '12px 32px',
-            borderRadius: '999px',
-            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-            fontSize: '24px',
-            fontWeight: 700,
-            color: '#ffffff',
-            fontFamily: 'system-ui, sans-serif',
-            boxShadow: `0 4px 30px ${hexToRgba(accentColor, 0.4)}`,
+            opacity: textOpacity,
+            transform: `translateY(${textY}px)`,
+            textAlign: 'center',
+            maxWidth: '80%',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
-          {CTA_TYPE_LABELS[ctaType] ?? ctaType}
-        </div>
-
-        {/* Destination URL */}
-        {destination && (
           <p
             style={{
-              fontSize: '18px',
-              color: hexToRgba('#ffffff', 0.5),
+              fontSize: '64px',
+              fontWeight: 900,
+              color: '#ffffff',
               fontFamily: 'system-ui, sans-serif',
+              lineHeight: 1.15,
               margin: 0,
+              letterSpacing: '-0.01em',
+              textShadow: `0 0 20px ${hexToRgba(accentColor, 0.6)}, 0 0 60px ${hexToRgba(accentColor, 0.3)}, 0 4px 30px rgba(0,0,0,0.5)`,
             }}
           >
-            {destination}
+            {ctaText}
           </p>
-        )}
-      </div>
+        </div>
 
-      {/* Bottom arrow indicator */}
+        {/* CTA badge — pulsing */}
+        <div
+          style={{
+            opacity: badgeOpacity,
+            transform: `translateY(${badgeY}px) scale(${badgePulse})`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <div
+            style={{
+              padding: '14px 36px',
+              borderRadius: '999px',
+              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#ffffff',
+              fontFamily: 'system-ui, sans-serif',
+              boxShadow: `0 4px 30px ${hexToRgba(accentColor, 0.4)}, 0 0 60px ${hexToRgba(primaryColor, 0.2)}`,
+            }}
+          >
+            {CTA_TYPE_LABELS[ctaType] ?? ctaType}
+          </div>
+
+          {destination && (
+            <p style={{ fontSize: '18px', color: hexToRgba('#ffffff', 0.5), fontFamily: 'system-ui, sans-serif', margin: 0 }}>
+              {destination}
+            </p>
+          )}
+        </div>
+      </AbsoluteFill>
+
+      {/* Bouncing arrow */}
       <div
         style={{
           position: 'absolute',
-          bottom: '50px',
+          bottom: `${barHeight + 30}px`,
+          left: '50%',
+          transform: 'translateX(-50%)',
           opacity: badgeOpacity,
-          zIndex: 1,
+          zIndex: 11,
         }}
       >
         <div
@@ -217,6 +231,7 @@ export const CTAScene: React.FC<CTASceneProps> = ({
             borderRight: '12px solid transparent',
             borderTop: `16px solid ${accentColor}`,
             transform: `translateY(${Math.sin(frame / 8) * 6}px)`,
+            filter: `drop-shadow(0 0 8px ${hexToRgba(accentColor, 0.5)})`,
           }}
         />
       </div>

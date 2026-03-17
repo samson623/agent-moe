@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getBrowserTask, updateBrowserTask } from '@/lib/supabase/queries/browser-tasks'
 import { TaskExecutor } from '@/features/browser-agent/task-executor'
+import { registerExecutor, unregisterExecutor } from '@/features/browser-agent/executor-registry'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,8 +53,11 @@ export async function POST(
     // task status via GET /api/browser-tasks/[id]. Errors are logged but do not
     // affect the response — the DB record will reflect failure when they occur.
     const executor = new TaskExecutor()
+    registerExecutor(id, executor)
     executor.execute(id, client).catch((err) => {
       console.error('[TaskExecutor]', err)
+    }).finally(() => {
+      unregisterExecutor(id)
     })
 
     return NextResponse.json({ data: updated, queued: true })

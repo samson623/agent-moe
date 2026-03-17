@@ -1,8 +1,8 @@
 /**
- * AI Image Generator — DALL-E fallback for scene visuals
+ * AI Image Generator — GPT Image 1.5 for scene visuals
  *
  * When stock photos from Pexels are irrelevant or unavailable,
- * this service generates custom images using OpenAI's DALL-E API.
+ * this service generates custom images using OpenAI's GPT Image 1.5 API.
  *
  * Style: Dark tech aesthetic, cinematic lighting, purple/green/amber glows,
  * matching the Agent MOE brand.
@@ -49,10 +49,10 @@ export interface GeneratedImage {
 }
 
 /**
- * Generate a scene background image using DALL-E.
+ * Generate a scene background image using GPT Image 1.5.
  *
  * Builds a prompt from the scene context + brand style guidelines.
- * Downloads the image to the public directory for Remotion to access.
+ * Saves the image to the public directory for Remotion to access.
  *
  * Returns null if generation fails (caller should fall back to gradient).
  */
@@ -69,27 +69,26 @@ export async function generateSceneImage(
     return null
   }
 
-  // Build a visual prompt from the scene context
   const prompt = buildPrompt(scene, orientation)
 
   try {
     console.log(`[AIImageGenerator] Generating image for scene ${sceneIndex + 1}: "${scene.title ?? 'Untitled'}"`)
 
     const response = await client.images.generate({
-      model: 'dall-e-3',
+      model: 'gpt-image-1.5',
       prompt,
       n: 1,
-      size: orientation === 'portrait' ? '1024x1792' : '1792x1024',
-      quality: 'standard',
+      size: orientation === 'portrait' ? '1024x1536' : '1536x1024',
+      quality: 'high',
     })
 
-    const imageUrl = response.data?.[0]?.url
-    if (!imageUrl) {
-      console.warn('[AIImageGenerator] No image URL in response')
+    const b64 = response.data?.[0]?.b64_json
+    if (!b64) {
+      console.warn('[AIImageGenerator] No image data in response')
       return null
     }
 
-    // Download to local public directory
+    // Save to local public directory
     const outputDir = path.join(process.cwd(), 'public', 'video-scene-images', videoPackageId)
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true })
@@ -99,17 +98,10 @@ export async function generateSceneImage(
     const localPath = path.join(outputDir, filename)
     const publicPath = `/video-scene-images/${videoPackageId}/${filename}`
 
-    // Download the image
-    const imgResponse = await fetch(imageUrl)
-    if (!imgResponse.ok) {
-      console.warn('[AIImageGenerator] Failed to download generated image')
-      return null
-    }
-
-    const buffer = Buffer.from(await imgResponse.arrayBuffer())
+    const buffer = Buffer.from(b64, 'base64')
     fs.writeFileSync(localPath, buffer)
 
-    console.log(`[AIImageGenerator] Generated and saved: ${publicPath}`)
+    console.log(`[AIImageGenerator] Generated and saved: ${publicPath} (${(buffer.length / 1024).toFixed(0)} KB)`)
 
     return {
       url: publicPath,
@@ -124,14 +116,13 @@ export async function generateSceneImage(
 }
 
 /**
- * Build a DALL-E prompt from scene context + brand guidelines.
+ * Build a prompt from scene context + brand guidelines.
  */
 function buildPrompt(scene: SceneContext, orientation: 'landscape' | 'portrait'): string {
   const aspectNote = orientation === 'portrait'
     ? 'Vertical composition (9:16 aspect ratio), optimized for mobile viewing.'
     : 'Horizontal composition (16:9 aspect ratio).'
 
-  // Combine visual direction with brand style
   return `${scene.visualDirection}
 
 Style requirements: ${BRAND_STYLE}

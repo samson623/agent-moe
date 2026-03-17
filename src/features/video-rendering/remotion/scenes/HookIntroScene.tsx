@@ -1,7 +1,8 @@
 import React from 'react';
 import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
-import { springScale, springOpacity, gradientAngle } from '../lib/text-animations';
+import { springScale, springOpacity } from '../lib/text-animations';
 import { hexToRgba } from '../lib/color-parser';
+
 interface HookIntroSceneProps {
   hookText: string;
   primaryColor: string;
@@ -24,7 +25,7 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
   const scale = springScale(frame, fps, 5);
   const opacity = springOpacity(frame, fps, 0);
 
-  // Spring entrance from bottom — starts at 80px below, springs to 0
+  // Spring entrance from bottom
   const slideProgress = spring({
     frame: frame - 5,
     fps,
@@ -32,15 +33,28 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
   });
   const yOffset = interpolate(slideProgress, [0, 1], [80, 0]);
 
-  const angle = gradientAngle(frame, fps);
-
-  // Ken Burns zoom for the background image
+  // Ken Burns zoom
   const bgScale = backgroundImage
-    ? interpolate(frame, [0, durationInFrames], [1.0, 1.1], {
+    ? interpolate(frame, [0, durationInFrames], [1.0, 1.12], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       })
     : 1;
+
+  // Cinematic letterbox bars — slide in
+  const barProgress = spring({
+    frame: frame - 2,
+    fps,
+    config: { damping: 18, mass: 0.8, stiffness: 60, overshootClamping: true },
+  });
+  const barHeight = interpolate(barProgress, [0, 1], [0, 80]);
+
+  // Accent line under text — grows from center
+  const lineWidth = interpolate(
+    spring({ frame: frame - 15, fps, config: { damping: 12, mass: 0.5, stiffness: 80 } }),
+    [0, 1],
+    [0, 120],
+  );
 
   const content = (
     <AbsoluteFill
@@ -51,7 +65,7 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
         padding: '60px',
       }}
     >
-      {/* Dark overlay for image readability */}
+      {/* Dark overlay */}
       {backgroundImage && (
         <div
           style={{
@@ -60,12 +74,12 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.45)',
           }}
         />
       )}
 
-      {/* Vignette overlay */}
+      {/* Vignette */}
       <div
         style={{
           position: 'absolute',
@@ -73,24 +87,47 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          background:
-            'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Accent glow (visible regardless of background) */}
+      {/* Accent glow */}
       <div
         style={{
           position: 'absolute',
           width: '500px',
           height: '500px',
           borderRadius: '50%',
-          background: hexToRgba(accentColor, backgroundImage ? 0.08 : 0.15),
+          background: hexToRgba(accentColor, backgroundImage ? 0.06 : 0.15),
           filter: 'blur(120px)',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
+        }}
+      />
+
+      {/* Cinematic letterbox bars */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: `${barHeight}px`,
+          background: '#000',
+          zIndex: 10,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          height: `${barHeight}px`,
+          background: '#000',
+          zIndex: 10,
         }}
       />
 
@@ -121,18 +158,19 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
         </p>
       </div>
 
-      {/* Bottom accent line */}
+      {/* Accent line — grows from center */}
       <div
         style={{
           position: 'absolute',
-          bottom: '40px',
+          bottom: `${barHeight + 40}px`,
           left: '50%',
-          transform: `translateX(-50%) scaleX(${scale})`,
-          width: '120px',
+          transform: 'translateX(-50%)',
+          width: `${lineWidth}px`,
           height: '4px',
           borderRadius: '2px',
           background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
-          zIndex: 1,
+          boxShadow: `0 0 20px ${hexToRgba(accentColor, 0.5)}`,
+          zIndex: 11,
         }}
       />
     </AbsoluteFill>
@@ -141,7 +179,6 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
   if (backgroundImage) {
     return (
       <AbsoluteFill>
-        {/* Ken Burns background */}
         <div
           style={{
             position: 'absolute',
@@ -169,7 +206,7 @@ export const HookIntroScene: React.FC<HookIntroSceneProps> = ({
     );
   }
 
-  // Fallback: original gradient background
+  const angle = 135 + (frame / fps) * 5;
   return (
     <AbsoluteFill
       style={{

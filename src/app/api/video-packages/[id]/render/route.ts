@@ -68,7 +68,9 @@ export async function POST(
     // Fire-and-forget: render in background
     ;(async () => {
       try {
-        const customSceneImages = readCustomSceneImages(pkg.metadata, pkg.scenes.length)
+        // Full layout: [hook, thumbnail, ...narration scenes, cta] = scenes.length + 3 slots
+        const totalSlots = pkg.scenes.length + 3
+        const customSceneImages = readCustomSceneImages(pkg.metadata, totalSlots)
         console.log(
           '[video-render] Starting render with custom scene images:',
           JSON.stringify(customSceneImages),
