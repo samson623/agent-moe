@@ -56,6 +56,8 @@ export function CreateBrowserTaskModal({
   const [timeoutMs, setTimeoutMs] = useState(30000)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [enableLiveView, setEnableLiveView] = useState(false)
+  const [enableRecording, setEnableRecording] = useState(false)
+  const [recordingQuality, setRecordingQuality] = useState<'low' | 'medium' | 'high'>('medium')
   const [isDone, setIsDone] = useState(false)
 
   // Schedule picker state
@@ -81,6 +83,8 @@ export function CreateBrowserTaskModal({
     setTimeoutMs(30000)
     setShowAdvanced(false)
     setEnableLiveView(false)
+    setEnableRecording(false)
+    setRecordingQuality('medium')
     setIsDone(false)
     setExecutionMode('immediate')
     setScheduledAt('')
@@ -108,7 +112,10 @@ export function CreateBrowserTaskModal({
         instructions,
         priority,
         timeout_ms: timeoutMs,
-        config: enableLiveView ? { enable_live_view: true } : undefined,
+        config: (enableLiveView || enableRecording) ? {
+          ...(enableLiveView ? { enable_live_view: true } : {}),
+          ...(enableRecording ? { record: true, recording_quality: recordingQuality } : {}),
+        } : undefined,
       })
 
       if (!task) return
@@ -346,6 +353,57 @@ export function CreateBrowserTaskModal({
                     />
                   </button>
                 </label>
+
+                {/* Record Toggle */}
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-xs font-medium text-[var(--text)]">Record Execution</p>
+                    <p className="text-xs text-[var(--text-muted)]">Save an MP4 recording of the browser session</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={enableRecording}
+                    onClick={() => setEnableRecording(!enableRecording)}
+                    className={cn(
+                      'relative inline-flex h-5 w-9 shrink-0 rounded-full border transition-colors',
+                      enableRecording
+                        ? 'bg-[var(--accent)] border-[var(--accent)]'
+                        : 'bg-[var(--surface)] border-[var(--border)]'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                        enableRecording ? 'translate-x-4' : 'translate-x-0'
+                      )}
+                    />
+                  </button>
+                </label>
+
+                {/* Recording Quality */}
+                {enableRecording && (
+                  <div className="space-y-1.5 pl-1">
+                    <p className="text-xs font-medium text-[var(--text)]">Recording Quality</p>
+                    <div className="flex gap-1.5">
+                      {(['low', 'medium', 'high'] as const).map((q) => (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={() => setRecordingQuality(q)}
+                          className={cn(
+                            'px-3 py-1 rounded text-xs border capitalize transition-all',
+                            recordingQuality === q
+                              ? 'border-[var(--accent)] text-[var(--accent)] bg-[rgba(99,102,241,0.08)]'
+                              : 'border-[var(--border)] text-[var(--text-muted)]'
+                          )}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <p className="text-xs text-[var(--text-muted)]">
                   Advanced config (selectors, form data) can be set via API or edited after creation.

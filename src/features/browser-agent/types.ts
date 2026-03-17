@@ -38,6 +38,10 @@ export interface BrowserTaskConfig {
   screencast_format?: 'jpeg' | 'png'
   /** Screencast JPEG quality (0-100) */
   screencast_quality?: number
+  /** Enable MP4 recording of browser execution */
+  record?: boolean
+  /** Recording quality preset */
+  recording_quality?: 'low' | 'medium' | 'high'
 }
 
 export interface BrowserTaskInput {
@@ -67,6 +71,8 @@ export interface BrowserTaskResult {
   final_url?: string
   /** Number of screencast frames captured during execution */
   screencast_frames?: number
+  /** Public URL path to the MP4 recording */
+  recording_url?: string
 }
 
 export interface BrowserTask {
@@ -83,6 +89,7 @@ export interface BrowserTask {
   config: BrowserTaskConfig
   result?: BrowserTaskResult
   screenshot_url?: string
+  recording_url?: string
   error_message?: string
   retry_count: number
   max_retries: number
@@ -164,6 +171,8 @@ export const BrowserTaskConfigSchema = z.object({
   enable_live_view: z.boolean().optional(),
   screencast_format: z.enum(['jpeg', 'png']).optional(),
   screencast_quality: z.number().min(0).max(100).optional(),
+  record: z.boolean().optional(),
+  recording_quality: z.enum(['low', 'medium', 'high']).optional(),
 })
 
 export const BrowserTaskInputSchema = z.object({
@@ -207,4 +216,5 @@ export const BrowserTaskResultSchema = z.object({
   page_title: z.string().optional(),
   final_url: z.string().optional(),
   screencast_frames: z.number().optional(),
+  recording_url: z.string().optional(),
 })

@@ -12,6 +12,8 @@ import {
   Navigation,
   ChevronRight,
   RefreshCw,
+  Film,
+  Radio,
 } from 'lucide-react'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
 import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
@@ -141,7 +143,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
         {task.instructions}
       </p>
 
-      {/* Priority + Retries */}
+      {/* Priority + Retries + Indicators */}
       <div className="flex items-center gap-3 mb-3">
         <span className="text-xs text-[var(--text-muted)]">
           Priority <span className="font-semibold text-[var(--text)]">{task.priority}</span>/10
@@ -150,6 +152,18 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
           <span className="text-xs text-[var(--text-muted)]">
             <RefreshCw size={9} className="inline mr-0.5" />
             {task.retry_count}/{task.max_retries} retries
+          </span>
+        )}
+        {task.recording_url && (
+          <span className="text-xs text-[#8b5cf6] flex items-center gap-1">
+            <Film size={10} />
+            Recorded
+          </span>
+        )}
+        {task.status === 'running' && task.config.enable_live_view && (
+          <span className="text-xs text-[#10b981] flex items-center gap-1">
+            <Radio size={10} className="animate-pulse" />
+            Live
           </span>
         )}
       </div>

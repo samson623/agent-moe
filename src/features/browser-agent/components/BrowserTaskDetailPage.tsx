@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Globe, Camera, MousePointer, FileText, Search, Monitor, Send, Navigation,
-  ArrowLeft, RefreshCw, Play, X,
+  ArrowLeft, RefreshCw, Play, X, Film, Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -285,6 +285,34 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
             <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
               <p className="text-xs font-semibold text-[var(--text-muted)] mb-1">Page Title</p>
               <p className="text-xs text-[var(--text)]">{task.result.page_title}</p>
+            </div>
+          )}
+
+          {/* Recording card */}
+          {(task.recording_url || task.result?.recording_url) && (
+            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Film size={14} className="text-[var(--accent)]" />
+                <p className="text-xs font-semibold text-[var(--text)]">Recording Available</p>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                Browser session recorded as MP4
+                {task.result?.screencast_frames && (
+                  <span> ({task.result.screencast_frames} frames)</span>
+                )}
+              </p>
+              <a
+                href={task.recording_url ?? task.result?.recording_url ?? ''}
+                download
+                className={cn(
+                  'flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-[var(--radius)] text-xs font-medium transition-all',
+                  'border border-[var(--accent)] text-[var(--accent)]',
+                  'hover:bg-[rgba(139,92,246,0.08)]'
+                )}
+              >
+                <Download size={12} />
+                Download MP4
+              </a>
             </div>
           )}
         </div>

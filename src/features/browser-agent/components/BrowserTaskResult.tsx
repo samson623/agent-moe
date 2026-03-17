@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Download, Film } from 'lucide-react'
 import type { BrowserTask } from '../types'
 
 interface BrowserTaskResultProps {
   task: BrowserTask
 }
 
-type ResultTab = 'data' | 'text' | 'links' | 'screenshot'
+type ResultTab = 'data' | 'text' | 'links' | 'screenshot' | 'recording'
 
 export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
   const [activeTab, setActiveTab] = useState<ResultTab>('data')
@@ -32,12 +32,14 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
   const hasText       = Boolean(result.text_content)
   const hasLinks      = result.links && result.links.length > 0
   const hasScreenshot = Boolean(task.screenshot_url || result.screenshot_path)
+  const hasRecording  = Boolean(task.recording_url || result.recording_url)
 
   const TABS: Array<{ id: ResultTab; label: string; available: boolean }> = [
     { id: 'data',       label: 'Data',       available: Boolean(hasData) },
     { id: 'text',       label: 'Text',       available: Boolean(hasText) },
     { id: 'links',      label: `Links${hasLinks ? ` (${result.links!.length})` : ''}`, available: Boolean(hasLinks) },
     { id: 'screenshot', label: 'Screenshot', available: Boolean(hasScreenshot) },
+    { id: 'recording',  label: 'Recording',  available: Boolean(hasRecording) },
   ]
 
   const availableTabs = TABS.filter((t) => t.available)
@@ -155,6 +157,42 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
               className="w-full h-auto max-h-[500px] object-contain"
               unoptimized
             />
+          </div>
+        )}
+
+        {currentTab === 'recording' && hasRecording && (
+          <div className="space-y-3">
+            <div className="rounded-[var(--radius)] border border-[var(--border)] overflow-hidden bg-black">
+              <video
+                src={task.recording_url ?? result.recording_url ?? ''}
+                controls
+                className="w-full max-h-[500px]"
+                style={{ aspectRatio: '16/9' }}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                <Film size={12} />
+                <span>Browser execution recording</span>
+                {result.screencast_frames && (
+                  <span>({result.screencast_frames} frames)</span>
+                )}
+              </div>
+              <a
+                href={task.recording_url ?? result.recording_url ?? ''}
+                download
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] text-xs font-medium transition-all',
+                  'border border-[var(--border)] text-[var(--text-muted)]',
+                  'hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                )}
+              >
+                <Download size={12} />
+                Download MP4
+              </a>
+            </div>
           </div>
         )}
       </div>

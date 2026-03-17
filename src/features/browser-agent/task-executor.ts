@@ -63,13 +63,17 @@ export class TaskExecutor {
 
       const result = await this.withTimeout(executePromise, task.timeout_ms)
 
-      // Success
-      await updateBrowserTask(supabase, taskId, {
+      // Success — include recording URL if available
+      const updatePayload: Record<string, unknown> = {
         status: result.success ? 'completed' : 'failed',
         result: result as BrowserTaskResult,
         error_message: result.error ?? undefined,
         completed_at: new Date().toISOString(),
-      })
+      }
+      if (result.recording_url) {
+        updatePayload.recording_url = result.recording_url
+      }
+      await updateBrowserTask(supabase, taskId, updatePayload)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       const isTimeout = errorMsg.includes('timed out') || errorMsg.includes('Timeout')

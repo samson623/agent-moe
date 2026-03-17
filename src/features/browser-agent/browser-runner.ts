@@ -12,6 +12,7 @@ import type { Browser, Page } from 'playwright'
 import type { BrowserTask, BrowserTaskResult, BrowserTaskConfig } from './types'
 import { Screencast } from './screencast'
 import type { ScreencastOptions } from './screencast'
+import { Recorder } from './recorder'
 
 // ---------------------------------------------------------------------------
 // BrowserRunner
@@ -21,6 +22,7 @@ export class BrowserRunner {
   private browser: Browser | null = null
   private readonly browserTypeName: 'chromium' | 'firefox' | 'webkit'
   private screencast: Screencast | null = null
+  private recorder: Recorder | null = null
 
   constructor(browserType: 'chromium' | 'firefox' | 'webkit' = 'chromium') {
     this.browserTypeName = browserType
@@ -53,8 +55,10 @@ export class BrowserRunner {
     const page = await context.newPage()
 
     try {
-      // Start screencast if live view is enabled
-      if (task.config.enable_live_view) {
+      // Start screencast if live view OR recording is enabled
+      // (recording depends on screencast for its frame data)
+      const needsScreencast = task.config.enable_live_view || task.config.record
+      if (needsScreencast) {
         this.screencast = new Screencast()
         const screencastOpts: ScreencastOptions = {
           format: task.config.screencast_format ?? 'jpeg',
@@ -63,6 +67,14 @@ export class BrowserRunner {
           maxHeight: task.config.viewport?.height ?? 720,
         }
         await this.screencast.start(page, screencastOpts)
+
+        // Start recorder if recording is enabled
+        if (task.config.record) {
+          this.recorder = new Recorder()
+          await this.recorder.start(this.screencast, task.id, {
+            quality: task.config.recording_quality ?? 'medium',
+          })
+        }
       }
 
       let result: BrowserTaskResult
@@ -96,6 +108,14 @@ export class BrowserRunner {
           result = this.buildResult(false, { error: `Unknown task type: ${String(task.task_type)}` })
       }
 
+      // Stop recorder first (it needs screencast frames to flush)
+      if (this.recorder) {
+        const recordingPath = await this.recorder.stop()
+        if (recordingPath) {
+          result.recording_url = this.recorder.getPublicUrl()
+        }
+      }
+
       // Stop screencast and record frame count
       if (this.screencast) {
         await this.screencast.stop()
@@ -105,7 +125,10 @@ export class BrowserRunner {
       result.execution_time_ms = Date.now() - start
       return result
     } catch (err) {
-      // Stop screencast on error too
+      // Stop recorder and screencast on error too
+      if (this.recorder) {
+        await this.recorder.stop().catch(() => {})
+      }
       if (this.screencast) {
         await this.screencast.stop().catch(() => {})
       }
@@ -115,6 +138,7 @@ export class BrowserRunner {
         execution_time_ms: Date.now() - start,
       })
     } finally {
+      this.recorder = null
       this.screencast = null
       await context.close()
     }
@@ -126,6 +150,13 @@ export class BrowserRunner {
    */
   getScreencast(): Screencast | null {
     return this.screencast
+  }
+
+  /**
+   * Get the active recorder instance (if recording is enabled).
+   */
+  getRecorder(): Recorder | null {
+    return this.recorder
   }
 
   // ---------------------------------------------------------------------------
