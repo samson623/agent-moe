@@ -18,6 +18,8 @@ interface UseMissionsReturn {
   refetch: () => Promise<void>;
   createMission: (title: string, description?: string, priority?: string) => Promise<Mission | null>;
   isCreating: boolean;
+  cancelMission: (id: string) => Promise<boolean>;
+  cancelAllActive: () => Promise<void>;
 }
 
 export function useMissions({
@@ -98,8 +100,9 @@ export function useMissions({
           throw new Error(body.error || `Failed to create mission (${res.status})`);
         }
 
-        const mission: Mission = await res.json();
+        const { mission } = await res.json();
         await fetchMissions();
+
         return mission;
       } catch (err) {
         setError((err as Error).message);
@@ -111,5 +114,36 @@ export function useMissions({
     [workspaceId, fetchMissions],
   );
 
-  return { missions, total, isLoading, error, refetch: fetchMissions, createMission, isCreating };
+  const cancelMission = useCallback(
+    async (id: string): Promise<boolean> => {
+      setError(null);
+      try {
+        const res = await fetch(`/api/missions/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'failed' }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `Failed to cancel mission (${res.status})`);
+        }
+        await fetchMissions();
+        return true;
+      } catch (err) {
+        setError((err as Error).message);
+        return false;
+      }
+    },
+    [fetchMissions],
+  );
+
+  const cancelAllActive = useCallback(async () => {
+    setError(null);
+    const active = missions.filter(
+      (m) => m.status !== 'completed' && m.status !== 'failed',
+    );
+    await Promise.all(active.map((m) => cancelMission(m.id)));
+  }, [missions, cancelMission]);
+
+  return { missions, total, isLoading, error, refetch: fetchMissions, createMission, isCreating, cancelMission, cancelAllActive };
 }

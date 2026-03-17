@@ -7,10 +7,13 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { MotionFadeIn } from '@/components/nebula/motion'
 import { useVideoPackageDetail } from '../hooks/use-video-package-detail'
 import { VideoHookDisplay } from './VideoHookDisplay'
 import { SceneBreakdown } from './SceneBreakdown'
 import { ThumbnailConceptCard } from './ThumbnailConceptCard'
+import { SceneVisualsPanel } from './SceneVisualsPanel'
+import { RenderVideoPanel } from '@/features/video-rendering/components/RenderVideoPanel'
 
 // ---------------------------------------------------------------------------
 // Config maps (same as card)
@@ -94,7 +97,7 @@ function CTADisplay({ cta }: { cta: NonNullable<ReturnType<typeof useVideoPackag
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
+      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">
         Call to Action
       </p>
       <div
@@ -107,11 +110,11 @@ function CTADisplay({ cta }: { cta: NonNullable<ReturnType<typeof useVideoPackag
           <div>
             <p className="text-sm font-semibold text-[var(--text)]">{cta.text}</p>
             <div className="flex items-center gap-2 mt-1.5">
-              <Badge variant="muted" className="text-[10px] capitalize">
+              <Badge variant="muted" className="text-xs capitalize">
                 {cta.type.replace(/_/g, ' ')}
               </Badge>
               {cta.destination && (
-                <span className="text-[11px] text-[var(--text-muted)] truncate max-w-[200px]">
+                <span className="text-xs md:text-sm text-[var(--text-muted)] truncate max-w-[200px]">
                   {cta.destination}
                 </span>
               )}
@@ -212,7 +215,7 @@ interface VideoPackageDetailPageProps {
 
 export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPageProps) {
   const router = useRouter()
-  const { pkg, loading, error, remove } = useVideoPackageDetail(id, workspaceId)
+  const { pkg, loading, error, refresh, remove } = useVideoPackageDetail(id, workspaceId)
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [deleting, setDeleting] = useState(false)
 
@@ -263,7 +266,7 @@ export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPa
   const statusVariant = STATUS_VARIANT[pkg.status] ?? 'muted'
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <MotionFadeIn className="p-6 max-w-4xl mx-auto space-y-6">
       {/* ── Back button ─────────────────────────────────── */}
       <button
         type="button"
@@ -337,7 +340,7 @@ export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPa
       </div>
 
       {/* ── Tab content ─────────────────────────────────── */}
-      <div className="animate-fade-in">
+      <div>
         {/* Overview: Hook + CTA */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
@@ -348,7 +351,10 @@ export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPa
 
         {/* Scenes */}
         {activeTab === 'scenes' && (
-          <SceneBreakdown scenes={pkg.scenes} />
+          <div className="space-y-6">
+            <SceneVisualsPanel pkg={pkg} workspaceId={workspaceId} onRefresh={refresh} />
+            <SceneBreakdown scenes={pkg.scenes} />
+          </div>
         )}
 
         {/* Thumbnail */}
@@ -358,7 +364,7 @@ export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPa
             {pkg.caption && (
               <Card>
                 <CardContent className="py-4 space-y-2">
-                  <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">
                     Caption
                   </p>
                   <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
@@ -371,8 +377,19 @@ export function VideoPackageDetailPage({ id, workspaceId }: VideoPackageDetailPa
         )}
 
         {/* Export */}
-        {activeTab === 'export' && <ExportContent pkg={pkg} />}
+        {activeTab === 'export' && (
+          <div className="space-y-6">
+            <RenderVideoPanel
+              videoPackageId={pkg.id}
+              workspaceId={workspaceId}
+              platform={pkg.platform}
+              sceneDurations={pkg.scenes.map((s) => s.duration_seconds)}
+              metadata={pkg.metadata}
+            />
+            <ExportContent pkg={pkg} />
+          </div>
+        )}
       </div>
-    </div>
+    </MotionFadeIn>
   )
 }

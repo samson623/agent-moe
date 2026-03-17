@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   FileText,
   TrendingUp,
   DollarSign,
   Shield,
+  Wallet,
   Activity,
   Clock,
   Cpu,
@@ -16,13 +18,13 @@ import {
   AlertTriangle,
   Inbox,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StatCard } from '@/components/ui/stat-card'
+import { GlassCard, StatCard, SectionHeader, StatusBadge, EmptyState, PageWrapper } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem, MotionFadeIn } from '@/components/nebula/motion'
 import { cn } from '@/lib/utils'
 import { useOperatorStats, type TeamStats } from '../hooks/use-operator-stats'
 import { useOperatorActivity, type ActivityItem } from '../hooks/use-operator-activity'
+import { OperatorTeamCard, type OperatorTeam } from './OperatorTeamCard'
 
 // ---------------------------------------------------------------------------
 // Time formatting
@@ -93,6 +95,49 @@ const TEAMS: TeamConfig[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Operator team overview cards data
+// ---------------------------------------------------------------------------
+
+const OPERATOR_TEAMS: OperatorTeam[] = [
+  {
+    id: 'content_strike',
+    name: 'Content Strike Team',
+    icon: FileText,
+    description: 'Research, hooks, scripts, captions, thumbnails',
+    status: 'Live',
+    output: '34 assets/day',
+    value: '$3.4K/mo impact',
+  },
+  {
+    id: 'growth_operator',
+    name: 'Growth Operator',
+    icon: TrendingUp,
+    description: 'Trend detection, competitor gaps, timing windows',
+    status: 'Live',
+    output: '+27% engagement',
+    value: '$4.9K/mo impact',
+  },
+  {
+    id: 'revenue_closer',
+    name: 'Revenue Closer',
+    icon: Wallet,
+    description: 'Offer routing, lead qualification, nurture sequences',
+    status: 'Armed',
+    output: '19 SQLs/week',
+    value: '$7.8K/mo impact',
+  },
+  {
+    id: 'brand_guardian',
+    name: 'Brand Guardian',
+    icon: Shield,
+    description: 'Safety checks, claim filters, tone alignment',
+    status: 'Live',
+    output: '99.2% compliance',
+    value: 'Risk reduced',
+  },
+]
+
+// ---------------------------------------------------------------------------
 // Activity icon resolver
 // ---------------------------------------------------------------------------
 
@@ -131,16 +176,17 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)]"
-        >
-          <Skeleton className="w-4 h-4 rounded-full" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-12" />
-            <Skeleton className="h-3 w-20" />
+        <GlassCard key={i} padding="md">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-3 w-20" />
+            </div>
           </div>
-        </div>
+          <div className="mt-3">
+            <Skeleton className="h-7 w-12" />
+          </div>
+        </GlassCard>
       ))}
     </div>
   )
@@ -148,9 +194,9 @@ function StatsSkeleton() {
 
 function TeamCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
+    <GlassCard padding="none">
       <Skeleton className="h-1 w-full rounded-none" />
-      <CardHeader>
+      <div className="p-5 space-y-4">
         <div className="flex items-center gap-3">
           <Skeleton className="w-10 h-10 rounded-[var(--radius)]" />
           <div className="space-y-1.5">
@@ -158,8 +204,6 @@ function TeamCardSkeleton() {
             <Skeleton className="h-3 w-20" />
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
         <div className="space-y-1.5">
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-3/4" />
@@ -169,8 +213,8 @@ function TeamCardSkeleton() {
             <Skeleton key={i} className="h-5 w-16 rounded-full" />
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   )
 }
 
@@ -200,13 +244,13 @@ function TeamCard({ team, teamStats }: { team: TeamConfig; teamStats: TeamStats 
   const completedRatio = teamStats.total > 0 ? (teamStats.completed / teamStats.total) * 100 : 0
 
   return (
-    <Card className="overflow-hidden group hover:border-[var(--border)] transition-all duration-200">
+    <GlassCard padding="none" className="overflow-hidden">
       <div
         className="h-1 w-full"
         style={{ background: `linear-gradient(90deg, ${team.color}, ${team.color}40)` }}
       />
 
-      <CardHeader>
+      <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
@@ -216,73 +260,75 @@ function TeamCard({ team, teamStats }: { team: TeamConfig; teamStats: TeamStats 
               <Icon size={18} style={{ color: team.color }} />
             </div>
             <div>
-              <CardTitle className="text-sm">{team.name}</CardTitle>
+              <h4 className="text-sm font-semibold text-[var(--text)]">{team.name}</h4>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">{team.role}</p>
             </div>
           </div>
-          <Badge variant={isActive ? 'success' : 'muted'}>
-            {isActive ? 'Active' : 'Idle'}
-          </Badge>
+          <StatusBadge
+            label={isActive ? 'Active' : 'Idle'}
+            variant={isActive ? 'success' : 'default'}
+            pulse={isActive}
+          />
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Mini stats row */}
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: 'Completed', value: teamStats.completed, cls: 'text-[var(--success)]' },
-            { label: 'Failed', value: teamStats.failed, cls: 'text-[var(--danger)]' },
-            { label: 'Pending', value: teamStats.pending, cls: 'text-[var(--warning)]' },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className={cn('text-sm font-bold tabular-nums', s.cls)}>
-                {s.value}
-              </p>
-              <p className="text-xs text-[var(--text-muted)]">{s.label}</p>
+        <div className="mt-4 space-y-4">
+          {/* Mini stats row */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Completed', value: teamStats.completed, cls: 'text-[var(--success)]' },
+              { label: 'Failed', value: teamStats.failed, cls: 'text-[var(--danger)]' },
+              { label: 'Pending', value: teamStats.pending, cls: 'text-[var(--warning)]' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className={cn('text-sm font-bold tabular-nums', s.cls)}>
+                  {s.value}
+                </p>
+                <p className="text-xs text-[var(--text-muted)]">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Completed progress bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-[var(--text-muted)]">
+              <span>Completed ratio</span>
+              <span className="tabular-nums">{completedRatio.toFixed(0)}%</span>
             </div>
-          ))}
-        </div>
-
-        {/* Completed progress bar */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-[var(--text-muted)]">
-            <span>Completed ratio</span>
-            <span className="tabular-nums">{completedRatio.toFixed(0)}%</span>
+            <div className="h-1.5 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${completedRatio}%`,
+                  background: team.color,
+                }}
+              />
+            </div>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${completedRatio}%`,
-                background: team.color,
-              }}
-            />
+
+          {/* Capabilities */}
+          <div className="flex flex-wrap gap-1.5">
+            {team.capabilities.map((cap) => (
+              <span
+                key={cap}
+                className={cn(
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
+                  'border border-[var(--border-subtle)]',
+                )}
+              >
+                {cap}
+              </span>
+            ))}
+          </div>
+
+          {/* Footer: model info */}
+          <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
+            <Cpu size={12} className="text-[var(--text-muted)]" />
+            <span className="text-xs text-[var(--text-muted)]">{team.model}</span>
           </div>
         </div>
-
-        {/* Capabilities */}
-        <div className="flex flex-wrap gap-1.5">
-          {team.capabilities.map((cap) => (
-            <span
-              key={cap}
-              className={cn(
-                'text-xs font-medium px-2 py-0.5 rounded-full',
-                'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
-                'border border-[var(--border-subtle)]',
-              )}
-            >
-              {cap}
-            </span>
-          ))}
-        </div>
-
-        {/* Footer: model info */}
-        <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
-          <Cpu size={12} className="text-[var(--text-muted)]" />
-          <span className="text-xs text-[var(--text-muted)]">{team.model}</span>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   )
 }
 
@@ -309,12 +355,11 @@ function ActivityFeed({ items, loading }: { items: ActivityItem[]; loading: bool
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Inbox size={32} className="text-[var(--text-disabled)] mb-3" />
-        <p className="text-sm text-[var(--text-muted)]">
-          No operator activity yet. Submit a mission to get started.
-        </p>
-      </div>
+      <EmptyState
+        icon={Inbox}
+        title="No operator activity yet"
+        description="Submit a mission to get started."
+      />
     )
   }
 
@@ -351,6 +396,7 @@ function ActivityFeed({ items, loading }: { items: ActivityItem[]; loading: bool
 // ---------------------------------------------------------------------------
 
 export function OperatorsPage({ workspaceId }: { workspaceId: string }) {
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
   const { stats, loading: statsLoading, error: statsError, refresh: refreshStats } = useOperatorStats(workspaceId)
   const { activity, loading: activityLoading, error: activityError, refresh: refreshActivity } = useOperatorActivity(workspaceId, 15)
 
@@ -367,64 +413,96 @@ export function OperatorsPage({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <div className="space-y-6 p-6 md:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-end gap-2">
-        <Badge variant={isLive ? 'success' : 'warning'}>
-          {isLive ? 'Live' : 'No Workspace'}
-        </Badge>
-        <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="Refresh">
-          <RefreshCw size={14} />
-        </Button>
-      </div>
-
-      {/* Errors */}
-      {statsError && <ErrorAlert message={statsError} onRetry={refreshStats} />}
-      {activityError && <ErrorAlert message={activityError} onRetry={refreshActivity} />}
-
-      {/* Quick stats row */}
-      {statsLoading ? (
-        <StatsSkeleton />
-      ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard title="Total Jobs Executed" value={totalJobs.toLocaleString()} icon={Cpu} accent="text-cyan-300" />
-          <StatCard title="Active Jobs" value={activeJobs.toLocaleString()} icon={Activity} accent="text-cyan-300" />
-          <StatCard title="Jobs Completed" value={completedJobs.toLocaleString()} icon={CheckCircle2} accent="text-cyan-300" />
-          <StatCard title="Pending Queue" value={pendingJobs.toLocaleString()} icon={Clock} accent="text-cyan-300" />
-        </div>
-      )}
-
-      {/* Operator team cards */}
-      {statsLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <TeamCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {TEAMS.map((team) => (
-            <TeamCard key={team.key} team={team} teamStats={stats[team.key]} />
-          ))}
-        </div>
-      )}
-
-      {/* Recent activity feed */}
-      <Card>
-        <CardHeader>
+    <PageWrapper>
+      <div className="space-y-6">
+        {/* Header */}
+        <MotionFadeIn>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Recent Activity</CardTitle>
-            {activity.length > 0 && (
-              <Badge variant="muted" className="text-xs">
-                {activity.length} items
-              </Badge>
-            )}
+            <SectionHeader
+              title="Operator Teams"
+              description="AI operator teams executing missions across your workspace"
+              className="mb-0"
+            />
+            <div className="flex items-center gap-2">
+              <StatusBadge
+                label={isLive ? 'Live' : 'No Workspace'}
+                variant={isLive ? 'success' : 'warning'}
+                pulse={isLive}
+              />
+              <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="Refresh">
+                <RefreshCw size={14} />
+              </Button>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <ActivityFeed items={activity} loading={activityLoading} />
-        </CardContent>
-      </Card>
-    </div>
+        </MotionFadeIn>
+
+        {/* Errors */}
+        {statsError && <ErrorAlert message={statsError} onRetry={refreshStats} />}
+        {activityError && <ErrorAlert message={activityError} onRetry={refreshActivity} />}
+
+        {/* Operator team overview cards */}
+        <MotionStagger className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {OPERATOR_TEAMS.map((team) => (
+            <MotionStaggerItem key={team.id}>
+              <OperatorTeamCard
+                team={team}
+                active={selectedTeamId === team.id}
+                onClick={() =>
+                  setSelectedTeamId((prev) => (prev === team.id ? null : team.id))
+                }
+              />
+            </MotionStaggerItem>
+          ))}
+        </MotionStagger>
+
+        {/* Quick stats row */}
+        <MotionFadeIn delay={0.05}>
+          {statsLoading ? (
+            <StatsSkeleton />
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <StatCard label="Total Jobs Executed" value={totalJobs.toLocaleString()} icon={Cpu} tone="primary" />
+              <StatCard label="Active Jobs" value={activeJobs.toLocaleString()} icon={Activity} tone="accent" />
+              <StatCard label="Jobs Completed" value={completedJobs.toLocaleString()} icon={CheckCircle2} tone="success" />
+              <StatCard label="Pending Queue" value={pendingJobs.toLocaleString()} icon={Clock} tone="warning" />
+            </div>
+          )}
+        </MotionFadeIn>
+
+        {/* Operator team cards */}
+        {statsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <TeamCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {TEAMS.map((team) => (
+              <MotionStaggerItem key={team.key}>
+                <TeamCard team={team} teamStats={stats[team.key]} />
+              </MotionStaggerItem>
+            ))}
+          </MotionStagger>
+        )}
+
+        {/* Recent activity feed */}
+        <MotionFadeIn delay={0.15}>
+          <GlassCard padding="none">
+            <div className="p-5">
+              <SectionHeader
+                title="Recent Activity"
+                action={
+                  activity.length > 0 ? (
+                    <StatusBadge label={`${activity.length} items`} variant="default" />
+                  ) : undefined
+                }
+              />
+              <ActivityFeed items={activity} loading={activityLoading} />
+            </div>
+          </GlassCard>
+        </MotionFadeIn>
+      </div>
+    </PageWrapper>
   )
 }

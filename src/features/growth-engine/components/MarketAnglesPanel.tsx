@@ -52,7 +52,7 @@ export function MarketAnglesPanel({ signals, isLoading }: MarketAnglesPanelProps
           <Brain size={14} className="text-[var(--accent)]" />
           <CardTitle className="text-sm">Market Angles</CardTitle>
         </div>
-        <p className="text-[11px] text-[var(--text-muted)]">
+        <p className="text-xs md:text-sm text-[var(--text-muted)]">
           AI-identified positioning opportunities
         </p>
       </CardHeader>
@@ -78,7 +78,7 @@ export function MarketAnglesPanel({ signals, isLoading }: MarketAnglesPanelProps
                 </p>
                 <Badge variant="muted" className="text-[9px] shrink-0">{angle.sourceTopic.slice(0, 20)}</Badge>
               </div>
-              <p className="text-[10px] text-[var(--text-muted)] leading-relaxed mb-1">
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-1">
                 {angle.rationale.slice(0, 100)}{angle.rationale.length > 100 ? '…' : ''}
               </p>
               <span

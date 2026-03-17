@@ -30,6 +30,7 @@ import {
   AIErrorCode,
   type CTAOutput,
   type ExecutionResult,
+  type FormattingJobInput,
   type Job,
   JobType,
   ModelChoice,
@@ -43,6 +44,7 @@ import {
   ThreadOutputSchema,
 } from "@/features/ai/types";
 import { BaseOperator } from "@/features/ai/operators/base-operator";
+import { normalizePlatformFields } from "@/features/ai/utils/platform-normalization";
 
 // ---------------------------------------------------------------------------
 // Helper: extract + parse JSON from Claude response
@@ -166,6 +168,11 @@ CONTENT QUALITY SIGNALS:
           return await this.repurposeContent({ ...input, jobId: job.id });
         }
 
+        case JobType.CONTENT_FORMATTING: {
+          const input = job.input as FormattingJobInput;
+          return await this.openai.formatContent(input.content, input.targetPlatform);
+        }
+
         default:
           return this.unsupportedJobResult(job, start);
       }
@@ -227,7 +234,9 @@ Return ONLY valid JSON:
         } as ExecutionResult<ContentOutput>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizePlatformFields(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, ContentOutputSchema);
 
       this.log("post_generated", {
@@ -386,7 +395,9 @@ Return ONLY valid JSON:
         } as ExecutionResult<ScriptOutput>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizePlatformFields(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, ScriptOutputSchema);
 
       this.log("script_generated", {
@@ -467,7 +478,9 @@ Return ONLY valid JSON:
         } as ExecutionResult<ContentOutput>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizePlatformFields(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, ContentOutputSchema);
 
       return {
@@ -606,7 +619,9 @@ Return ONLY valid JSON matching the ContentOutput schema:
         } as ExecutionResult<ContentOutput>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizePlatformFields(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, ContentOutputSchema);
 
       return {

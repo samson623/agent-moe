@@ -4,6 +4,8 @@ import { OAuthManager } from '@/features/connectors/oauth-manager'
 import { getConnectorByPlatform, createConnector, updateConnector, updateConnectorCredentials, updateConnectorStatus } from '@/lib/supabase/queries/connectors'
 import type { ConnectorPlatform } from '@/features/connectors/types'
 
+export const dynamic = 'force-dynamic'
+
 type Params = { params: Promise<{ platform: string }> }
 
 export async function GET(req: Request, { params }: Params) {

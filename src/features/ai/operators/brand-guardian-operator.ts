@@ -77,6 +77,20 @@ function extractJSON(raw: string): string {
   return raw.trim();
 }
 
+function normalizeSafetyReviewPayload(value: unknown): unknown {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const payload = value as Record<string, unknown>;
+
+  return {
+    ...payload,
+    revisedContent: payload.revisedContent ?? null,
+    revisionNotes: payload.revisionNotes ?? null,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Brand Guardian Operator
 // ---------------------------------------------------------------------------
@@ -223,8 +237,8 @@ Return ONLY valid JSON:
     }
   ],
   "toneScore": <0.0-1.0>,
-  "revisedContent": "<optional improved version>",
-  "revisionNotes": "<optional notes on what was changed>",
+  "revisedContent": "<optional improved version or null>",
+  "revisionNotes": "<optional notes on what was changed or null>",
   "reviewedAt": "${new Date().toISOString()}"
 }`;
 
@@ -238,7 +252,9 @@ Return ONLY valid JSON:
         return { ...result, jobType: JobType.SAFETY_REVIEW } as ExecutionResult<SafetyReview>;
       }
 
-      const parsed: unknown = JSON.parse(extractJSON(result.data));
+      const parsed: unknown = normalizeSafetyReviewPayload(
+        JSON.parse(extractJSON(result.data))
+      );
       const validated = this.validateOutput(parsed, SafetyReviewSchema);
 
       this.log("content_reviewed", {

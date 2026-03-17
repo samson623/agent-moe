@@ -1,20 +1,25 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Globe, Plus, RefreshCw } from 'lucide-react'
+import { Globe, Plus, RefreshCw, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { BrowserTaskCard } from './BrowserTaskCard'
 import { BrowserTaskFilters } from './BrowserTaskFilters'
 import { CreateBrowserTaskModal } from './CreateBrowserTaskModal'
+import { ScheduleCard } from './ScheduleCard'
 import { useBrowserTaskStats } from '../hooks/use-browser-task-stats'
+import { useBrowserTaskSchedules } from '../hooks/use-browser-task-schedules'
 import { useRealtimeBrowserTasks } from '../hooks/use-realtime-browser-tasks'
 import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
 import { useRouter } from 'next/navigation'
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 
 interface BrowserAgentPageProps {
   workspaceId: string
 }
+
+type TabId = 'tasks' | 'schedules'
 
 const LIMIT = 12
 
@@ -31,7 +36,7 @@ function StatCard({
 }) {
   return (
     <div className="relative rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)] p-4 overflow-hidden">
-      <p className="text-[11px] text-[var(--text-muted)] mb-1">{label}</p>
+      <p className="text-xs md:text-sm text-[var(--text-muted)] mb-1">{label}</p>
       <div className="flex items-center gap-2">
         <p className="text-2xl font-bold tabular-nums" style={{ color }}>
           {value}
@@ -63,6 +68,9 @@ function SkeletonCard() {
 export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
   const router = useRouter()
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabId>('tasks')
+
   // Filter state
   const [status, setStatus] = useState<BrowserTaskStatus | 'all'>('all')
   const [taskType, setTaskType] = useState<BrowserTaskType | 'all'>('all')
@@ -79,14 +87,21 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
   const refresh = useCallback(() => setTick((t) => t + 1), [])
 
   const { stats } = useBrowserTaskStats(workspaceId)
+  const {
+    schedules,
+    total: schedulesTotal,
+    isLoading: schedulesLoading,
+    refresh: refreshSchedules,
+  } = useBrowserTaskSchedules({ workspaceId })
 
-  // Load tasks
+  // Load tasks — only show skeleton on initial load, not on background refreshes
   useEffect(() => {
     if (!workspaceId) return
     const controller = new AbortController()
+    let isFirst = true
 
     async function load() {
-      setIsLoading(true)
+      if (isFirst) setIsLoading(true)
       try {
         const params = new URLSearchParams({
           workspace_id: workspaceId,
@@ -107,11 +122,14 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
         setTasks(filtered)
         setTotal(json.count ?? 0)
       } catch { /* silently handle */ }
-      finally { setIsLoading(false) }
+      finally {
+        if (isFirst) { setIsLoading(false); isFirst = false }
+      }
     }
 
     void load()
-    const interval = setInterval(() => { void load() }, 5000)
+    // Realtime subscription handles live updates — only poll as a fallback every 30s
+    const interval = setInterval(() => { void load() }, 30000)
     return () => { controller.abort(); clearInterval(interval) }
   }, [workspaceId, page, status, taskType, urlSearch, tick])
 
@@ -131,119 +149,234 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
 
   const totalPages = Math.ceil(total / LIMIT)
 
+  function handleCreated() {
+    refresh()
+    refreshSchedules()
+  }
+
+  async function handleToggleSchedule(id: string) {
+    try {
+      await fetch(`/api/browser-task-schedules/${id}/toggle`, { method: 'POST' })
+      refreshSchedules()
+    } catch { /* silently handle */ }
+  }
+
+  async function handleDeleteSchedule(id: string) {
+    try {
+      await fetch(`/api/browser-task-schedules/${id}`, { method: 'DELETE' })
+      refreshSchedules()
+    } catch { /* silently handle */ }
+  }
+
   return (
     <div className="space-y-6 p-6 md:p-8">
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={refresh}
-          className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw size={14} />
-        </button>
-        <Button
-          onClick={() => setModalOpen(true)}
-          variant="accent"
-          size="sm"
-          className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-        >
-          <Plus size={14} />
-            New Task
-          </Button>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => { refresh(); refreshSchedules() }}
+            className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw size={14} />
+          </button>
+          <Button
+            onClick={() => setModalOpen(true)}
+            variant="accent"
+            size="sm"
+            className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+          >
+            <Plus size={14} />
+              New Task
+            </Button>
+        </div>
+      </MotionFadeIn>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Tasks"    value={stats?.total ?? 0}          color="#6366f1" />
-        <StatCard label="Running"        value={stats?.running ?? 0}         color="#3b82f6" pulse={(stats?.running ?? 0) > 0} />
-        <StatCard label="Completed Today" value={stats?.completed_today ?? 0} color="#10b981" />
-        <StatCard label="Failed"         value={stats?.failed ?? 0}          color="#ef4444" />
-      </div>
+      <MotionStagger className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MotionStaggerItem><StatCard label="Total Tasks"    value={stats?.total ?? 0}          color="#6366f1" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Running"        value={stats?.running ?? 0}         color="#3b82f6" pulse={(stats?.running ?? 0) > 0} /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Completed Today" value={stats?.completed_today ?? 0} color="#10b981" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Failed"         value={stats?.failed ?? 0}          color="#ef4444" /></MotionStaggerItem>
+      </MotionStagger>
 
-      {/* Filters */}
-      <BrowserTaskFilters
-        status={status}
-        taskType={taskType}
-        urlSearch={urlSearch}
-        onStatusChange={(v) => { setStatus(v); setPage(1) }}
-        onTaskTypeChange={(v) => { setTaskType(v); setPage(1) }}
-        onUrlSearchChange={(v) => { setUrlSearch(v); setPage(1) }}
-        activeCount={activeFilterCount}
-      />
-
-      {/* Task grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : tasks.length === 0 ? (
-        <div
-          className={cn(
-            'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
-            'bg-[var(--surface-solid)] p-12 text-center overflow-hidden'
-          )}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 70%)' }}
-            aria-hidden="true"
-          />
-          <div className="relative flex flex-col items-center gap-3">
-            <Globe size={32} className="text-[var(--text-muted)] opacity-40" />
-            <p className="text-sm text-[var(--text-muted)]">
-              {activeFilterCount > 0
-                ? 'No tasks match your filters'
-                : 'No browser tasks yet. Create your first task.'}
-            </p>
-            {activeFilterCount === 0 && (
-              <Button
-                onClick={() => setModalOpen(true)}
-                variant="accent"
-                size="sm"
-                className="mt-2"
-              >
-                <Plus size={13} className="mr-1.5" />
-                New Task
-              </Button>
+      {/* Tabs */}
+      <MotionFadeIn delay={0.03}>
+        <div className="flex gap-1 border-b border-[var(--border)]">
+          <button
+            onClick={() => setActiveTab('tasks')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
+              activeTab === 'tasks'
+                ? 'border-[var(--accent)] text-[var(--accent)]'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
             )}
-          </div>
+          >
+            Tasks
+            {total > 0 && (
+              <span className="ml-1.5 text-xs opacity-70">{total}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('schedules')}
+            className={cn(
+              'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
+              activeTab === 'schedules'
+                ? 'border-[var(--primary)] text-[var(--primary)]'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
+            )}
+          >
+            <Calendar size={13} />
+            Schedules
+            {schedulesTotal > 0 && (
+              <span className="text-xs opacity-70">{schedulesTotal}</span>
+            )}
+          </button>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {tasks.map((task) => (
-              <BrowserTaskCard
-                key={task.id}
-                task={task}
-                onClick={() => router.push(`/browser/${task.id}`)}
-                onActionComplete={refresh}
-              />
-            ))}
-          </div>
+      </MotionFadeIn>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-xs text-[var(--text-muted)]">
-                Page {page} of {totalPages} · {total} task{total !== 1 ? 's' : ''}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
+      {/* Tasks Tab */}
+      {activeTab === 'tasks' && (
+        <>
+          {/* Filters */}
+          <MotionFadeIn delay={0.05}>
+          <BrowserTaskFilters
+            status={status}
+            taskType={taskType}
+            urlSearch={urlSearch}
+            onStatusChange={(v) => { setStatus(v); setPage(1) }}
+            onTaskTypeChange={(v) => { setTaskType(v); setPage(1) }}
+            onUrlSearchChange={(v) => { setUrlSearch(v); setPage(1) }}
+            activeCount={activeFilterCount}
+          />
+          </MotionFadeIn>
+
+          {/* Task grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
+          ) : tasks.length === 0 ? (
+            <div
+              className={cn(
+                'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
+                'bg-[var(--surface-solid)] p-12 text-center overflow-hidden'
+              )}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 70%)' }}
+                aria-hidden="true"
+              />
+              <div className="relative flex flex-col items-center gap-3">
+                <Globe size={32} className="text-[var(--text-muted)] opacity-40" />
+                <p className="text-sm text-[var(--text-muted)]">
+                  {activeFilterCount > 0
+                    ? 'No tasks match your filters'
+                    : 'No browser tasks yet. Create your first task.'}
+                </p>
+                {activeFilterCount === 0 && (
+                  <Button
+                    onClick={() => setModalOpen(true)}
+                    variant="accent"
+                    size="sm"
+                    className="mt-2"
+                  >
+                    <Plus size={13} className="mr-1.5" />
+                    New Task
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <MotionStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {tasks.map((task) => (
+                  <MotionStaggerItem key={task.id}>
+                    <BrowserTaskCard
+                      task={task}
+                      onClick={() => router.push(`/browser/${task.id}`)}
+                      onActionComplete={refresh}
+                    />
+                  </MotionStaggerItem>
+                ))}
+              </MotionStagger>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    Page {page} of {totalPages} · {total} task{total !== 1 ? 's' : ''}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Schedules Tab */}
+      {activeTab === 'schedules' && (
+        <>
+          {schedulesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : schedules.length === 0 ? (
+            <div
+              className={cn(
+                'relative rounded-[var(--radius-xl)] border border-[var(--border)]',
+                'bg-[var(--surface-solid)] p-12 text-center overflow-hidden'
+              )}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.06) 0%, transparent 70%)' }}
+                aria-hidden="true"
+              />
+              <div className="relative flex flex-col items-center gap-3">
+                <Calendar size={32} className="text-[var(--text-muted)] opacity-40" />
+                <p className="text-sm text-[var(--text-muted)]">
+                  No scheduled tasks yet. Create one using the "New Task" button.
+                </p>
+                <Button
+                  onClick={() => setModalOpen(true)}
+                  variant="accent"
+                  size="sm"
+                  className="mt-2"
+                >
+                  <Plus size={13} className="mr-1.5" />
+                  New Scheduled Task
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {schedules.map((schedule) => (
+                <MotionStaggerItem key={schedule.id}>
+                  <ScheduleCard
+                    schedule={schedule}
+                    onToggle={handleToggleSchedule}
+                    onDelete={handleDeleteSchedule}
+                  />
+                </MotionStaggerItem>
+              ))}
+            </MotionStagger>
           )}
         </>
       )}
@@ -252,7 +385,7 @@ export function BrowserAgentPage({ workspaceId }: BrowserAgentPageProps) {
         workspaceId={workspaceId}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreated={refresh}
+        onCreated={handleCreated}
       />
     </div>
   )

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getConnector, updateConnector, deleteConnector } from '@/lib/supabase/queries/connectors'
 
+export const dynamic = 'force-dynamic'
+
 type Params = { params: Promise<{ id: string }> }
 
 async function authorizeConnector(id: string) {

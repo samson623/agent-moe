@@ -69,7 +69,7 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
       )}
 
       {/* Meta row */}
-      <div className="flex items-center gap-4 text-[10px] text-[var(--text-muted)]">
+      <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
         {result.page_title && <span>Title: <span className="text-[var(--text)]">{result.page_title}</span></span>}
         {result.final_url && result.final_url !== task.url && (
           <span>Redirected to: <span className="text-[var(--primary)]">{result.final_url.slice(0, 60)}</span></span>
@@ -104,7 +104,7 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
         {currentTab === 'data' && hasData && (
           <pre
             className={cn(
-              'text-[11px] text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)]',
+              'text-xs md:text-sm text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)]',
               'rounded-[var(--radius)] p-4 overflow-auto max-h-96 font-mono leading-relaxed'
             )}
           >
@@ -115,7 +115,7 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
         {currentTab === 'text' && hasText && (
           <pre
             className={cn(
-              'text-[11px] text-[var(--text-secondary)] bg-[var(--surface-elevated)] border border-[var(--border)]',
+              'text-xs md:text-sm text-[var(--text-secondary)] bg-[var(--surface-elevated)] border border-[var(--border)]',
               'rounded-[var(--radius)] p-4 overflow-auto max-h-96 whitespace-pre-wrap font-mono leading-relaxed'
             )}
           >
@@ -138,7 +138,7 @@ export function BrowserTaskResult({ task }: BrowserTaskResultProps) {
               </a>
             ))}
             {result.links!.length > 20 && (
-              <p className="text-[10px] text-[var(--text-muted)] pt-1">
+              <p className="text-xs text-[var(--text-muted)] pt-1">
                 +{result.links!.length - 20} more links
               </p>
             )}

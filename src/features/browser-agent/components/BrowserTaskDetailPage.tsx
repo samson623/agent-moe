@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Globe, Camera, MousePointer, FileText, Search, Monitor, Send, Navigation,
@@ -8,12 +8,14 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { MotionFadeIn } from '@/components/nebula/motion'
 import { useBrowserTaskDetail } from '../hooks/use-browser-task-detail'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
 import { useRealtimeBrowserTasks } from '../hooks/use-realtime-browser-tasks'
 import { BrowserTaskLog } from './BrowserTaskLog'
 import { BrowserTaskResult } from './BrowserTaskResult'
 import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
+import { LiveBrowserView } from './LiveBrowserView'
 
 const TASK_ICONS: Record<BrowserTaskType, React.ElementType> = {
   scrape:       Globe,
@@ -35,7 +37,7 @@ const STATUS_COLORS: Record<BrowserTaskStatus, string> = {
   timeout:   '#f97316',
 }
 
-type DetailTab = 'result' | 'config' | 'activity'
+type DetailTab = 'live' | 'result' | 'config' | 'activity'
 
 interface BrowserTaskDetailPageProps {
   taskId: string
@@ -57,6 +59,15 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
     workspaceId: task?.workspace_id ?? '',
     onUpdate: handleUpdate,
   })
+
+  // Auto-switch to live tab when task starts running with live view
+  const prevStatusRef = useRef(task?.status)
+  useEffect(() => {
+    if (task?.status === 'running' && prevStatusRef.current !== 'running' && task.config.enable_live_view) {
+      setActiveTab('live')
+    }
+    prevStatusRef.current = task?.status
+  }, [task?.status, task?.config.enable_live_view])
 
   if (isLoading && !task) {
     return (
@@ -81,9 +92,11 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
   const Icon = TASK_ICONS[task.task_type]
   const statusColor = STATUS_COLORS[task.status]
   const isRunning = task.status === 'running'
+  const hasLiveView = Boolean(task.config.enable_live_view)
+  const showLiveTab = isRunning && hasLiveView
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <MotionFadeIn className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
@@ -107,7 +120,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                 {task.task_type.replace('_', ' ')}
               </h2>
               <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
                 style={{ color: statusColor, background: `${statusColor}18`, border: `1px solid ${statusColor}30` }}
               >
                 {task.status}
@@ -154,24 +167,39 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
         <div className="lg:col-span-2 space-y-4">
           {/* Tab bar */}
           <div className="flex gap-1 border-b border-[var(--border)]">
-            {(['result', 'config', 'activity'] as DetailTab[]).map((tab) => (
+            {([...(showLiveTab ? ['live' as DetailTab] : []), 'result', 'config', 'activity'] as DetailTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   'px-4 py-2 text-xs font-medium capitalize transition-all border-b-2 -mb-px',
                   activeTab === tab
-                    ? 'border-[var(--accent)] text-[var(--accent)]'
+                    ? tab === 'live'
+                      ? 'border-[#10b981] text-[#10b981]'
+                      : 'border-[var(--accent)] text-[var(--accent)]'
                     : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
                 )}
               >
-                {tab}
+                {tab === 'live' ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+                    Live View
+                  </span>
+                ) : (
+                  tab
+                )}
               </button>
             ))}
           </div>
 
           {/* Tab content */}
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className={cn(
+            'rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]',
+            activeTab === 'live' ? 'p-0 overflow-hidden' : 'p-4'
+          )}>
+            {activeTab === 'live' && showLiveTab && (
+              <LiveBrowserView taskId={task.id} enabled={isRunning} />
+            )}
             {activeTab === 'result'   && <BrowserTaskResult task={task} />}
             {activeTab === 'activity' && <BrowserTaskLog task={task} />}
             {activeTab === 'config' && (
@@ -182,7 +210,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">Task Config</p>
-                  <pre className="text-[11px] text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-auto font-mono">
+                  <pre className="text-xs md:text-sm text-[var(--text)] bg-[var(--surface-elevated)] border border-[var(--border)] rounded-[var(--radius)] p-3 overflow-auto font-mono">
                     {JSON.stringify(task.config, null, 2)}
                   </pre>
                 </div>
@@ -190,13 +218,13 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
                   {task.mission_id && (
                     <div>
                       <p className="text-[var(--text-muted)]">Mission ID</p>
-                      <p className="text-[var(--text)] font-mono text-[10px]">{task.mission_id}</p>
+                      <p className="text-[var(--text)] font-mono text-xs">{task.mission_id}</p>
                     </div>
                   )}
                   {task.job_id && (
                     <div>
                       <p className="text-[var(--text-muted)]">Job ID</p>
-                      <p className="text-[var(--text)] font-mono text-[10px]">{task.job_id}</p>
+                      <p className="text-[var(--text)] font-mono text-xs">{task.job_id}</p>
                     </div>
                   )}
                   <div>
@@ -261,6 +289,6 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
           )}
         </div>
       </div>
-    </div>
+    </MotionFadeIn>
   )
 }

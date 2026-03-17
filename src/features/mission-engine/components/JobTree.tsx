@@ -129,7 +129,7 @@ export function JobTree({ jobs }: JobTreeProps) {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className={cn(
-                    'text-[10px] font-medium uppercase tracking-widest',
+                    'text-xs font-medium uppercase tracking-widest',
                     'text-[var(--text-disabled)]',
                   )}
                 >

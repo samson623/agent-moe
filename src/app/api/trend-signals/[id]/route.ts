@@ -7,6 +7,8 @@ import {
   deleteTrendSignal,
 } from '@/lib/supabase/queries/trend-signals'
 
+export const dynamic = 'force-dynamic'
+
 const UpdateSignalSchema = z.object({
   workspace_id: z.string().uuid(),
   topic: z.string().min(1).max(500).optional(),

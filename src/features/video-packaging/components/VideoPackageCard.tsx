@@ -84,12 +84,12 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
         {/* Top row: platform badge + status */}
         <div className="flex items-center justify-between gap-2">
           <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{ color: platform.color, background: platform.bg }}
           >
             {platform.label}
           </span>
-          <Badge variant={statusVariant} className="text-[10px] capitalize">
+          <Badge variant={statusVariant} className="text-xs capitalize">
             {pkg.status}
           </Badge>
         </div>
@@ -108,7 +108,7 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className={cn(
-              'text-[10px] font-medium px-2 py-0.5 rounded-full',
+              'text-xs font-medium px-2 py-0.5 rounded-full',
               'bg-[var(--surface-elevated)] text-[var(--text-secondary)]',
               'border border-[var(--border-subtle)]',
             )}
@@ -117,7 +117,7 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
           </span>
           <span
             className={cn(
-              'text-[10px] font-medium px-2 py-0.5 rounded-full',
+              'text-xs font-medium px-2 py-0.5 rounded-full',
               'bg-[var(--surface-elevated)] text-[var(--text-secondary)]',
               'border border-[var(--border-subtle)]',
             )}
@@ -127,7 +127,7 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
           {pkg.hook.variants.length > 0 && (
             <span
               className={cn(
-                'text-[10px] font-medium px-2 py-0.5 rounded-full',
+                'text-xs font-medium px-2 py-0.5 rounded-full',
                 'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
                 'border border-[var(--border-subtle)]',
               )}
@@ -140,7 +140,7 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
         {/* Confidence score bar */}
         {confidence !== null && confidence !== undefined && (
           <div className="space-y-1">
-            <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
+            <div className="flex justify-between text-xs text-[var(--text-muted)]">
               <span>Confidence</span>
               <span className="tabular-nums">{(confidence * 100).toFixed(0)}%</span>
             </div>
@@ -163,7 +163,7 @@ export function VideoPackageCard({ pkg, onClick }: VideoPackageCardProps) {
 
         {/* Footer: timestamp */}
         <div className="flex items-center justify-between pt-1 border-t border-[var(--border-subtle)]">
-          <span className="text-[10px] text-[var(--text-muted)] tabular-nums">
+          <span className="text-xs text-[var(--text-muted)] tabular-nums">
             {formatTimeAgo(pkg.created_at)}
           </span>
         </div>

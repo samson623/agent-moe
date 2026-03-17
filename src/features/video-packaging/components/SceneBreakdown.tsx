@@ -41,7 +41,7 @@ export function SceneBreakdown({ scenes: rawScenes }: SceneBreakdownProps) {
               </h4>
               <span
                 className={cn(
-                  'shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums',
+                  'shrink-0 text-xs font-bold px-2 py-0.5 rounded-full tabular-nums',
                   'bg-[var(--surface)] border border-[var(--border-subtle)]',
                   'text-[var(--text-secondary)]',
                 )}

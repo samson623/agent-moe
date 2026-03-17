@@ -31,7 +31,7 @@ export function PendingApprovalsBadge({ count, isLoading }: PendingApprovalsBadg
         'flex items-center justify-center',
         'min-w-[18px] h-[18px] px-1 rounded-full',
         'bg-[var(--danger)] text-white',
-        'text-[10px] font-bold leading-none',
+        'text-xs font-bold leading-none',
         'ring-2 ring-[var(--surface)]',
         'transition-transform duration-200 ease-out',
         'scale-100 hover:scale-110'

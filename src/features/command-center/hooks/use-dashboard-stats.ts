@@ -24,8 +24,14 @@ export function useDashboardStats(workspaceId: string): UseDashboardStatsReturn 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
   const fetchStats = useCallback(async () => {
+    if (!workspaceId) {
+      setIsLoading(false);
+      return;
+    }
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -44,20 +50,26 @@ export function useDashboardStats(workspaceId: string): UseDashboardStatsReturn 
         throw new Error(body.error || `Failed to fetch stats (${res.status})`);
       }
 
+      if (!mountedRef.current) return;
       setStats(await res.json());
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
+      if (!mountedRef.current) return;
       setError((err as Error).message);
     } finally {
-      if (!controller.signal.aborted) {
+      if (mountedRef.current) {
         setIsLoading(false);
       }
     }
   }, [workspaceId]);
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchStats();
-    return () => abortRef.current?.abort();
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
   }, [fetchStats]);
 
   return { stats, isLoading, error, refetch: fetchStats };

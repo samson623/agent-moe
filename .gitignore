@@ -43,3 +43,12 @@ desktop.ini
 
 # Testing
 coverage/
+
+# Remotion
+remotion-bundle/
+*.mp4
+
+# Temp logs
+tmp-*.log
+tmp-*.err
+tmp-*.out

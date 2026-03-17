@@ -82,12 +82,17 @@ function mapDbTeamToOperatorTeam(team: DbOperatorTeam): OperatorTeam {
 }
 
 /**
- * Derives a JobType from the DB job's input_data.
+ * Derives a JobType from the DB job row.
  *
- * The MissionPlanner stores `job_type` inside input_data when it creates jobs.
- * Falls back to a team-based default if the field is absent or unrecognised.
+ * Priority: job_type column → input_data.job_type → team-based default.
  */
 function deriveJobType(dbJob: DbJob): JobType {
+  // 1. Use the job_type column directly (set by orchestrator)
+  if (dbJob.job_type && Object.values(JobType).includes(dbJob.job_type as JobType)) {
+    return dbJob.job_type as JobType
+  }
+
+  // 2. Check input_data for legacy jobs
   const inputData = dbJob.input_data
   if (
     inputData !== null &&
@@ -101,7 +106,7 @@ function deriveJobType(dbJob: DbJob): JobType {
     }
   }
 
-  // Fallback: derive a sensible default per operator team
+  // 3. Fallback: derive a sensible default per operator team
   const defaults: Record<DbOperatorTeam, JobType> = {
     content_strike: JobType.CONTENT_GENERATION,
     growth_operator: JobType.TREND_ANALYSIS,

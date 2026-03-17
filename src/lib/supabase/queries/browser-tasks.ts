@@ -91,6 +91,7 @@ export async function createBrowserTask(
       workspace_id: input.workspace_id,
       mission_id: input.mission_id ?? null,
       job_id: input.job_id ?? null,
+      schedule_id: input.schedule_id ?? null,
       task_type: input.task_type,
       url: input.url,
       instructions: input.instructions,

@@ -4,6 +4,8 @@ import { getConnector } from '@/lib/supabase/queries/connectors'
 import { ConnectorPublisher } from '@/features/connectors/publisher'
 import type { PublishInput } from '@/features/connectors/types'
 
+export const dynamic = 'force-dynamic'
+
 type Params = { params: Promise<{ id: string }> }
 
 export async function POST(req: Request, { params }: Params) {

@@ -23,9 +23,10 @@ export function useBrowserTaskStats(workspaceId: string): UseBrowserTaskStatsRet
 
     const controller = new AbortController()
 
+    let isFirst = true
+
     async function load() {
-      setIsLoading(true)
-      setError(null)
+      if (isFirst) { setIsLoading(true); setError(null) }
       try {
         const res = await fetch(`/api/browser-tasks/stats?workspace_id=${workspaceId}`, {
           signal: controller.signal,
@@ -40,13 +41,13 @@ export function useBrowserTaskStats(workspaceId: string): UseBrowserTaskStatsRet
           setError('Failed to load stats')
         }
       } finally {
-        setIsLoading(false)
+        if (isFirst) { setIsLoading(false); isFirst = false }
       }
     }
 
     void load()
 
-    const interval = setInterval(() => { void load() }, 10000)
+    const interval = setInterval(() => { void load() }, 30000)
 
     return () => {
       controller.abort()

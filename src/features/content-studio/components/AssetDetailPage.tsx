@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { MotionFadeIn } from '@/components/nebula/motion'
 import { AssetEditor } from './AssetEditor'
 import { StatusManager } from './StatusManager'
 import { PlatformSelector } from './PlatformSelector'
@@ -175,7 +176,7 @@ export function AssetDetailPage({ initialAsset }: AssetDetailPageProps) {
   }
 
   return (
-    <div className="animate-fade-in space-y-6 p-6 md:p-8">
+    <MotionFadeIn className="space-y-6 p-6 md:p-8">
       {/* Header */}
       <div className="space-y-4">
         <Link
@@ -366,6 +367,6 @@ export function AssetDetailPage({ initialAsset }: AssetDetailPageProps) {
           </Card>
         </div>
       </div>
-    </div>
+    </MotionFadeIn>
   )
 }

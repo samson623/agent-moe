@@ -1,100 +1,81 @@
 'use client'
 
 import { BarChart2, TrendingUp, CheckCircle, AlertTriangle } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { SystemStats } from '@/features/analytics/types'
+import { StatCard } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 
 interface StatsOverviewProps {
   stats: SystemStats | null
   isLoading: boolean
 }
 
-function getRateColor(rate: number): string {
-  if (rate >= 80) return 'var(--success)'
-  if (rate >= 60) return 'var(--warning)'
-  return 'var(--danger)'
+type StatTone = 'primary' | 'accent' | 'success' | 'warning' | 'danger'
+
+function getRateTone(rate: number): StatTone {
+  if (rate >= 80) return 'success'
+  if (rate >= 60) return 'warning'
+  return 'danger'
 }
 
 export function StatsOverview({ stats, isLoading }: StatsOverviewProps) {
-  const approvalColor = getRateColor(stats?.approval_rate ?? 0)
-  const publishColor = getRateColor(stats?.publish_success_rate ?? 0)
+  const approvalTone = getRateTone(stats?.approval_rate ?? 0)
+  const publishTone = getRateTone(stats?.publish_success_rate ?? 0)
 
-  const cards = [
+  const cards: {
+    label: string
+    value: string | number
+    subtitle: string
+    icon: typeof BarChart2
+    tone: StatTone
+  }[] = [
     {
       label: 'Missions',
       value: stats
         ? `${stats.missions_completed} / ${stats.missions_total}`
-        : '— / —',
-      subtext: 'completed',
-      Icon: BarChart2,
-      color: 'var(--primary)',
+        : '-- / --',
+      subtitle: 'completed',
+      icon: BarChart2,
+      tone: 'primary',
     },
     {
       label: 'Assets Generated',
       value: stats?.assets_total ?? 0,
-      subtext: `${stats?.assets_published ?? 0} published`,
-      Icon: TrendingUp,
-      color: 'var(--accent)',
+      subtitle: `${stats?.assets_published ?? 0} published`,
+      icon: TrendingUp,
+      tone: 'accent',
     },
     {
       label: 'Approval Rate',
-      value: stats ? `${stats.approval_rate}%` : '—%',
-      subtext: 'of submitted assets',
-      Icon: CheckCircle,
-      color: approvalColor,
+      value: stats ? `${stats.approval_rate}%` : '--%',
+      subtitle: 'of submitted assets',
+      icon: CheckCircle,
+      tone: approvalTone,
     },
     {
       label: 'Publish Success',
-      value: stats ? `${stats.publish_success_rate}%` : '—%',
-      subtext: 'of publish attempts',
-      Icon: AlertTriangle,
-      color: publishColor,
+      value: stats ? `${stats.publish_success_rate}%` : '--%',
+      subtitle: 'of publish attempts',
+      icon: AlertTriangle,
+      tone: publishTone,
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-      {cards.map(({ label, value, subtext, Icon, color }) => (
-        <div
-          key={label}
-          className={cn(
-            'flex items-center gap-3 p-4 rounded-[var(--radius-lg)]',
-            'border border-[var(--border)] bg-[var(--surface)]',
-          )}
-        >
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-[var(--radius)] shrink-0"
-            style={{
-              backgroundColor: `${color}18`,
-              border: `1px solid ${color}30`,
-            }}
-            aria-hidden="true"
-          >
-            <Icon size={16} style={{ color }} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            {isLoading ? (
-              <div className="animate-pulse space-y-1.5">
-                <div className="h-5 w-16 bg-[var(--surface-elevated)] rounded" />
-                <div className="h-3 w-24 bg-[var(--surface-elevated)] rounded" />
-              </div>
-            ) : (
-              <>
-                <p
-                  className="text-xl font-bold leading-none tabular-nums"
-                  style={{ color }}
-                >
-                  {value}
-                </p>
-                <p className="text-[10px] text-[var(--text-muted)] mt-0.5 truncate">
-                  {label} · {subtext}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+    <MotionStagger className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      {cards.map((card) => (
+        <MotionStaggerItem key={card.label}>
+          <StatCard
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            tone={card.tone}
+            subtitle={card.subtitle}
+            subtitleTone="neutral"
+            loading={isLoading}
+          />
+        </MotionStaggerItem>
       ))}
-    </div>
+    </MotionStagger>
   )
 }

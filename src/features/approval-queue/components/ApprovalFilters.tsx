@@ -98,7 +98,7 @@ export function ApprovalFiltersBar({
           onClick={onClear}
           className="ml-auto text-xs text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors duration-150 flex items-center gap-1"
         >
-          <span className="bg-[var(--primary)] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          <span className="bg-[var(--primary)] text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
             {activeCount}
           </span>
           Clear filters

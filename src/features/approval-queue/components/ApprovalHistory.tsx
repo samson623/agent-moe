@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Check, X, RotateCcw } from 'lucide-react'
+import { GlassCard } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 import { RiskBadge } from './RiskBadge'
 import { cn } from '@/lib/utils'
 import type { Approval } from '@/lib/supabase/types'
@@ -61,8 +63,6 @@ export function ApprovalHistory({ workspaceId }: ApprovalHistoryProps) {
       workspace_id: workspaceId,
       limit: '50',
     })
-    // Fetch non-pending approvals as history
-    // We'll get all and filter client-side for simplicity
     fetch(`/api/approvals?${params.toString()}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Failed to load history (${res.status})`)
@@ -80,9 +80,9 @@ export function ApprovalHistory({ workspaceId }: ApprovalHistoryProps) {
 
   if (error) {
     return (
-      <div className="px-4 py-3 rounded-[var(--radius)] bg-red-500/10 border border-red-500/30 text-sm text-red-400">
-        {error}
-      </div>
+      <GlassCard className="bg-red-500/10 border-red-500/30" hover={false}>
+        <span className="text-sm text-red-400">{error}</span>
+      </GlassCard>
     )
   }
 
@@ -95,45 +95,51 @@ export function ApprovalHistory({ workspaceId }: ApprovalHistoryProps) {
   }
 
   return (
-    <div className="divide-y divide-[var(--border)]">
-      {isLoading ? (
-        <>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </>
-      ) : (
-        history.map((approval) => {
-          const Icon = DECISION_ICON[approval.status] ?? Check
-          const colorClass = DECISION_COLOR[approval.status] ?? 'text-[var(--text-muted)] bg-[var(--skeleton)]'
+    <GlassCard padding="sm" hover={false}>
+      <div className="divide-y divide-[var(--border)]">
+        {isLoading ? (
+          <>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </>
+        ) : (
+          <MotionStagger>
+            {history.map((approval) => {
+              const Icon = DECISION_ICON[approval.status] ?? Check
+              const colorClass = DECISION_COLOR[approval.status] ?? 'text-[var(--text-muted)] bg-[var(--skeleton)]'
 
-          return (
-            <div key={approval.id} className="flex gap-3 py-3">
-              <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5', colorClass)}>
-                <Icon size={12} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <RiskBadge risk_level={approval.risk_level} />
-                  <span className="text-xs font-mono text-[var(--text-secondary)] truncate">
-                    {approval.asset_id?.slice(0, 12) ?? 'N/A'}…
-                  </span>
-                  {approval.reviewed_at && (
-                    <span className="ml-auto text-[11px] text-[var(--text-disabled)] shrink-0">
-                      {relativeTime(approval.reviewed_at)}
-                    </span>
-                  )}
-                </div>
-                {approval.notes && (
-                  <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-1 italic">
-                    &ldquo;{approval.notes}&rdquo;
-                  </p>
-                )}
-              </div>
-            </div>
-          )
-        })
-      )}
-    </div>
+              return (
+                <MotionStaggerItem key={approval.id}>
+                  <div className="flex gap-3 py-3">
+                    <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5', colorClass)}>
+                      <Icon size={12} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <RiskBadge risk_level={approval.risk_level} />
+                        <span className="text-xs font-mono text-[var(--text-secondary)] truncate">
+                          {approval.asset_id?.slice(0, 12) ?? 'N/A'}…
+                        </span>
+                        {approval.reviewed_at && (
+                          <span className="ml-auto text-xs md:text-sm text-[var(--text-disabled)] shrink-0">
+                            {relativeTime(approval.reviewed_at)}
+                          </span>
+                        )}
+                      </div>
+                      {approval.notes && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-1 italic">
+                          &ldquo;{approval.notes}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </MotionStaggerItem>
+              )
+            })}
+          </MotionStagger>
+        )}
+      </div>
+    </GlassCard>
   )
 }

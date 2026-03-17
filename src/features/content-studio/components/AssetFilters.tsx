@@ -74,7 +74,7 @@ export function AssetFilters({ filters, onFiltersChange, assetCount }: AssetFilt
         <div className="flex items-center gap-2 ml-auto">
           {activeCount > 0 && (
             <>
-              <Badge variant="accent" className="text-[10px]">
+              <Badge variant="accent" className="text-xs">
                 {activeCount} filter{activeCount > 1 ? 's' : ''}
               </Badge>
               <Button variant="ghost" size="xs" onClick={clearAll} className="gap-1 text-[var(--text-muted)]">
@@ -91,7 +91,7 @@ export function AssetFilters({ filters, onFiltersChange, assetCount }: AssetFilt
 
       {/* Platform pills */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium mr-1">
+        <span className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-medium mr-1">
           Platform
         </span>
         {PLATFORMS.map((p) => {
@@ -115,7 +115,7 @@ export function AssetFilters({ filters, onFiltersChange, assetCount }: AssetFilt
 
       {/* Status pills */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium mr-1">
+        <span className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-medium mr-1">
           Status
         </span>
         {STATUSES.map((s) => {

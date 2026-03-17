@@ -57,7 +57,7 @@ export function ConnectorStats({ stats, loading }: ConnectorStatsProps) {
             <p className="text-lg font-bold text-[var(--text)] leading-none">
               {loading ? '—' : value}
             </p>
-            <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{label}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
           </div>
         </div>
       ))}

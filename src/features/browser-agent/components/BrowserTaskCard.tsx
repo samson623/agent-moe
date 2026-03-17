@@ -103,7 +103,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
             >
               {typeCfg.label}
             </p>
-            <p className="text-[11px] text-[var(--text-muted)] truncate">
+            <p className="text-xs md:text-sm text-[var(--text-muted)] truncate">
               {truncateUrl(task.url)}
             </p>
           </div>
@@ -124,7 +124,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
             </span>
           )}
           <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+            className="text-xs font-semibold px-2 py-0.5 rounded-full border"
             style={{
               color: statusCfg.color,
               borderColor: `${statusCfg.color}40`,
@@ -143,11 +143,11 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
 
       {/* Priority + Retries */}
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-[10px] text-[var(--text-muted)]">
+        <span className="text-xs text-[var(--text-muted)]">
           Priority <span className="font-semibold text-[var(--text)]">{task.priority}</span>/10
         </span>
         {task.retry_count > 0 && (
-          <span className="text-[10px] text-[var(--text-muted)]">
+          <span className="text-xs text-[var(--text-muted)]">
             <RefreshCw size={9} className="inline mr-0.5" />
             {task.retry_count}/{task.max_retries} retries
           </span>
@@ -156,7 +156,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
 
       {/* Footer: timestamp + action */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-[var(--text-muted)]">
+        <span className="text-xs text-[var(--text-muted)]">
           {task.completed_at
             ? `Done ${new Date(task.completed_at).toLocaleTimeString()}`
             : `Created ${new Date(task.created_at).toLocaleDateString()}`}
@@ -168,7 +168,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
               onClick={handleExecute}
               disabled={isExecuting}
               className={cn(
-                'text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all',
+                'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
                 'bg-[var(--primary)] text-white hover:opacity-90',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
@@ -181,7 +181,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
               onClick={handleCancel}
               disabled={isCancelling}
               className={cn(
-                'text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all',
+                'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
                 'border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--danger)] hover:text-[var(--danger)]',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
@@ -194,7 +194,7 @@ export function BrowserTaskCard({ task, onClick, onActionComplete }: BrowserTask
               onClick={handleRetry}
               disabled={isExecuting}
               className={cn(
-                'text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all',
+                'text-xs font-semibold px-2.5 py-1 rounded-full transition-all',
                 'border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}

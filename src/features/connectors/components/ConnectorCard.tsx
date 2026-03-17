@@ -125,20 +125,20 @@ export function ConnectorCard({ connector, onRefetch }: ConnectorCardProps) {
               </span>
             )}
             <StatusIcon size={11} style={{ color: statusCfg.color }} />
-            <span className="text-[10px] font-medium" style={{ color: statusCfg.color }}>
+            <span className="text-xs font-medium" style={{ color: statusCfg.color }}>
               {statusCfg.label}
             </span>
           </div>
         </div>
 
         {/* Last sync */}
-        <p className="text-[10px] text-[var(--text-muted)] mb-2">
+        <p className="text-xs text-[var(--text-muted)] mb-2">
           {formatLastSync(connector.last_sync_at)}
         </p>
 
         {/* Test result feedback */}
         {testResult && (
-          <p className={cn('text-[10px] mb-2 font-medium', testResult.startsWith('✓') ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
+          <p className={cn('text-xs mb-2 font-medium', testResult.startsWith('✓') ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
             {testResult}
           </p>
         )}
@@ -150,7 +150,7 @@ export function ConnectorCard({ connector, onRefetch }: ConnectorCardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-[10px] h-6 px-2 gap-1"
+                className="text-xs h-6 px-2 gap-1"
                 onClick={handleTest}
                 disabled={loading}
               >
@@ -160,7 +160,7 @@ export function ConnectorCard({ connector, onRefetch }: ConnectorCardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-[10px] h-6 px-2 gap-1 text-[var(--danger)] hover:text-[var(--danger)]"
+                className="text-xs h-6 px-2 gap-1 text-[var(--danger)] hover:text-[var(--danger)]"
                 onClick={handleDisconnect}
                 disabled={loading}
               >
@@ -171,21 +171,21 @@ export function ConnectorCard({ connector, onRefetch }: ConnectorCardProps) {
           ) : connector.status === 'error' ? (
             <Button
               size="sm"
-              className="text-[10px] h-6 px-2 gap-1"
+              className="text-xs h-6 px-2 gap-1"
               onClick={handleConnect}
             >
               <AlertCircle size={9} />
               Reconnect
             </Button>
           ) : connector.status === 'pending' ? (
-            <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 gap-1" disabled>
+            <Button variant="outline" size="sm" className="text-xs h-6 px-2 gap-1" disabled>
               <Loader2 size={9} className="animate-spin" />
               Completing auth...
             </Button>
           ) : (
             <Button
               size="sm"
-              className="text-[10px] h-6 px-2 gap-1"
+              className="text-xs h-6 px-2 gap-1"
               onClick={handleConnect}
             >
               <Send size={9} />

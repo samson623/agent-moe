@@ -75,7 +75,7 @@ function MilestoneRow({ milestone, isLast }: MilestoneRowProps) {
           </div>
           <Badge
             variant={MILESTONE_STATUS_BADGE[milestone.status]}
-            className="text-[10px] shrink-0"
+            className="text-xs shrink-0"
           >
             {MILESTONE_STATUS_LABEL[milestone.status]}
           </Badge>
@@ -83,12 +83,12 @@ function MilestoneRow({ milestone, isLast }: MilestoneRowProps) {
 
         {/* Footer: date + asset count */}
         <div className="flex items-center gap-3 mt-2">
-          <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
             <Clock size={9} aria-hidden="true" />
             <span>{formatMilestoneDate(milestone.date)}</span>
           </div>
           {milestone.asset_ids.length > 0 && (
-            <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+            <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
               <Layers size={9} aria-hidden="true" />
               <span>
                 {milestone.asset_ids.length} asset{milestone.asset_ids.length !== 1 ? 's' : ''}

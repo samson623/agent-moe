@@ -1,7 +1,9 @@
 'use client'
 
-import { cn } from '@/lib/utils'
+
 import type { ContentPerformance } from '@/features/analytics/types'
+import { GlassCard, SectionHeader, StatusBadge } from '@/components/nebula'
+import { MotionFadeIn } from '@/components/nebula/motion'
 
 interface ContentPerformancePanelProps {
   data: ContentPerformance | null
@@ -35,34 +37,29 @@ export function ContentPerformancePanel({ data, isLoading }: ContentPerformanceP
     : 1
 
   return (
-    <div
-      className={cn(
-        'p-5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]',
-        'space-y-5',
-      )}
-    >
-      <h3 className="text-sm font-semibold text-[var(--text)]">Content Performance</h3>
+    <GlassCard hover={false}>
+      <SectionHeader title="Content Performance" />
 
       {isLoading ? (
         <div className="animate-pulse grid md:grid-cols-2 gap-6">
           {[0, 1].map((col) => (
             <div key={col} className="space-y-2">
-              <div className="h-3 w-20 bg-[var(--surface-elevated)] rounded mb-3" />
+              <div className="h-3 w-20 bg-[var(--skeleton)] rounded mb-3" />
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex justify-between">
-                  <div className="h-3 w-24 bg-[var(--surface-elevated)] rounded" />
-                  <div className="h-3 w-10 bg-[var(--surface-elevated)] rounded" />
+                  <div className="h-3 w-24 bg-[var(--skeleton)] rounded" />
+                  <div className="h-3 w-10 bg-[var(--skeleton)] rounded" />
                 </div>
               ))}
             </div>
           ))}
         </div>
       ) : data ? (
-        <>
+        <MotionFadeIn>
           <div className="grid md:grid-cols-2 gap-6">
             {/* By Type */}
             <div className="space-y-2">
-              <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
                 By Type
               </p>
               {data.by_type.length === 0 ? (
@@ -76,17 +73,15 @@ export function ContentPerformancePanel({ data, isLoading }: ContentPerformanceP
                     <span className="text-xs text-[var(--text)]">
                       {formatTypeName(item.type)}
                     </span>
-                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
-                      <span className="font-semibold text-[var(--text)] tabular-nums">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[var(--text)] tabular-nums">
                         {item.count}
                       </span>
-                      <span>·</span>
-                      <span
-                        className="text-[var(--success)]"
-                        title="Published"
-                      >
-                        {item.published} pub
-                      </span>
+                      <StatusBadge
+                        label={`${item.published} pub`}
+                        variant="success"
+                        size="sm"
+                      />
                     </div>
                   </div>
                 ))
@@ -95,7 +90,7 @@ export function ContentPerformancePanel({ data, isLoading }: ContentPerformanceP
 
             {/* By Platform */}
             <div className="space-y-2">
-              <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
                 By Platform
               </p>
               {data.by_platform.length === 0 ? (
@@ -127,41 +122,24 @@ export function ContentPerformancePanel({ data, isLoading }: ContentPerformanceP
           </div>
 
           {/* Confidence score */}
-          <div className="flex items-center gap-3 pt-3 border-t border-[var(--border)]">
+          <div className="flex items-center gap-3 pt-3 mt-3 border-t border-[var(--border)]">
             <span className="text-xs text-[var(--text-muted)]">Avg Confidence Score</span>
-            <span
-              className={cn(
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums',
-              )}
-              style={{
-                backgroundColor:
-                  data.avg_confidence_score >= 80
-                    ? 'rgba(16,185,129,0.12)'
-                    : data.avg_confidence_score >= 60
-                    ? 'rgba(245,158,11,0.12)'
-                    : 'rgba(239,68,68,0.12)',
-                color:
-                  data.avg_confidence_score >= 80
-                    ? 'var(--success)'
-                    : data.avg_confidence_score >= 60
-                    ? 'var(--warning)'
-                    : 'var(--danger)',
-                border: `1px solid ${
-                  data.avg_confidence_score >= 80
-                    ? 'rgba(16,185,129,0.25)'
-                    : data.avg_confidence_score >= 60
-                    ? 'rgba(245,158,11,0.25)'
-                    : 'rgba(239,68,68,0.25)'
-                }`,
-              }}
-            >
-              {data.avg_confidence_score}%
-            </span>
+            <StatusBadge
+              label={`${data.avg_confidence_score}%`}
+              variant={
+                data.avg_confidence_score >= 80
+                  ? 'success'
+                  : data.avg_confidence_score >= 60
+                  ? 'warning'
+                  : 'danger'
+              }
+              size="md"
+            />
           </div>
-        </>
+        </MotionFadeIn>
       ) : (
         <p className="text-sm text-[var(--text-muted)]">No content data available.</p>
       )}
-    </div>
+    </GlassCard>
   )
 }

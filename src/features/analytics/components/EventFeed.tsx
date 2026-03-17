@@ -1,7 +1,9 @@
 'use client'
 
+import { Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { AnalyticsEvent } from '@/features/analytics/types'
+import { GlassCard, SectionHeader, StatusBadge, EmptyState } from '@/components/nebula'
 
 interface EventFeedProps {
   events: AnalyticsEvent[]
@@ -73,38 +75,35 @@ function relativeTime(iso: string): string {
 }
 
 function formatEventType(eventType: string): string {
-  return eventType.replace(/\./g, ' › ')
+  return eventType.replace(/\./g, ' > ')
 }
 
 export function EventFeed({ events, isLoading, onLoadMore }: EventFeedProps) {
   const visible = events.slice(0, 20)
 
   return (
-    <div
-      className={cn(
-        'p-5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]',
-        'space-y-4',
-      )}
-    >
-      <h3 className="text-sm font-semibold text-[var(--text)]">Event Feed</h3>
+    <GlassCard hover={false}>
+      <SectionHeader title="Event Feed" />
 
       {isLoading ? (
         <div className="space-y-3 animate-pulse">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-[var(--surface-elevated)] mt-1.5 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-[var(--skeleton)] mt-1.5 shrink-0" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-3 w-40 bg-[var(--surface-elevated)] rounded" />
-                <div className="h-2.5 w-24 bg-[var(--surface-elevated)] rounded" />
+                <div className="h-3 w-40 bg-[var(--skeleton)] rounded" />
+                <div className="h-2.5 w-24 bg-[var(--skeleton)] rounded" />
               </div>
-              <div className="h-2.5 w-14 bg-[var(--surface-elevated)] rounded" />
+              <div className="h-2.5 w-14 bg-[var(--skeleton)] rounded" />
             </div>
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="text-sm text-[var(--text-muted)]">No events recorded yet.</p>
-        </div>
+        <EmptyState
+          icon={Activity}
+          title="No events yet"
+          description="Events will appear here as your operators process missions and generate content."
+        />
       ) : (
         <>
           <div className="space-y-0.5">
@@ -131,26 +130,21 @@ export function EventFeed({ events, isLoading, onLoadMore }: EventFeedProps) {
                       {formatEventType(event.event_type)}
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span
-                        className="inline-flex items-center px-1.5 py-0 text-[10px] rounded-sm font-medium"
-                        style={{
-                          backgroundColor: colors.bg,
-                          border: `1px solid ${colors.border}`,
-                          color: colors.text,
-                        }}
-                      >
-                        {event.entity_type}
-                      </span>
+                      <StatusBadge
+                        label={event.entity_type}
+                        variant="default"
+                        size="sm"
+                      />
                       {event.entity_id && (
-                        <span className="text-[10px] text-[var(--text-muted)] truncate max-w-[120px] font-mono">
-                          {event.entity_id.slice(0, 8)}…
+                        <span className="text-xs text-[var(--text-muted)] truncate max-w-[120px] font-mono">
+                          {event.entity_id.slice(0, 8)}...
                         </span>
                       )}
                     </div>
                   </div>
 
                   {/* Time */}
-                  <span className="text-[10px] text-[var(--text-muted)] shrink-0 pt-0.5 tabular-nums">
+                  <span className="text-xs text-[var(--text-muted)] shrink-0 pt-0.5 tabular-nums">
                     {relativeTime(event.occurred_at)}
                   </span>
                 </div>
@@ -174,6 +168,6 @@ export function EventFeed({ events, isLoading, onLoadMore }: EventFeedProps) {
           )}
         </>
       )}
-    </div>
+    </GlassCard>
   )
 }

@@ -23,7 +23,7 @@ Not a content generator. An **operating system for AI work**.
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 15.3.0 (App Router), TypeScript, Tailwind CSS, shadcn/ui |
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui |
 | Backend | Next.js API Routes + Server Actions |
 | Database | Supabase (PostgreSQL), Row Level Security, Realtime |
 | AI Engine (Heavy) | Anthropic SDK (`@anthropic-ai/sdk`) � Claude OAuth bearer token strategy |

@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/supabase/queries/activity'
 
+export const dynamic = 'force-dynamic'
+
 const ScanSchema = z.object({
   workspace_id: z.string().uuid(),
   topics: z.array(z.string().min(1)).min(1).max(20),

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { VideoPackagePage } from '@/features/video-packaging/components/VideoPackagePage'
 
-export const metadata = { title: 'Video Studio — AGENT MOE' }
+export const metadata = { title: 'Video Studio - AGENT MOE' }
 
 export default async function VideoPage() {
   const supabase = await createClient()

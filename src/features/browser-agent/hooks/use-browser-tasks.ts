@@ -39,10 +39,10 @@ export function useBrowserTasks(options: UseBrowserTasksOptions): UseBrowserTask
     if (!workspaceId) return
 
     const controller = new AbortController()
+    let isFirst = true
 
     async function load() {
-      setIsLoading(true)
-      setError(null)
+      if (isFirst) { setIsLoading(true); setError(null) }
       try {
         const params = new URLSearchParams({
           workspace_id: workspaceId,
@@ -67,14 +67,14 @@ export function useBrowserTasks(options: UseBrowserTasksOptions): UseBrowserTask
           setError('Failed to load browser tasks')
         }
       } finally {
-        setIsLoading(false)
+        if (isFirst) { setIsLoading(false); isFirst = false }
       }
     }
 
     void load()
 
-    // Auto-refresh every 5s
-    const interval = setInterval(() => { void load() }, 5000)
+    // Background refresh every 30s (realtime handles live updates)
+    const interval = setInterval(() => { void load() }, 30000)
 
     return () => {
       controller.abort()

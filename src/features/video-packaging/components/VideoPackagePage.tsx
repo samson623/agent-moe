@@ -22,6 +22,8 @@ import type { VideoPackageFilters } from '../hooks/use-video-packages'
 import { VideoPackageCard } from './VideoPackageCard'
 import { VideoPackageFilters as VideoPackageFiltersBar } from './VideoPackageFilters'
 import { GenerateVideoPackageModal } from './GenerateVideoPackageModal'
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
+import { VideoFactoryTab } from '@/features/video-factory/components/VideoFactoryTab'
 
 // ---------------------------------------------------------------------------
 // Skeleton
@@ -120,7 +122,7 @@ function QuickStat({ label, value, icon: Icon }: { label: string; value: number;
         <p className="text-base font-bold text-[var(--text)] leading-none tabular-nums">
           {value.toLocaleString()}
         </p>
-        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{label}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">{label}</p>
       </div>
     </div>
   )
@@ -139,6 +141,7 @@ const PAGE_SIZE = 12
 export function VideoPackagePage({ workspaceId }: VideoPackagePageProps) {
   const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'packages' | 'factory'>('packages')
   const [filters, setFilters] = useState<VideoPackageFilters>({})
   const [page, setPage] = useState(1)
 
@@ -157,45 +160,80 @@ export function VideoPackagePage({ workspaceId }: VideoPackagePageProps) {
 
   return (
     <div className="space-y-6 p-6 md:p-8">
-      {/* ── Actions ─────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          variant="accent"
-          size="sm"
-          onClick={() => setModalOpen(true)}
-          className="gap-2"
-        >
-          <Plus size={14} />
-          Generate Package
-        </Button>
-      </div>
+      {/* ── Tab bar + Actions ─────────────────────────────── */}
+      <MotionFadeIn>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1 p-1 rounded-[var(--radius-lg)] bg-[var(--surface-solid)] border border-[var(--border)]">
+            <button
+              onClick={() => setActiveTab('packages')}
+              className={cn(
+                'px-3 py-1.5 rounded-[var(--radius)] text-xs font-medium transition-all',
+                activeTab === 'packages'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)]',
+              )}
+            >
+              Packages
+            </button>
+            <button
+              onClick={() => setActiveTab('factory')}
+              className={cn(
+                'px-3 py-1.5 rounded-[var(--radius)] text-xs font-medium transition-all',
+                activeTab === 'factory'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)]',
+              )}
+            >
+              Factory
+            </button>
+          </div>
+          {activeTab === 'packages' && (
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={() => setModalOpen(true)}
+              className="gap-2"
+            >
+              <Plus size={14} />
+              Generate Package
+            </Button>
+          )}
+        </div>
+      </MotionFadeIn>
+
+      {/* ── Factory tab ──────────────────────────────────── */}
+      {activeTab === 'factory' && (
+        <VideoFactoryTab workspaceId={workspaceId} />
+      )}
 
       {/* ── Error ───────────────────────────────────────── */}
-      {error && <ErrorAlert message={error} onRetry={refetch} />}
+      {activeTab === 'packages' && error && <ErrorAlert message={error} onRetry={refetch} />}
 
       {/* ── Quick stats ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <QuickStat label="Total Packages" value={total} icon={Layers} />
-        <QuickStat label="YouTube" value={youtubeCount} icon={Youtube} />
-        <QuickStat label="TikTok" value={tiktokCount} icon={Activity} />
-        <QuickStat label="Pending Review" value={reviewCount} icon={Clock} />
-      </div>
+      {activeTab === 'packages' && <MotionStagger className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MotionStaggerItem><QuickStat label="Total Packages" value={total} icon={Layers} /></MotionStaggerItem>
+        <MotionStaggerItem><QuickStat label="YouTube" value={youtubeCount} icon={Youtube} /></MotionStaggerItem>
+        <MotionStaggerItem><QuickStat label="TikTok" value={tiktokCount} icon={Activity} /></MotionStaggerItem>
+        <MotionStaggerItem><QuickStat label="Pending Review" value={reviewCount} icon={Clock} /></MotionStaggerItem>
+      </MotionStagger>}
 
       {/* ── Filters ─────────────────────────────────────── */}
-      <Card>
-        <CardContent className="py-4 px-4">
-          <VideoPackageFiltersBar
-            filters={filters}
-            onChange={(f) => {
-              setFilters(f)
-              setPage(1)
-            }}
-          />
-        </CardContent>
-      </Card>
+      {activeTab === 'packages' && <MotionFadeIn delay={0.05}>
+        <Card>
+          <CardContent className="py-4 px-4">
+            <VideoPackageFiltersBar
+              filters={filters}
+              onChange={(f) => {
+                setFilters(f)
+                setPage(1)
+              }}
+            />
+          </CardContent>
+        </Card>
+      </MotionFadeIn>}
 
       {/* ── Grid ────────────────────────────────────────── */}
-      {loading ? (
+      {activeTab === 'packages' && (loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 9 }).map((_, i) => (
             <PackageCardSkeleton key={i} />
@@ -204,19 +242,20 @@ export function VideoPackagePage({ workspaceId }: VideoPackagePageProps) {
       ) : packages.length === 0 ? (
         <EmptyState onGenerate={() => setModalOpen(true)} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <MotionStagger className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {packages.map((pkg) => (
-            <VideoPackageCard
-              key={pkg.id}
-              pkg={pkg}
-              onClick={() => router.push(`/video/${pkg.id}`)}
-            />
+            <MotionStaggerItem key={pkg.id}>
+              <VideoPackageCard
+                pkg={pkg}
+                onClick={() => router.push(`/video/${pkg.id}`)}
+              />
+            </MotionStaggerItem>
           ))}
-        </div>
-      )}
+        </MotionStagger>
+      ))}
 
       {/* ── Pagination ──────────────────────────────────── */}
-      {!loading && packages.length > 0 && total > PAGE_SIZE && (
+      {activeTab === 'packages' && !loading && packages.length > 0 && total > PAGE_SIZE && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <Button
             variant="outline"

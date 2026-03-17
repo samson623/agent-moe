@@ -49,7 +49,7 @@ export function ThumbnailConceptCard({ concept }: ThumbnailConceptCardProps) {
 
           {/* Corner label */}
           <span
-            className="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--surface)]/80 text-[var(--text-muted)]"
+            className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--surface)]/80 text-[var(--text-muted)]"
           >
             Preview
           </span>
@@ -77,7 +77,7 @@ function DetailRow({
 }) {
   return (
     <div className="space-y-1">
-      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
+      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">
         {label}
       </p>
       <div className="flex items-start gap-2">

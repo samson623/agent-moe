@@ -1,6 +1,7 @@
 'use client';
 
-import { Activity, ArrowRight, Clock, Pause, Play, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Activity, ArrowRight, Clock, Pause, Play, Loader2, X, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,8 @@ interface Mission {
 interface ActiveMissionsListProps {
   missions: Mission[];
   isLoading: boolean;
+  onCancel?: (id: string) => Promise<boolean>;
+  onCancelAll?: () => Promise<void>;
 }
 
 function timeAgo(dateString: string): string {
@@ -84,11 +87,20 @@ const DEFAULT_STATUS_CONFIG = {
   pulse: false,
 } as const;
 
-function MissionRow({ mission }: { mission: Mission }) {
+function MissionRow({ mission, onCancel }: { mission: Mission; onCancel?: (id: string) => Promise<boolean> }) {
+  const [cancelling, setCancelling] = useState(false);
   const config = STATUS_CONFIG[mission.status] ?? DEFAULT_STATUS_CONFIG;
   const Icon = STATUS_ICON[mission.status] ?? Clock;
   const priorityVariant = PRIORITY_VARIANT[mission.priority] ?? ('default' as const);
   const progressWidth = PROGRESS_WIDTH[mission.status] ?? 'w-1/6';
+
+  const handleCancel = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onCancel || cancelling) return;
+    setCancelling(true);
+    await onCancel(mission.id);
+    setCancelling(false);
+  };
 
   return (
     <div
@@ -161,6 +173,21 @@ function MissionRow({ mission }: { mission: Mission }) {
         <span className="text-[10px] text-[var(--text-disabled)] min-w-[48px] text-right">
           {timeAgo(mission.started_at ?? mission.created_at)}
         </span>
+        {onCancel && (
+          <button
+            onClick={handleCancel}
+            disabled={cancelling}
+            title="Cancel mission"
+            className={cn(
+              'flex items-center justify-center w-6 h-6 rounded-md',
+              'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+              'text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-muted)]',
+              cancelling && 'opacity-100 animate-spin'
+            )}
+          >
+            {cancelling ? <Loader2 size={12} /> : <X size={12} />}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -182,12 +209,20 @@ function SkeletonRow() {
   );
 }
 
-export function ActiveMissionsList({ missions, isLoading }: ActiveMissionsListProps) {
+export function ActiveMissionsList({ missions, isLoading, onCancel, onCancelAll }: ActiveMissionsListProps) {
+  const [cancellingAll, setCancellingAll] = useState(false);
   const activeMissions = missions.filter(
     (m) => m.status !== 'completed' && m.status !== 'failed'
   );
   const displayed = activeMissions.slice(0, 8);
   const hasMore = activeMissions.length > 8;
+
+  const handleCancelAll = async () => {
+    if (!onCancelAll || cancellingAll) return;
+    setCancellingAll(true);
+    await onCancelAll();
+    setCancellingAll(false);
+  };
 
   return (
     <Card>
@@ -204,11 +239,25 @@ export function ActiveMissionsList({ missions, isLoading }: ActiveMissionsListPr
             </div>
             <CardTitle>Active Missions</CardTitle>
           </div>
-          {!isLoading && activeMissions.length > 0 && (
-            <Badge variant="default" className="tabular-nums">
-              {activeMissions.length}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {!isLoading && activeMissions.length > 1 && onCancelAll && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelAll}
+                disabled={cancellingAll}
+                className="h-7 gap-1.5 text-[10px] text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--danger-muted)]"
+              >
+                {cancellingAll ? <Loader2 size={11} className="animate-spin" /> : <XCircle size={11} />}
+                Cancel All
+              </Button>
+            )}
+            {!isLoading && activeMissions.length > 0 && (
+              <Badge variant="default" className="tabular-nums">
+                {activeMissions.length}
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -237,7 +286,7 @@ export function ActiveMissionsList({ missions, isLoading }: ActiveMissionsListPr
         ) : (
           <>
             {displayed.map((mission) => (
-              <MissionRow key={mission.id} mission={mission} />
+              <MissionRow key={mission.id} mission={mission} onCancel={onCancel} />
             ))}
           </>
         )}

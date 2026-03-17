@@ -29,6 +29,7 @@ export type DbOperatorTeam =
   | 'growth_operator'
   | 'revenue_closer'
   | 'brand_guardian'
+  | 'browser_agent'
 
 export interface JobFilters {
   mission_id?: string

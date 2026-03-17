@@ -174,7 +174,6 @@ export async function POST(
     const { error: statusError } = await updateMissionStatus(client, missionId, 'planning')
 
     if (statusError) {
-      // Non-fatal: jobs are already stored; log and continue
       console.error('[POST /missions/[id]/plan] Failed to update mission status:', statusError)
     }
 

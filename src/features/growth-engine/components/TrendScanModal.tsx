@@ -150,7 +150,7 @@ export function TrendScanModal({
                   )}
                 />
                 {topics.length > 0 && (
-                  <p className="text-[10px] text-[var(--text-muted)]">
+                  <p className="text-xs text-[var(--text-muted)]">
                     {topics.length} topic{topics.length > 1 ? 's' : ''} detected
                   </p>
                 )}

@@ -79,7 +79,7 @@ export function CampaignCard({ campaign, onSelect, onLaunch }: CampaignCardProps
             <p className="text-sm font-semibold text-[var(--text)] truncate max-w-[180px]">
               {campaign.name}
             </p>
-            <Badge variant={STATUS_BADGE[campaign.status]} className="capitalize text-[10px] shrink-0">
+            <Badge variant={STATUS_BADGE[campaign.status]} className="capitalize text-xs shrink-0">
               {STATUS_LABEL[campaign.status]}
             </Badge>
           </div>
@@ -105,7 +105,7 @@ export function CampaignCard({ campaign, onSelect, onLaunch }: CampaignCardProps
       {/* Meta row */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Asset count */}
-        <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+        <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
           <Layers size={10} aria-hidden="true" />
           <span>
             {campaign.asset_ids.length} asset{campaign.asset_ids.length !== 1 ? 's' : ''}
@@ -113,7 +113,7 @@ export function CampaignCard({ campaign, onSelect, onLaunch }: CampaignCardProps
         </div>
 
         {/* Milestone count */}
-        <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+        <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
           <Flag size={10} aria-hidden="true" />
           <span>
             {campaign.timeline.length} milestone{campaign.timeline.length !== 1 ? 's' : ''}
@@ -121,7 +121,7 @@ export function CampaignCard({ campaign, onSelect, onLaunch }: CampaignCardProps
         </div>
 
         {/* Launch date */}
-        <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+        <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
           <Calendar size={10} aria-hidden="true" />
           <span>{formatDate(campaign.launch_date)}</span>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { Link as LinkIcon, Plus, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from "@/components/nebula/motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -95,50 +96,56 @@ export function ConnectorsPage({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="space-y-6 p-6 md:p-8">
       {/* Header row */}
-      <div className="flex items-center justify-end gap-2">
-        {loading ? (
-          <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
-        ) : error ? (
-          <Badge variant="danger">
-            <AlertCircle size={10} className="mr-1" />
-            Error
-          </Badge>
-        ) : (
-          <Badge variant="success">
-            <CheckCircle2 size={10} className="mr-1" />
-            {connectedCount} Connected
-          </Badge>
-        )}
-        <Button size="sm" onClick={() => setConnectModalOpen(true)} className="gap-1.5">
-          <Plus size={14} />
-          Add Connector
-        </Button>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center justify-end gap-2">
+          {loading ? (
+            <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
+          ) : error ? (
+            <Badge variant="danger">
+              <AlertCircle size={10} className="mr-1" />
+              Error
+            </Badge>
+          ) : (
+            <Badge variant="success">
+              <CheckCircle2 size={10} className="mr-1" />
+              {connectedCount} Connected
+            </Badge>
+          )}
+          <Button size="sm" onClick={() => setConnectModalOpen(true)} className="gap-1.5">
+            <Plus size={14} />
+            Add Connector
+          </Button>
+        </div>
+      </MotionFadeIn>
 
       {/* Stats row */}
-      <ConnectorStats stats={stats} loading={statsLoading} />
+      <MotionFadeIn delay={0.05}>
+        <ConnectorStats stats={stats} loading={statsLoading} />
+      </MotionFadeIn>
 
       {/* Filter row */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <ConnectorFilters
-            statusFilter={statusFilter}
-            platformFilter={platformFilter}
-            onStatusChange={setStatusFilter}
-            onPlatformChange={setPlatformFilter}
-          />
+      <MotionFadeIn delay={0.1}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <ConnectorFilters
+              statusFilter={statusFilter}
+              platformFilter={platformFilter}
+              onStatusChange={setStatusFilter}
+              onPlatformChange={setPlatformFilter}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={loading}
+            className="gap-1.5 shrink-0"
+          >
+            <RefreshCw size={13} className={cn(loading && "animate-spin")} />
+            Refresh
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refetch}
-          disabled={loading}
-          className="gap-1.5 shrink-0"
-        >
-          <RefreshCw size={13} className={cn(loading && "animate-spin")} />
-          Refresh
-        </Button>
-      </div>
+      </MotionFadeIn>
 
       {/* Connector grid */}
       <div>
@@ -181,15 +188,16 @@ export function ConnectorsPage({ workspaceId }: { workspaceId: string }) {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <MotionStagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredConnectors.map((c) => (
-              <ConnectorCard
-                key={c.id}
-                connector={c}
-                onRefetch={refetch}
-              />
+              <MotionStaggerItem key={c.id}>
+                <ConnectorCard
+                  connector={c}
+                  onRefetch={refetch}
+                />
+              </MotionStaggerItem>
             ))}
-          </div>
+          </MotionStagger>
         )}
       </div>
 

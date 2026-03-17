@@ -10,6 +10,8 @@
 
 import type { Browser, Page } from 'playwright'
 import type { BrowserTask, BrowserTaskResult, BrowserTaskConfig } from './types'
+import { Screencast } from './screencast'
+import type { ScreencastOptions } from './screencast'
 
 // ---------------------------------------------------------------------------
 // BrowserRunner
@@ -18,6 +20,7 @@ import type { BrowserTask, BrowserTaskResult, BrowserTaskConfig } from './types'
 export class BrowserRunner {
   private browser: Browser | null = null
   private readonly browserTypeName: 'chromium' | 'firefox' | 'webkit'
+  private screencast: Screencast | null = null
 
   constructor(browserType: 'chromium' | 'firefox' | 'webkit' = 'chromium') {
     this.browserTypeName = browserType
@@ -50,6 +53,18 @@ export class BrowserRunner {
     const page = await context.newPage()
 
     try {
+      // Start screencast if live view is enabled
+      if (task.config.enable_live_view) {
+        this.screencast = new Screencast()
+        const screencastOpts: ScreencastOptions = {
+          format: task.config.screencast_format ?? 'jpeg',
+          quality: task.config.screencast_quality ?? 60,
+          maxWidth: task.config.viewport?.width ?? 1280,
+          maxHeight: task.config.viewport?.height ?? 720,
+        }
+        await this.screencast.start(page, screencastOpts)
+      }
+
       let result: BrowserTaskResult
 
       switch (task.task_type) {
@@ -81,16 +96,36 @@ export class BrowserRunner {
           result = this.buildResult(false, { error: `Unknown task type: ${String(task.task_type)}` })
       }
 
+      // Stop screencast and record frame count
+      if (this.screencast) {
+        await this.screencast.stop()
+        result.screencast_frames = this.screencast.getFrameCount()
+      }
+
       result.execution_time_ms = Date.now() - start
       return result
     } catch (err) {
+      // Stop screencast on error too
+      if (this.screencast) {
+        await this.screencast.stop().catch(() => {})
+      }
+
       return this.buildResult(false, {
         error: err instanceof Error ? err.message : String(err),
         execution_time_ms: Date.now() - start,
       })
     } finally {
+      this.screencast = null
       await context.close()
     }
+  }
+
+  /**
+   * Get the active screencast instance (if live view is enabled).
+   * Used by TaskExecutor to wire up WebSocket streaming / recording.
+   */
+  getScreencast(): Screencast | null {
+    return this.screencast
   }
 
   // ---------------------------------------------------------------------------

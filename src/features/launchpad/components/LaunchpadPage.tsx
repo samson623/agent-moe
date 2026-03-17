@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 import {
   useCampaigns,
   useCampaignDetail,
@@ -28,6 +29,7 @@ import { CampaignFilters } from './CampaignFilters'
 import { CampaignCard } from './CampaignCard'
 import { CampaignForm } from './CampaignForm'
 import { CampaignTimeline } from './CampaignTimeline'
+import { LaunchControls } from './LaunchControls'
 import { LaunchModal } from './LaunchModal'
 
 // ---------------------------------------------------------------------------
@@ -126,7 +128,6 @@ function DetailPanel({ campaignId, onClose, onLaunch, onDeleted }: DetailPanelPr
     <div
       className={cn(
         'flex flex-col rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-solid)]',
-        'animate-fade-in',
       )}
     >
       {/* Panel header */}
@@ -531,19 +532,23 @@ export function LaunchpadPage({ workspaceId }: LaunchpadPageProps) {
   return (
     <div className="space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2"
-          aria-label="Create a new campaign"
-        >
-          <Plus size={15} aria-hidden="true" />
-          New Campaign
-        </Button>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            className="flex items-center gap-2"
+            aria-label="Create a new campaign"
+          >
+            <Plus size={15} aria-hidden="true" />
+            New Campaign
+          </Button>
+        </div>
+      </MotionFadeIn>
 
       {/* Stats bar */}
-      <CampaignStats stats={stats} loading={statsLoading} />
+      <MotionFadeIn delay={0.05}>
+        <CampaignStats stats={stats} loading={statsLoading} />
+      </MotionFadeIn>
 
       {/* Main content area */}
       <div
@@ -583,31 +588,38 @@ export function LaunchpadPage({ workspaceId }: LaunchpadPageProps) {
                   <EmptyState onCreateClick={() => setShowCreateForm(true)} />
                 </div>
               ) : (
-                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <MotionStagger className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                   {campaigns.map((campaign) => (
-                    <CampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      onSelect={(id) => {
-                        setSelectedCampaignId((prev) => (prev === id ? null : id))
-                      }}
-                      onLaunch={handleLaunchCardTrigger}
-                    />
+                    <MotionStaggerItem key={campaign.id}>
+                      <CampaignCard
+                        campaign={campaign}
+                        onSelect={(id) => {
+                          setSelectedCampaignId((prev) => (prev === id ? null : id))
+                        }}
+                        onLaunch={handleLaunchCardTrigger}
+                      />
+                    </MotionStaggerItem>
                   ))}
-                </div>
+                </MotionStagger>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Right: detail panel */}
+        {/* Right: detail panel + launch controls */}
         {showDetailPanel && selectedCampaignId && (
-          <DetailPanel
-            campaignId={selectedCampaignId}
-            onClose={() => setSelectedCampaignId(null)}
-            onLaunch={handleLaunchTrigger}
-            onDeleted={handleCampaignDeleted}
-          />
+          <div className="space-y-4">
+            <DetailPanel
+              campaignId={selectedCampaignId}
+              onClose={() => setSelectedCampaignId(null)}
+              onLaunch={handleLaunchTrigger}
+              onDeleted={handleCampaignDeleted}
+            />
+            <LaunchControls
+              campaign={campaigns.find((c) => c.id === selectedCampaignId) ?? null}
+              workspaceId={workspaceId}
+            />
+          </div>
         )}
       </div>
 

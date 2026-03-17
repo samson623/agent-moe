@@ -1,6 +1,7 @@
 /**
  * Sidebar component tests
- * Tests that: sidebar renders, all 8 nav links are present, active state works
+ * Tests that: sidebar renders, all 13 nav links are present, active state works
+ * Updated for Nebula design system (icon rail + compact labels)
  */
 
 import React from "react";
@@ -34,25 +35,36 @@ jest.mock("next/link", () => {
 import { usePathname } from "next/navigation";
 const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
 
+// Current nav labels after Nebula redesign
 const NAV_LABELS = [
   "Command Center",
-  "Content Studio",
+  "Missions",
+  "Content",
+  "Video",
   "Operators",
-  "Growth Engine",
-  "Revenue Lab",
+  "Approvals",
+  "Growth",
+  "Browser",
+  "Revenue",
   "Launchpad",
   "Connectors",
+  "Analytics",
   "Settings",
 ];
 
 const NAV_HREFS = [
   "/",
+  "/missions",
   "/content",
+  "/video",
   "/operators",
+  "/approvals",
   "/growth",
+  "/browser",
   "/revenue",
   "/launchpad",
   "/connectors",
+  "/analytics",
   "/settings",
 ];
 
@@ -67,24 +79,22 @@ describe("Sidebar", () => {
 
   it("renders without crashing", () => {
     render(<Sidebar />);
-    // If it renders, the test passes — look for the logo text
-    expect(screen.getByText("MOE")).toBeInTheDocument();
+    expect(screen.getByText("Agent MOE")).toBeInTheDocument();
   });
 
-  it("renders the Agent Moe logo/wordmark", () => {
+  it("renders the Agent MOE logo/wordmark", () => {
     render(<Sidebar />);
-    expect(screen.getByText("MOE")).toBeInTheDocument();
-    expect(screen.getByText("AI Operator")).toBeInTheDocument();
+    expect(screen.getByText("Agent MOE")).toBeInTheDocument();
   });
 
-  it("renders all 8 navigation labels", () => {
+  it("renders all 13 navigation labels", () => {
     render(<Sidebar />);
     NAV_LABELS.forEach((label) => {
       expect(screen.getByText(label)).toBeInTheDocument();
     });
   });
 
-  it("renders all 8 navigation links with correct hrefs", () => {
+  it("renders all 13 navigation links with correct hrefs", () => {
     render(<Sidebar />);
     const links = screen.getAllByRole("link");
     const linkHrefs = links.map((l) => l.getAttribute("href"));
@@ -113,12 +123,12 @@ describe("Sidebar", () => {
     expect(dashboardLink).not.toHaveAttribute("aria-current", "page");
   });
 
-  it("marks the content studio link as active when on /content", () => {
+  it("marks the content link as active when on /content", () => {
     mockUsePathname.mockReturnValue("/content");
     render(<Sidebar />);
 
     const contentLink = screen.getByRole("link", {
-      name: /content studio/i,
+      name: /^content$/i,
     });
     expect(contentLink).toHaveAttribute("aria-current", "page");
   });
@@ -149,12 +159,6 @@ describe("Sidebar", () => {
       .getAllByRole("link")
       .filter((el) => el.getAttribute("aria-current") === "page");
     expect(activeLinks).toHaveLength(1);
-  });
-
-  it("renders the system status indicator", () => {
-    render(<Sidebar />);
-    expect(screen.getByText("System Online")).toBeInTheDocument();
-    expect(screen.getByText("All operators ready")).toBeInTheDocument();
   });
 
   it("renders the main navigation landmark", () => {

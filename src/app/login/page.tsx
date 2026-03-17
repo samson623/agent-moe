@@ -208,7 +208,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {/* Divider */}
           <div className="mb-5 flex items-center gap-4">
             <div className="h-px flex-1 bg-white/[0.07]" />
-            <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-zinc-600">
+            <span className="text-xs md:text-sm font-medium uppercase tracking-[0.15em] text-zinc-600">
               or email
             </span>
             <div className="h-px flex-1 bg-white/[0.07]" />

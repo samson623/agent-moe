@@ -6,6 +6,8 @@ import {
   deleteBrowserTask,
 } from '@/lib/supabase/queries/browser-tasks'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

@@ -169,7 +169,7 @@ export function JobCard({ job, allJobs, onExecute }: JobCardProps) {
         <span
           className={cn(
             'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full',
-            'text-[10px] font-medium border',
+            'text-xs font-medium border',
             team.textClass,
             team.bgClass,
             team.borderClass,
@@ -186,7 +186,7 @@ export function JobCard({ job, allJobs, onExecute }: JobCardProps) {
           <span
             className={cn(
               'inline-flex items-center px-2 py-0.5 rounded-full',
-              'text-[10px] font-bold tracking-wider uppercase',
+              'text-xs font-bold tracking-wider uppercase',
               'bg-[var(--surface-elevated)] text-[var(--text-muted)]',
               'border border-[var(--border-subtle)]',
             )}
@@ -206,7 +206,7 @@ export function JobCard({ job, allJobs, onExecute }: JobCardProps) {
       {/* Dependencies */}
       {depJobs.length > 0 && (
         <div className="space-y-1">
-          <p className="text-[10px] text-[var(--text-disabled)] uppercase tracking-wider">
+          <p className="text-xs text-[var(--text-disabled)] uppercase tracking-wider">
             Depends on {depJobs.length} job{depJobs.length !== 1 ? 's' : ''}
           </p>
           <div className="flex flex-wrap gap-1">
@@ -215,7 +215,7 @@ export function JobCard({ job, allJobs, onExecute }: JobCardProps) {
                 key={dep.id}
                 className={cn(
                   'inline-flex items-center gap-1 px-1.5 py-0.5 rounded',
-                  'text-[10px] text-[var(--text-muted)]',
+                  'text-xs text-[var(--text-muted)]',
                   'bg-[var(--surface-elevated)] border border-[var(--border-subtle)]',
                 )}
               >
@@ -237,7 +237,7 @@ export function JobCard({ job, allJobs, onExecute }: JobCardProps) {
 
       {/* Duration */}
       {job.status === 'completed' && job.duration_ms != null && (
-        <p className="text-[10px] text-[var(--text-disabled)]">
+        <p className="text-xs text-[var(--text-disabled)]">
           Completed in {formatDuration(job.duration_ms!)}
         </p>
       )}

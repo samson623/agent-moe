@@ -66,11 +66,11 @@ export function PublishHistoryPanel({ logs }: PublishHistoryPanelProps) {
               </div>
 
               {log.error_message && (
-                <p className="text-[10px] text-[var(--danger)] truncate">{log.error_message}</p>
+                <p className="text-xs text-[var(--danger)] truncate">{log.error_message}</p>
               )}
 
               {log.external_post_id && !log.error_message && (
-                <p className="text-[10px] text-[var(--text-muted)] truncate">
+                <p className="text-xs text-[var(--text-muted)] truncate">
                   ID: {log.external_post_id}
                 </p>
               )}

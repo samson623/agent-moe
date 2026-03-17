@@ -24,8 +24,8 @@ function ScoreBar({ label, value, max = 100 }: { label: string; value: number; m
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-[var(--text-muted)]">{label}</span>
-        <span className="text-[10px] font-bold tabular-nums" style={{ color }}>{value}</span>
+        <span className="text-xs text-[var(--text-muted)]">{label}</span>
+        <span className="text-xs font-bold tabular-nums" style={{ color }}>{value}</span>
       </div>
       <div className="h-1 rounded-full bg-[var(--border)]">
         <div
@@ -61,13 +61,13 @@ export function SignalCard({ signal, onClick, selected }: SignalCardProps) {
         </h3>
         <div className="flex items-center gap-1.5 shrink-0">
           <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+            className="text-xs font-semibold px-2 py-0.5 rounded-full border"
             style={{ color: cfg.border, borderColor: `${cfg.border}40`, background: cfg.bg }}
           >
             {cfg.label}
           </span>
           {signal.platform && (
-            <Badge variant="muted" className="text-[10px]">{signal.platform}</Badge>
+            <Badge variant="muted" className="text-xs">{signal.platform}</Badge>
           )}
         </div>
       </div>
@@ -81,7 +81,7 @@ export function SignalCard({ signal, onClick, selected }: SignalCardProps) {
 
       {/* Category */}
       {signal.category && (
-        <Badge variant="muted" className="text-[10px] mb-2">{signal.category}</Badge>
+        <Badge variant="muted" className="text-xs mb-2">{signal.category}</Badge>
       )}
 
       {/* Competitor gaps */}
@@ -90,13 +90,13 @@ export function SignalCard({ signal, onClick, selected }: SignalCardProps) {
           {signal.competitor_gaps.slice(0, 2).map((gap, i) => (
             <span
               key={i}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-muted)]"
+              className="text-xs px-2 py-0.5 rounded-full bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-muted)]"
             >
               gap: {gap.slice(0, 40)}{gap.length > 40 ? '…' : ''}
             </span>
           ))}
           {extraGaps > 0 && (
-            <span className="text-[10px] text-[var(--text-muted)]">+{extraGaps} more</span>
+            <span className="text-xs text-[var(--text-muted)]">+{extraGaps} more</span>
           )}
         </div>
       )}
@@ -104,14 +104,14 @@ export function SignalCard({ signal, onClick, selected }: SignalCardProps) {
       {/* First market angle */}
       {firstAngle && (
         <div className="border-l-2 border-l-[var(--accent)] pl-2 mb-3">
-          <p className="text-[11px] text-[var(--text-muted)] leading-relaxed italic">
+          <p className="text-xs md:text-sm text-[var(--text-muted)] leading-relaxed italic">
             {firstAngle.angle.slice(0, 100)}{firstAngle.angle.length > 100 ? '…' : ''}
           </p>
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+      <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
         <span>
           Scanned {new Date(signal.scanned_at).toLocaleDateString()}
           {signal.content_ideas.length > 0 && (

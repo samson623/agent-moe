@@ -116,7 +116,7 @@ export function StatusManager({
           <span
             key={step}
             className={cn(
-              'text-[10px]',
+              'text-xs',
               step === currentStatus ? 'text-[var(--text)]' : 'text-[var(--text-disabled)]',
             )}
           >

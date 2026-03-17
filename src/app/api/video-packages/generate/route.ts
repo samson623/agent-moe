@@ -5,7 +5,7 @@ import { createVideoPackage } from '@/lib/supabase/queries/video-packages'
 import { logActivity } from '@/lib/supabase/queries/activity'
 import type { VideoPackagePlatform } from '@/lib/supabase/queries/video-packages'
 import { VideoPackageOperator } from '@/features/video-packaging/video-package-operator'
-import type { VideoPackageInput } from '@/features/video-packaging/types'
+import type { VideoPackageInput, VideoPackageOutput } from '@/features/video-packaging/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +43,151 @@ const OPERATOR_PLATFORM_MAP: Record<VideoPackagePlatform, OperatorPlatform> = {
   linkedin: 'x',        // closest native equivalent for operator prompting
   email: 'youtube',     // long-form, closest equivalent
   universal: 'youtube', // generic fallback
+}
+
+const CTA_BY_PLATFORM: Record<VideoPackagePlatform, VideoPackageOutput['cta']['type']> = {
+  x: 'comment',
+  linkedin: 'comment',
+  instagram: 'link_in_bio',
+  tiktok: 'comment',
+  youtube: 'subscribe',
+  email: 'visit',
+  universal: 'subscribe',
+}
+
+interface GenerationOutcome {
+  output: VideoPackageOutput
+  generatedBy: 'video_package_operator' | 'video_package_fallback'
+  durationMs: number | undefined
+  tokensUsed: number | undefined
+  fallbackReason?: string
+}
+
+function sentenceCase(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return 'Untitled'
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
+
+function buildHookVariants(topic: string, platform: VideoPackagePlatform, hookCount: number): string[] {
+  const variants = [
+    `Most people overcomplicate ${topic}. Here is the version that actually works on ${platform}.`,
+    `If you want better results from ${topic}, start with this before you buy another tool.`,
+    `This is the fastest way to turn ${topic} into something you can publish this week.`,
+    `Stop guessing on ${topic}. Use this simple framework instead.`,
+  ]
+
+  return variants.slice(0, Math.max(0, hookCount - 1))
+}
+
+function buildFallbackVideoPackage(
+  input: VideoPackageInput,
+  dbPlatform: VideoPackagePlatform,
+  fallbackReason: string,
+): VideoPackageOutput {
+  const sceneCount = Math.max(1, input.scene_count ?? 4)
+  const scenes = Array.from({ length: sceneCount }, (_, index) => {
+    const order = index + 1
+
+    if (order === 1) {
+      return {
+        order,
+        title: 'Hook and context',
+        script: `Start with the core tension around ${input.topic}. Explain why this matters right now and what the viewer will get by staying through the full video.`,
+        visual_direction: `Open with bold on-screen text about ${input.topic}, a fast punch-in, and one visual example that makes the problem obvious in under three seconds.`,
+        duration_seconds: 8,
+      }
+    }
+
+    if (order === sceneCount) {
+      return {
+        order,
+        title: 'Takeaway and action',
+        script: `Summarize the strongest lesson from ${input.topic}, restate the payoff in plain language, and close with one clear next step the viewer can take today.`,
+        visual_direction: `Shift to a cleaner frame with a simple checklist, highlight the result, and end on a single CTA card with strong contrast.`,
+        duration_seconds: 8,
+      }
+    }
+
+    return {
+      order,
+      title: `Key point ${order - 1}`,
+      script: `Break down one practical insight about ${input.topic}. Keep the narration direct, specific, and easy to say out loud in a ${input.tone ?? 'clear'} tone.`,
+      visual_direction: `Show one concrete visual example for ${input.topic}, combine it with short text overlays, and keep the pacing fast enough for ${dbPlatform}.`,
+      duration_seconds: 10,
+    }
+  })
+
+  const hookPrimary = `Here is the simplest way to make ${input.topic} work for you without wasting another week.`
+  const hookVariants = buildHookVariants(input.topic, dbPlatform, input.hook_count ?? 3)
+
+  return {
+    title: `${sentenceCase(input.topic)}: ${sceneCount} steps that actually work`,
+    platform: dbPlatform,
+    hook: {
+      primary: hookPrimary,
+      variants: hookVariants,
+    },
+    scenes,
+    thumbnail_concept: {
+      headline: sentenceCase(input.topic).split(' ').slice(0, 4).join(' '),
+      visual_description: `High-contrast close-up tied to ${input.topic}, with one clear focal point and enough empty space for text.`,
+      color_scheme: 'Deep navy background with bright cyan accent and white headline text',
+      text_overlay: 'Simple breakdown, real examples, no fluff',
+    },
+    caption: `A clean, publish-ready breakdown of ${input.topic} with simple steps you can apply immediately. #${input.platform} #contentstrategy #aiworkflow`,
+    cta: {
+      text: 'Follow for more practical breakdowns like this.',
+      type: CTA_BY_PLATFORM[dbPlatform],
+      destination: dbPlatform === 'youtube' ? 'Channel subscription' : undefined,
+    },
+    confidence_score: 0.58,
+    rationale: `Fallback package used because the primary AI generation path failed: ${fallbackReason}`,
+  }
+}
+
+async function generateWithResilience(
+  input: VideoPackageInput,
+  dbPlatform: VideoPackagePlatform,
+): Promise<GenerationOutcome> {
+  const operator = new VideoPackageOperator()
+  const maxAttempts = 2
+  let lastError = 'Unknown operator error'
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const result = await operator.generateVideoPackage(input)
+
+      if (result.success) {
+        return {
+          output: result.data,
+          generatedBy: 'video_package_operator',
+          durationMs: result.durationMs,
+          tokensUsed: result.tokensUsed,
+        }
+      }
+
+      lastError = result.error.message
+      console.warn('[video-package-generate] operator attempt failed', {
+        attempt,
+        error: result.error.message,
+      })
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : 'Unknown operator error'
+      console.warn('[video-package-generate] operator attempt threw', {
+        attempt,
+        error: lastError,
+      })
+    }
+  }
+
+  return {
+    output: buildFallbackVideoPackage(input, dbPlatform, lastError),
+    generatedBy: 'video_package_fallback',
+    durationMs: undefined,
+    tokensUsed: undefined,
+    fallbackReason: lastError,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -88,30 +233,8 @@ export async function POST(request: NextRequest) {
       scene_count,
     }
 
-    const operator = new VideoPackageOperator()
-
-    let operatorResult
-    try {
-      operatorResult = await operator.generateVideoPackage(operatorInput)
-    } catch (err) {
-      const details = err instanceof Error ? err.message : 'Unknown operator error'
-      return NextResponse.json(
-        { error: 'Video package generation failed', details },
-        { status: 500 },
-      )
-    }
-
-    if (!operatorResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Video package generation failed',
-          details: operatorResult.error.message,
-        },
-        { status: 500 },
-      )
-    }
-
-    const output = operatorResult.data
+    const generation = await generateWithResilience(operatorInput, platform)
+    const output = generation.output
 
     const client = createAdminClient()
 
@@ -147,15 +270,16 @@ export async function POST(request: NextRequest) {
       status: 'draft',
       confidence_score: output.confidence_score,
       metadata: {
-        generated_by: 'video_package_operator',
+        generated_by: generation.generatedBy,
         topic,
         tone,
         scene_count: output.scenes.length,
         hook_count: output.hook.variants.length + 1,
-        generation_version: '1.0.0',
+        generation_version: '1.0.1',
         rationale: output.rationale,
-        tokens_used: operatorResult.tokensUsed,
-        duration_ms: operatorResult.durationMs,
+        tokens_used: generation.tokensUsed,
+        duration_ms: generation.durationMs,
+        fallback_reason: generation.fallbackReason,
       },
     })
 
@@ -173,7 +297,7 @@ export async function POST(request: NextRequest) {
       action: 'video_package_generated',
       entity_type: 'video_package',
       entity_id: data.id,
-      summary: `Video package generated for topic "${topic}" on ${platform} via VideoPackageOperator`,
+      summary: `Video package generated for topic "${topic}" on ${platform} via ${generation.generatedBy}`,
       details: {
         topic,
         platform,
@@ -182,6 +306,8 @@ export async function POST(request: NextRequest) {
         hook_count: output.hook.variants.length + 1,
         confidence_score: output.confidence_score,
         mission_id: mission_id ?? null,
+        generated_by: generation.generatedBy,
+        fallback_reason: generation.fallbackReason ?? null,
       },
     })
 

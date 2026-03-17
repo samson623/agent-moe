@@ -2,8 +2,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import type { BadgeProps } from '@/components/ui/badge'
+import { PageWrapper } from '@/components/nebula'
+import { SectionHeader } from '@/components/nebula'
+import { StatusBadge } from '@/components/nebula'
+import { GlassCard } from '@/components/nebula'
+import { MotionStagger, MotionStaggerItem, MotionFadeIn } from '@/components/nebula/motion'
+import { MissionsEmptyState } from './empty-state'
 import type { MissionStatus, MissionPriority } from '@/lib/supabase/types'
 
 // ---------------------------------------------------------------------------
@@ -21,13 +25,12 @@ function formatRelativeTime(iso: string): string {
   return `${diffDays}d ago`
 }
 
-type StatusVariant = BadgeProps['variant']
-type PriorityVariant = BadgeProps['variant']
+type StatusVariant = 'default' | 'success' | 'warning' | 'danger' | 'primary' | 'accent' | 'info'
 
 const STATUS_VARIANT: Record<MissionStatus, StatusVariant> = {
-  pending: 'outline',
+  pending: 'default',
   planning: 'info',
-  running: 'default',
+  running: 'primary',
   paused: 'warning',
   completed: 'success',
   failed: 'danger',
@@ -42,9 +45,18 @@ const STATUS_LABEL: Record<MissionStatus, string> = {
   failed: 'Failed',
 }
 
-const PRIORITY_VARIANT: Record<MissionPriority, PriorityVariant> = {
-  low: 'muted',
-  normal: 'outline',
+const STATUS_PULSE: Record<MissionStatus, boolean> = {
+  pending: false,
+  planning: true,
+  running: true,
+  paused: false,
+  completed: false,
+  failed: false,
+}
+
+const PRIORITY_VARIANT: Record<MissionPriority, StatusVariant> = {
+  low: 'default',
+  normal: 'default',
   high: 'warning',
   urgent: 'danger',
 }
@@ -82,86 +94,76 @@ export default async function MissionsPage() {
     : []
 
   return (
-    <div className="p-7 max-w-4xl mx-auto space-y-6">
+    <PageWrapper className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-        >
-          <ArrowLeft size={14} />
-          Back
-        </Link>
-        <div className="h-4 w-px bg-[var(--border)]" aria-hidden="true" />
-        <h1 className="text-lg font-semibold text-[var(--text)] tracking-tight">
-          Missions
-        </h1>
-        <span className="ml-auto text-xs text-[var(--text-muted)]">
-          {missions.length} recent
-        </span>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Back
+          </Link>
+          <div className="h-4 w-px bg-[var(--border)]" aria-hidden="true" />
+          <SectionHeader
+            title="Missions"
+            description={`${missions.length} recent`}
+            className="mb-0 flex-1"
+          />
+        </div>
+      </MotionFadeIn>
 
       {/* Body */}
       {!workspace ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <p className="text-[var(--text-muted)] text-sm">No workspace found.</p>
-          <Link
-            href="/settings"
-            className="text-xs text-[var(--primary)] hover:text-[var(--primary-hover)] underline underline-offset-2"
-          >
-            Set up a workspace in Settings
-          </Link>
-        </div>
+        <MissionsEmptyState variant="no-workspace" />
       ) : missions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <p className="text-[var(--text-muted)] text-sm">No missions yet.</p>
-          <Link
-            href="/"
-            className="text-xs text-[var(--primary)] hover:text-[var(--primary-hover)] underline underline-offset-2"
-          >
-            Create your first mission from the Command Center
-          </Link>
-        </div>
+        <MissionsEmptyState variant="no-missions" />
       ) : (
-        <ul className="flex flex-col gap-2" role="list">
+        <MotionStagger className="flex flex-col gap-2">
           {missions.map((mission) => {
             const status = mission.status as MissionStatus
             const priority = mission.priority as MissionPriority
 
             return (
-              <li key={mission.id}>
-                <Link
-                  href={`/missions/${mission.id}`}
-                  className="group flex items-center gap-4 px-5 py-4 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--surface-hover)] transition-all duration-150"
-                >
-                  <span className="flex-1 min-w-0 text-sm font-medium text-[var(--text)] truncate">
-                    {mission.title}
-                  </span>
+              <MotionStaggerItem key={mission.id}>
+                <Link href={`/missions/${mission.id}`}>
+                  <GlassCard
+                    padding="none"
+                    className="group flex items-center gap-4 px-5 py-4 cursor-pointer"
+                  >
+                    <span className="flex-1 min-w-0 text-sm font-medium text-[var(--text)] truncate">
+                      {mission.title}
+                    </span>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={STATUS_VARIANT[status]}>
-                      {STATUS_LABEL[status]}
-                    </Badge>
-                    <Badge variant={PRIORITY_VARIANT[priority]}>
-                      {PRIORITY_LABEL[priority]}
-                    </Badge>
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge
+                        label={STATUS_LABEL[status]}
+                        variant={STATUS_VARIANT[status]}
+                        pulse={STATUS_PULSE[status]}
+                      />
+                      <StatusBadge
+                        label={PRIORITY_LABEL[priority]}
+                        variant={PRIORITY_VARIANT[priority]}
+                      />
+                    </div>
 
-                  <span className="shrink-0 text-xs text-[var(--text-muted)] w-16 text-right tabular-nums">
-                    {formatRelativeTime(mission.created_at)}
-                  </span>
+                    <span className="shrink-0 text-xs text-[var(--text-muted)] w-16 text-right tabular-nums">
+                      {formatRelativeTime(mission.created_at)}
+                    </span>
 
-                  <ArrowRight
-                    size={14}
-                    className="shrink-0 text-[var(--text-disabled)] group-hover:text-[var(--text-muted)] transition-colors"
-                    aria-hidden="true"
-                  />
+                    <ArrowRight
+                      size={14}
+                      className="shrink-0 text-[var(--text-disabled)] group-hover:text-[var(--text-muted)] transition-colors"
+                      aria-hidden="true"
+                    />
+                  </GlassCard>
                 </Link>
-              </li>
+              </MotionStaggerItem>
             )
           })}
-        </ul>
+        </MotionStagger>
       )}
-    </div>
+    </PageWrapper>
   )
 }

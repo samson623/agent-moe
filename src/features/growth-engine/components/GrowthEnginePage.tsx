@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { Radar, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 import { SignalFilters } from './SignalFilters'
 import { SignalCard } from './SignalCard'
 import { OpportunityBoard } from './OpportunityBoard'
 import { MarketAnglesPanel } from './MarketAnglesPanel'
+import { GrowthActionsPanel } from './GrowthActionsPanel'
 import { TopicScorer } from './TopicScorer'
 import { TrendScanModal } from './TrendScanModal'
 import { useRealtimeSignals } from '../hooks/use-realtime-signals'
@@ -188,34 +190,37 @@ export function GrowthEnginePage({ workspaceId }: GrowthEnginePageProps) {
   return (
     <div className="space-y-6 p-6 md:p-8">
       {/* Actions row */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={refresh}
-          className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
-          title="Refresh signals"
-        >
-          <RefreshCw size={14} />
-        </button>
-        <Button
-          onClick={() => setScanModalOpen(true)}
-          variant="accent"
-          size="sm"
-          className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-        >
-          <Radar size={14} />
-          Launch Scan
-        </Button>
-      </div>
+      <MotionFadeIn>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={refresh}
+            className="p-2 rounded-[var(--radius)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--border-hover)] transition-colors"
+            title="Refresh signals"
+          >
+            <RefreshCw size={14} />
+          </button>
+          <Button
+            onClick={() => setScanModalOpen(true)}
+            variant="accent"
+            size="sm"
+            className="gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+          >
+            <Radar size={14} />
+            Launch Scan
+          </Button>
+        </div>
+      </MotionFadeIn>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Total Signals" value={allSignals.length} color="#6366f1" />
-        <StatCard label="Rising / Explosive" value={hotCount} color="#10b981" pulse={hotCount > 0} />
-        <StatCard label="Top Opportunity" value={topOpp || '—'} color="#f59e0b" />
-        <StatCard label="Avg Audience Fit" value={allSignals.length > 0 ? `${avgFit}%` : '—'} color="#3b82f6" />
-      </div>
+      <MotionStagger className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MotionStaggerItem><StatCard label="Total Signals" value={allSignals.length} color="#6366f1" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Rising / Explosive" value={hotCount} color="#10b981" pulse={hotCount > 0} /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Top Opportunity" value={topOpp || '—'} color="#f59e0b" /></MotionStaggerItem>
+        <MotionStaggerItem><StatCard label="Avg Audience Fit" value={allSignals.length > 0 ? `${avgFit}%` : '—'} color="#3b82f6" /></MotionStaggerItem>
+      </MotionStagger>
 
       {/* Main 2-column layout */}
+      <MotionFadeIn delay={0.1}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-7">
         {/* Left: Filters + Signal Grid */}
         <div className="lg:col-span-2 space-y-4">
@@ -268,16 +273,17 @@ export function GrowthEnginePage({ workspaceId }: GrowthEnginePageProps) {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {signals.map((signal) => (
-                  <SignalCard
-                    key={signal.id}
-                    signal={signal}
-                    selected={selectedSignal === signal.id}
-                    onClick={() => setSelectedSignal((prev) => prev === signal.id ? null : signal.id)}
-                  />
+                  <MotionStaggerItem key={signal.id}>
+                    <SignalCard
+                      signal={signal}
+                      selected={selectedSignal === signal.id}
+                      onClick={() => setSelectedSignal((prev) => prev === signal.id ? null : signal.id)}
+                    />
+                  </MotionStaggerItem>
                 ))}
-              </div>
+              </MotionStagger>
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -307,8 +313,12 @@ export function GrowthEnginePage({ workspaceId }: GrowthEnginePageProps) {
           )}
         </div>
 
-        {/* Right: Opportunity Board + Market Angles */}
+        {/* Right: Growth Actions + Opportunity Board + Market Angles */}
         <div className="space-y-4">
+          <GrowthActionsPanel
+            selectedSignal={allSignals.find((s) => s.id === selectedSignal) ?? null}
+            workspaceId={workspaceId}
+          />
           <OpportunityBoard
             signals={opportunities}
             isLoading={isOppLoading}
@@ -317,9 +327,12 @@ export function GrowthEnginePage({ workspaceId }: GrowthEnginePageProps) {
           <MarketAnglesPanel signals={allSignals} isLoading={isOppLoading} />
         </div>
       </div>
+      </MotionFadeIn>
 
       {/* Bottom: Topic Scorer */}
-      <TopicScorer workspaceId={workspaceId} onScanQueued={refresh} />
+      <MotionFadeIn delay={0.15}>
+        <TopicScorer workspaceId={workspaceId} onScanQueued={refresh} />
+      </MotionFadeIn>
 
       {/* Scan Modal */}
       <TrendScanModal
