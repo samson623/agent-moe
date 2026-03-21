@@ -20,6 +20,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/supabase/queries/activity'
+import { notifyMissionStage } from '@/features/telegram/notifier'
 import { OperatorFactory } from '@/features/ai/operator-factory'
 import {
   type Workspace,
@@ -52,6 +53,10 @@ export interface ExecutionOptions {
   maxJobs?: number
   /** Log what would run without making any AI calls. */
   dryRun?: boolean
+  /** User ID for sending Telegram progress notifications. */
+  userId?: string
+  /** Total number of jobs in the mission (for progress denominator). */
+  totalJobs?: number
 }
 
 export interface ExecutionSummary {
@@ -200,7 +205,7 @@ export class ExecutionEngine {
    * Never throws — all errors are captured in job records and the summary.
    */
   async execute(options: ExecutionOptions = {}): Promise<ExecutionSummary> {
-    const { maxJobs, dryRun = false } = options
+    const { maxJobs, dryRun = false, userId, totalJobs } = options
     const engineStart = Date.now()
 
     const MAX_RETRIES = 2
@@ -277,6 +282,16 @@ export class ExecutionEngine {
 
       if (updatedJob?.status === 'completed') {
         jobsCompleted++
+        // Telegram: per-job progress notification
+        if (userId) {
+          const total = totalJobs ?? jobsExecuted
+          notifyMissionStage(
+            userId,
+            this.missionId,
+            'job_progress',
+            `✅ "${dbJob.title}" completed (${jobsCompleted}/${total})`,
+          ).catch(() => {})
+        }
       } else if (updatedJob?.status === 'failed') {
         const attempts = (retryCount.get(dbJob.id) ?? 0) + 1
         retryCount.set(dbJob.id, attempts)
@@ -290,6 +305,15 @@ export class ExecutionEngine {
           // Don't count as failed yet — give it another shot
         } else {
           jobsFailed++
+          // Telegram: notify job failure after retries exhausted
+          if (userId) {
+            notifyMissionStage(
+              userId,
+              this.missionId,
+              'job_progress',
+              `❌ "${dbJob.title}" failed after ${attempts} attempts`,
+            ).catch(() => {})
+          }
         }
       }
     }

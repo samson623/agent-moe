@@ -142,7 +142,9 @@ export function formatNotification(
     received: '📥',
     planning: '🧠',
     working: '⚡',
+    job_progress: '🔄',
     completed: '✅',
+    paused: '⏸',
     failed: '❌',
   }
 
@@ -150,7 +152,9 @@ export function formatNotification(
     received: 'Mission received',
     planning: 'Planning in progress',
     working: 'Operators working',
+    job_progress: 'Job update',
     completed: 'Mission completed',
+    paused: 'Mission paused — awaiting approval',
     failed: 'Mission failed',
   }
 

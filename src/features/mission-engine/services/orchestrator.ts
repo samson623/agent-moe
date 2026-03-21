@@ -88,6 +88,7 @@ export async function planAndExecuteMission(
         entity_id: missionId,
         summary: `Planning failed: ${planResult.error.message}`,
       })
+      notifyMissionStage(missionRow.user_id, missionId, 'failed', `Planning failed: ${planResult.error.message}`).catch(() => {})
       return
     }
 
@@ -123,7 +124,10 @@ export async function planAndExecuteMission(
     notifyMissionStage(missionRow.user_id, missionId, 'working', `${jobInserts.length} jobs queued`).catch(() => {})
 
     const engine = createExecutionEngine(missionId, workspaceId)
-    const summary = await engine.execute()
+    const summary = await engine.execute({
+      userId: missionRow.user_id,
+      totalJobs: jobInserts.length,
+    })
 
     // ── Phase 3: Finalize ──────────────────────────────────────────────────
     const statusMap = {
@@ -147,7 +151,12 @@ export async function planAndExecuteMission(
     })
 
     // Telegram: notify final status
-    const telegramStage = finalStatus === 'completed' ? 'completed' : 'failed' as const
+    const telegramStageMap = {
+      completed: 'completed',
+      paused: 'paused',
+      failed: 'failed',
+    } as const
+    const telegramStage = telegramStageMap[finalStatus] ?? 'failed'
     notifyMissionStage(
       missionRow.user_id,
       missionId,
@@ -166,5 +175,13 @@ export async function planAndExecuteMission(
       entity_id: missionId,
       summary: `Orchestrator error: ${message}`,
     }).catch(() => {})
+
+    // Best-effort Telegram notification — missionRow may not exist if failure was early
+    try {
+      const { data: row } = await client.from('missions').select('user_id').eq('id', missionId).single()
+      if (row) {
+        notifyMissionStage(row.user_id, missionId, 'failed', `Orchestrator error: ${message}`).catch(() => {})
+      }
+    } catch { /* silent */ }
   }
 }

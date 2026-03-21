@@ -101,5 +101,7 @@ export type MissionNotificationStage =
   | 'received'
   | 'planning'
   | 'working'
+  | 'job_progress'
   | 'completed'
+  | 'paused'
   | 'failed'

@@ -546,6 +546,7 @@ export type Database = {
           meta: Json
           plan_json: Json
           priority: Database["public"]["Enums"]["mission_priority"]
+          source_channel: string | null
           status: Database["public"]["Enums"]["mission_status"]
           title: string
           updated_at: string
@@ -559,6 +560,7 @@ export type Database = {
           meta?: Json
           plan_json?: Json
           priority?: Database["public"]["Enums"]["mission_priority"]
+          source_channel?: string | null
           status?: Database["public"]["Enums"]["mission_status"]
           title: string
           updated_at?: string
@@ -572,6 +574,7 @@ export type Database = {
           meta?: Json
           plan_json?: Json
           priority?: Database["public"]["Enums"]["mission_priority"]
+          source_channel?: string | null
           status?: Database["public"]["Enums"]["mission_status"]
           title?: string
           updated_at?: string

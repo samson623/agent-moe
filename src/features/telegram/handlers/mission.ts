@@ -7,6 +7,7 @@
 
 import { createMission } from '@/lib/supabase/queries/missions'
 import { formatMissionCreated, formatError } from '../formatter'
+import { notifyMissionStage } from '../notifier'
 import type { TelegramHandlerContext } from '../types'
 
 export async function handleMission(ctx: TelegramHandlerContext): Promise<string> {
@@ -27,6 +28,7 @@ export async function handleMission(ctx: TelegramHandlerContext): Promise<string
     instruction,
     priority: 'normal',
     status: 'pending',
+    source_channel: 'telegram',
     meta: { source: 'telegram' },
   })
 
@@ -34,6 +36,9 @@ export async function handleMission(ctx: TelegramHandlerContext): Promise<string
     console.error('[Telegram] /mission creation failed:', error)
     return formatError('Failed to create mission. Try again.')
   }
+
+  // Notify Telegram: mission received
+  notifyMissionStage(ctx.link.user_id, mission.id, 'received', instruction.slice(0, 200)).catch(() => {})
 
   // Fire-and-forget — orchestrator runs in background.
   // Dynamic import to avoid pulling server-only code at module load.

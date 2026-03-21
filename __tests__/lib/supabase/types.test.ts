@@ -361,6 +361,7 @@ describe('Row shape spot-checks', () => {
       priority: 'normal',
       meta: {},
       plan_json: {},
+      source_channel: 'dashboard',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
