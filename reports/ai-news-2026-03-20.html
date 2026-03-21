@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News Briefing — March 20, 2026 | Agent MOE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #06070c;
+    --bg-card: rgba(255,255,255,0.04);
+    --bg-card-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-glow: rgba(139,92,246,0.3);
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --violet: #8b5cf6;
+    --violet-light: #a78bfa;
+    --amber: #f59e0b;
+    --amber-light: #fbbf24;
+    --red: #ef4444;
+    --green: #22c55e;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --score-critical: #ef4444;
+    --score-high: #f59e0b;
+    --score-medium: #22c55e;
+    --score-low: #64748b;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Ambient background glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding: 48px 32px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(245,158,11,0.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--violet), var(--amber), transparent);
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--violet-light);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+  }
+  .header-badge .pulse {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  }
+  .header h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff 0%, var(--violet-light) 50%, var(--amber) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .date {
+    font-size: 18px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .header-meta-item {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .header-meta-item strong {
+    color: var(--text-dim);
+  }
+
+  /* ── Executive Summary ── */
+  .exec-summary {
+    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.05));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--violet);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 48px;
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .exec-summary h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--violet-light);
+    margin-bottom: 16px;
+  }
+  .exec-summary p {
+    margin-bottom: 12px;
+  }
+  .exec-summary strong {
+    color: #fff;
+  }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .stat-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-glow);
+    transform: translateY(-2px);
+  }
+  .stat-card .stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .stat-violet .stat-value { color: var(--violet-light); }
+  .stat-amber .stat-value { color: var(--amber); }
+  .stat-cyan .stat-value { color: var(--cyan); }
+  .stat-green .stat-value { color: var(--green); }
+  .stat-pink .stat-value { color: var(--pink); }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header .icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    flex: 1;
+  }
+  .section-header .toggle {
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+  }
+  .section.collapsed .toggle { transform: rotate(-90deg); }
+  .section.collapsed .section-body { display: none; }
+  .section-count {
+    background: rgba(255,255,255,0.08);
+    border-radius: 100px;
+    padding: 2px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  /* ── Story Cards ── */
+  .story-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 16px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .story-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-glow);
+    transform: translateY(-1px);
+  }
+  .story-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+  }
+  .story-card.score-critical::before { background: var(--score-critical); }
+  .story-card.score-high::before { background: var(--score-high); }
+  .story-card.score-medium::before { background: var(--score-medium); }
+
+  .story-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .story-rank {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+  .story-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+  }
+  .story-score {
+    flex-shrink: 0;
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .story-score .score-label {
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+  .score-critical-bg { background: rgba(239,68,68,0.15); color: var(--score-critical); border: 1px solid rgba(239,68,68,0.3); }
+  .score-high-bg { background: rgba(245,158,11,0.15); color: var(--score-high); border: 1px solid rgba(245,158,11,0.3); }
+  .score-medium-bg { background: rgba(34,197,94,0.15); color: var(--score-medium); border: 1px solid rgba(34,197,94,0.3); }
+
+  .story-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .story-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .story-summary {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .story-why {
+    font-size: 13px;
+    color: var(--amber);
+    font-weight: 500;
+    padding: 10px 14px;
+    background: rgba(245,158,11,0.06);
+    border-radius: 8px;
+    border-left: 2px solid rgba(245,158,11,0.3);
+  }
+  .story-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--violet-light);
+    text-decoration: none;
+    margin-top: 12px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .story-link:hover { color: #fff; }
+
+  /* ── X / Twitter Cards ── */
+  .tweet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+  .tweet-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    transition: all 0.3s;
+  }
+  .tweet-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(29,161,242,0.3);
+  }
+  .tweet-account {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1da1f2;
+    margin-bottom: 8px;
+  }
+  .tweet-account a { color: inherit; text-decoration: none; }
+  .tweet-account a:hover { text-decoration: underline; }
+  .tweet-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .tweet-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Data Table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .data-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-dim);
+  }
+  .data-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+  }
+  .data-table .model-name {
+    font-weight: 600;
+    color: #fff;
+  }
+  .data-table .org-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .org-openai { background: rgba(16,163,127,0.15); color: #10a37f; }
+  .org-xiaomi { background: rgba(255,103,0,0.15); color: #ff6700; }
+  .org-minimax { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .org-microsoft { background: rgba(0,120,215,0.15); color: #0078d7; }
+  .org-google { background: rgba(66,133,244,0.15); color: #4285f4; }
+
+  /* ── Regulation Cards ── */
+  .reg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+  .reg-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    transition: all 0.3s;
+  }
+  .reg-card:hover { background: var(--bg-card-hover); }
+  .reg-card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .reg-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .reg-card .status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  .status-passed { background: rgba(34,197,94,0.15); color: var(--green); }
+  .status-active { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .status-failed { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  /* ── Industry Moves ── */
+  .move-item {
+    display: flex;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .move-item:last-child { border-bottom: none; }
+  .move-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.04);
+  }
+  .move-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .move-content p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .move-value {
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  /* ── a16z Section ── */
+  .a16z-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .a16z-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+  }
+  .a16z-card .big-num {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+  .a16z-card .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .a16z-card .detail {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── YouTube ── */
+  .yt-channels {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .yt-channel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s;
+  }
+  .yt-channel:hover { background: var(--bg-card-hover); border-color: rgba(255,0,0,0.3); }
+  .yt-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,0,0,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .yt-channel .name { font-size: 14px; font-weight: 600; color: #fff; }
+  .yt-channel .desc { font-size: 11px; color: var(--text-muted); }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+  .footer p {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .footer .brand {
+    font-weight: 700;
+    color: var(--violet-light);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .header h1 { font-size: 28px; }
+    .header { padding: 32px 20px; }
+    .story-top { flex-direction: column; }
+    .story-score { align-self: flex-start; }
+    .tweet-grid, .reg-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .a16z-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-badge"><span class="pulse"></span> Scheduled Task — Executed</div>
+    <h1>AI News Briefing</h1>
+    <p class="date">Friday, March 20, 2026</p>
+    <div class="header-meta">
+      <span class="header-meta-item"><strong>Window:</strong> Mar 19 7:20 AM → Mar 20 7:20 AM</span>
+      <span class="header-meta-item"><strong>Sources:</strong> X, YouTube, Web, LLM Stats, a16z</span>
+      <span class="header-meta-item"><strong>Agent:</strong> Agent MOE</span>
+    </div>
+  </div>
+
+  <!-- ── STATS BAR ── -->
+  <div class="stats-bar">
+    <div class="stat-card stat-violet">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Top Stories</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-value">5</div>
+      <div class="stat-label">New Models</div>
+    </div>
+    <div class="stat-card stat-cyan">
+      <div class="stat-value">6</div>
+      <div class="stat-label">X Posts</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Industry Moves</div>
+    </div>
+    <div class="stat-card stat-pink">
+      <div class="stat-value">6</div>
+      <div class="stat-label">Policy Updates</div>
+    </div>
+  </div>
+
+  <!-- ── EXECUTIVE SUMMARY ── -->
+  <div class="exec-summary">
+    <h2>Executive Summary</h2>
+    <p><strong>Bezos is raising $100B</strong> to buy entire industries and automate them with AI — the largest AI fund in history, signaling that industrial AI is the next frontier beyond chatbots.</p>
+    <p>The <strong>a16z Gen AI report</strong> confirms the shift: ChatGPT has <strong>900M weekly users</strong>, Claude Code hit <strong>$1B ARR in 6 months</strong>, Meta paid <strong>$2B for agentic AI startup Manus</strong>, and Midjourney collapsed from Top 10 to #46 as native models absorbed its market.</p>
+    <p>Meanwhile, Xiaomi's <strong>1T-parameter MiMo V2 Pro</strong> is closing the gap with GPT-5.2/Opus, <strong>NVIDIA shipped enterprise agent tooling</strong>, and <strong>Visa is building payment rails</strong> for AI agents to spend money autonomously.</p>
+  </div>
+
+  <!-- ── TOP STORIES ── -->
+  <div class="section" id="top-stories">
+    <div class="section-header" onclick="toggleSection('top-stories')">
+      <div class="icon" style="background:rgba(239,68,68,0.12)">🔥</div>
+      <h2>Top Stories</h2>
+      <span class="section-count">10</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+
+      <!-- Story 1 -->
+      <div class="story-card score-critical">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#1 — Breaking</div>
+            <div class="story-title">Bezos Raising $100 Billion for Industrial AI Fund</div>
+          </div>
+          <div class="story-score score-critical-bg">97<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 20, 2026</span>
+          <span class="story-tag">🏢 Project Prometheus</span>
+          <span class="story-tag">💰 $100B Target</span>
+        </div>
+        <div class="story-summary">
+          Jeff Bezos is seeking $100 billion for a new fund targeting manufacturing, aerospace, and automotive companies for acquisition — then modernizing them with AI automation via Project Prometheus. Co-CEO'd with former Google exec Vik Bajaj. Built on the $6.2B seed from October 2025. This is the largest AI-focused fund in history and signals that AI is moving from software into physical industries.
+        </div>
+        <div class="story-why">💡 Why it matters: Industrial AI is the next wave. If Bezos succeeds, entire sectors get automated — creating massive demand for AI tools, agents, and operators like Agent MOE.</div>
+        <a class="story-link" href="https://www.businesstechafrica.co.za/news/2026/03/20/breaking-news-today-friday-20-march-2026/" target="_blank">Read full story →</a>
+      </div>
+
+      <!-- Story 2 -->
+      <div class="story-card score-critical">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#2 — Market Intelligence</div>
+            <div class="story-title">a16z Top 100 Gen AI Consumer Apps — March 2026</div>
+          </div>
+          <div class="story-score score-critical-bg">96<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 2026</span>
+          <span class="story-tag">📊 a16z Report</span>
+          <span class="story-tag">🌐 Consumer AI</span>
+        </div>
+        <div class="story-summary">
+          The definitive market map of who's winning in consumer AI. ChatGPT dominates at 900M weekly active users (2.7x Gemini on web). Claude paid subscribers up 200% YoY. Claude Code hit $1B ARR in just 6 months. Midjourney collapsed from Top 10 to #46 as native image gen in ChatGPT/Gemini ate its lunch. Meta acquired Manus (agentic AI) for ~$2B. Chinese video models (Kling AI, Hailuo) lead quality rankings. Desktop-native AI tools are the new growth frontier.
+        </div>
+        <div class="story-why">💡 Why it matters: This is the scoreboard. Agentic AI is officially a billion-dollar category. Desktop-native tools (like what we're building) are the growth vector.</div>
+        <a class="story-link" href="https://www.a16z.news/p/top-100-gen-ai-consumer-apps-march" target="_blank">Read full report →</a>
+      </div>
+
+      <!-- Story 3 -->
+      <div class="story-card score-critical">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#3 — Model Release</div>
+            <div class="story-title">Xiaomi Drops MiMo V2 Pro — 1 Trillion Parameter Model</div>
+          </div>
+          <div class="story-score score-critical-bg">95<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 20, 2026</span>
+          <span class="story-tag">🤖 Xiaomi</span>
+          <span class="story-tag">⚡ 1T Parameters</span>
+        </div>
+        <div class="story-summary">
+          Xiaomi released MiMo V2 Pro (Hunter Alpha), a 1 trillion-parameter model benchmarking close to GPT-5.2 and Opus 4.6 performance levels. This is a phone company competing at the frontier of AI. Chinese labs are closing the gap with Western models at an alarming pace, and this release proves the model size barrier is no longer a moat.
+        </div>
+        <div class="story-why">💡 Why it matters: Competition is global now. If a phone company can build GPT-5-class models, the price of intelligence is going to zero.</div>
+        <a class="story-link" href="https://llm-stats.com/ai-news" target="_blank">View on LLM Stats →</a>
+      </div>
+
+      <!-- Story 4 -->
+      <div class="story-card score-critical">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#4 — Infrastructure</div>
+            <div class="story-title">NVIDIA Releases Enterprise AI Agent Toolkit</div>
+          </div>
+          <div class="story-score score-critical-bg">92<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 19, 2026</span>
+          <span class="story-tag">🟢 NVIDIA GTC</span>
+          <span class="story-tag">🤖 Agentic AI</span>
+        </div>
+        <div class="story-summary">
+          NVIDIA introduced tools to make deploying autonomous AI agents safer and more manageable for enterprise environments. Addresses the #1 blocker for agent adoption: security and governance. Released alongside the Feynman GPU announcement at GTC 2026. This toolkit gives enterprises a standard way to sandbox, monitor, and audit AI agent behavior.
+        </div>
+        <div class="story-why">💡 Why it matters: NVIDIA is building the operating system for AI agents. If you're building agents, this is the infrastructure layer you'll likely end up on.</div>
+        <a class="story-link" href="https://www.artificialintelligence-news.com/news/nvidia-agent-toolkit-enterprise-ai-agents/" target="_blank">Read full story →</a>
+      </div>
+
+      <!-- Story 5 -->
+      <div class="story-card score-critical">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#5 — Finance × AI</div>
+            <div class="story-title">Visa Prepares Payment Systems for AI Agent Transactions</div>
+          </div>
+          <div class="story-score score-critical-bg">90<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 19, 2026</span>
+          <span class="story-tag">💳 Visa</span>
+          <span class="story-tag">💰 Agent Commerce</span>
+        </div>
+        <div class="story-summary">
+          Visa is modernizing its infrastructure to support autonomous AI systems conducting financial transactions independently. This means AI agents will soon have their own spending capabilities — buying ad inventory, purchasing supplies, paying for services — without human intervention for each transaction.
+        </div>
+        <div class="story-why">💡 Why it matters: Agent-driven commerce is becoming real. When AI agents can spend money, the entire economics of automation changes. Revenue Closer operators could autonomously purchase and optimize ad spend.</div>
+        <a class="story-link" href="https://www.artificialintelligence-news.com/news/visa-prepares-payment-systems-for-ai-agent-initiated-transactions/" target="_blank">Read full story →</a>
+      </div>
+
+      <!-- Story 6 -->
+      <div class="story-card score-high">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#6 — Model Release</div>
+            <div class="story-title">MiniMax Releases M2.7 — Self-Evolving LLM</div>
+          </div>
+          <div class="story-score score-high-bg">88<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 19, 2026</span>
+          <span class="story-tag">🤖 MiniMax</span>
+          <span class="story-tag">🔄 Self-Evolving</span>
+        </div>
+        <div class="story-summary">
+          MiniMax launched M2.7, a proprietary "self-evolving" LLM that uses reinforcement learning harnesses for autonomous optimization. This is the first model to market itself as self-improving without human fine-tuning cycles. The RL harness lets the model identify its own weaknesses and train itself to improve.
+        </div>
+        <div class="story-why">💡 Why it matters: Self-improving models are the holy grail. If this works at scale, human-in-the-loop fine-tuning becomes a bottleneck of the past.</div>
+        <a class="story-link" href="https://llm-stats.com/ai-news" target="_blank">View on LLM Stats →</a>
+      </div>
+
+      <!-- Story 7 -->
+      <div class="story-card score-high">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#7 — Agentic AI</div>
+            <div class="story-title">Meta Acquires Manus for ~$2B — Agentic AI Goes Mainstream</div>
+          </div>
+          <div class="story-score score-high-bg">85<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 2026</span>
+          <span class="story-tag">🏢 Meta</span>
+          <span class="story-tag">💰 ~$2B Acquisition</span>
+        </div>
+        <div class="story-summary">
+          Meta acquired Manus, the horizontal agentic AI platform, for approximately $2 billion. Manus enables multi-step task automation — agents that can browse, research, create, and execute complex workflows. Genspark, another agentic platform, hit $100M ARR. OpenAI acquired OpenClaw (68K GitHub stars) in February.
+        </div>
+        <div class="story-why">💡 Why it matters: Three major acquisitions in one month validates agentic AI as a category worth billions. Agent MOE is in the right space at the right time.</div>
+      </div>
+
+      <!-- Story 8 -->
+      <div class="story-card score-high">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#8 — Model Release</div>
+            <div class="story-title">Microsoft Launches MAI-Image-2</div>
+          </div>
+          <div class="story-score score-high-bg">82<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 19, 2026</span>
+          <span class="story-tag">🖼️ Image Gen</span>
+          <span class="story-tag">🏢 Microsoft</span>
+        </div>
+        <div class="story-summary">
+          Microsoft's text-to-image generator ranked #3 on the arena leaderboard, available via playground with forthcoming API. This directly competes with DALL-E 3 and Midjourney. Midjourney's fall to #46 in the a16z rankings shows the market is consolidating — native models in platforms are winning over standalone tools.
+        </div>
+        <div class="story-why">💡 Why it matters: Image generation is being absorbed into platforms. Standalone image tools are dying — build image gen into your workflows, not as a separate step.</div>
+        <a class="story-link" href="https://llm-stats.com/ai-news" target="_blank">View on LLM Stats →</a>
+      </div>
+
+      <!-- Story 9 -->
+      <div class="story-card score-high">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#9 — Geopolitics</div>
+            <div class="story-title">3 Men Charged with Smuggling AI Chips to China</div>
+          </div>
+          <div class="story-score score-high-bg">80<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 19, 2026</span>
+          <span class="story-tag">⚖️ DOJ</span>
+          <span class="story-tag">🔒 Export Controls</span>
+        </div>
+        <div class="story-summary">
+          A senior VP of Super Micro Computer and two others were charged with conspiring to smuggle billions of dollars in Nvidia-powered servers to China. This is the highest-profile enforcement action on AI chip export controls to date and escalates the US-China AI hardware war.
+        </div>
+        <div class="story-why">💡 Why it matters: The AI chip war is getting personal. Export controls are being enforced aggressively — this directly impacts GPU availability and pricing worldwide.</div>
+        <a class="story-link" href="https://www.kens5.com/article/syndication/associatedpress/3-men-are-charged-with-conspiring-to-smuggle-us-artificial-intelligence-to-china/616-b4412999-8c34-47d2-9a6f-b86b6d3e253e" target="_blank">Read full story →</a>
+      </div>
+
+      <!-- Story 10 -->
+      <div class="story-card score-medium">
+        <div class="story-top">
+          <div>
+            <div class="story-rank">#10 — Benchmarks</div>
+            <div class="story-title">ARC-AGI-3 Toolkit Launch — Measuring Real Agent Intelligence</div>
+          </div>
+          <div class="story-score score-medium-bg">78<span class="score-label">Score</span></div>
+        </div>
+        <div class="story-meta">
+          <span class="story-tag">📅 March 2026</span>
+          <span class="story-tag">🧪 ARC Prize</span>
+          <span class="story-tag">📊 Benchmark</span>
+        </div>
+        <div class="story-summary">
+          The ARC Prize launched the ARC-AGI-3 Toolkit: agents can now interact with environments at 2,000 FPS locally. They open-sourced the environment engine and 3 human-verified games where AI scores less than 5%. ARC-AGI-3 formally launches March 25, 2026.
+        </div>
+        <div class="story-why">💡 Why it matters: This is how we'll measure whether AI agents are actually intelligent or just pattern matching. Current AI scores <5% — massive room for improvement.</div>
+        <a class="story-link" href="https://x.com/arcprize/status/2016938079924474295" target="_blank">View on X →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── a16z MARKET DATA ── -->
+  <div class="section" id="a16z">
+    <div class="section-header" onclick="toggleSection('a16z')">
+      <div class="icon" style="background:rgba(139,92,246,0.12)">📊</div>
+      <h2>a16z Gen AI Market Data</h2>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="a16z-grid">
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--green)">900M</div>
+          <div class="label">ChatGPT Weekly Users</div>
+          <div class="detail">2.7x lead over Gemini on web, 2.5x on mobile</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--violet-light)">+200%</div>
+          <div class="label">Claude Paid Subs YoY</div>
+          <div class="detail">Fastest growing among frontier labs</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--amber)">$1B</div>
+          <div class="label">Claude Code ARR</div>
+          <div class="detail">Hit $1B annualized in just 6 months</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--red)">#46</div>
+          <div class="label">Midjourney Ranking</div>
+          <div class="detail">Fell from Top 10 — native models ate it</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--cyan)">~$2B</div>
+          <div class="label">Meta → Manus</div>
+          <div class="detail">Agentic AI acquisition validates the category</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--pink)">$100M</div>
+          <div class="label">Genspark ARR</div>
+          <div class="detail">Agentic AI platform reaching scale</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--green)">+258%</div>
+          <div class="label">Gemini Paid Subs YoY</div>
+          <div class="detail">Google catching up in subscriber growth</div>
+        </div>
+        <div class="a16z-card">
+          <div class="big-num" style="color:var(--amber)">11%</div>
+          <div class="label">Platform Overlap</div>
+          <div class="detail">Only 41 apps in both ChatGPT & Claude catalogs — diverging ecosystems</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── X (TWITTER) ── -->
+  <div class="section" id="x-posts">
+    <div class="section-header" onclick="toggleSection('x-posts')">
+      <div class="icon" style="background:rgba(29,161,242,0.12)">𝕏</div>
+      <h2>X (Twitter) — Trending AI Posts</h2>
+      <span class="section-count">6</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="tweet-grid">
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/arcprize/status/2016938079924474295" target="_blank">@arcprize</a></div>
+          <div class="tweet-text">ARC-AGI-3 Toolkit Launch — agents can now interact with environments at 2,000 FPS locally.</div>
+          <div class="tweet-detail">Open-sourced the environment engine + 3 human-verified games where AI scores &lt;5%. Full launch March 25.</div>
+        </div>
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/Sino_Market/status/2032603903515308392" target="_blank">@Sino_Market</a></div>
+          <div class="tweet-text">NVIDIA GTC "AI Spring" — Feynman GPU launch, Jensen Huang keynote, new AI infrastructure.</div>
+          <div class="tweet-detail">Week ahead coverage: Fed decision, NVIDIA GTC Mar 16-19, dubbed "AI Spring Festival" by attendees.</div>
+        </div>
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/mark_k/status/2005882288395960615" target="_blank">@mark_k</a></div>
+          <div class="tweet-text">Multimodal AI is having a big comeback in 2026! xAI doubling down with Grok 5.</div>
+          <div class="tweet-detail">Expects image generation and editing capabilities in Grok 5. References Nano Banana as proof of concept.</div>
+        </div>
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/Ai4Conferences/status/2026316616779047008" target="_blank">@Ai4Conferences</a></div>
+          <div class="tweet-text">4 new keynotes at Ai4 2026: autonomous systems, enterprise AI, world models.</div>
+          <div class="tweet-detail">Speakers include Waymo co-CEO Dmitri Dolgov. Focus on architecture powering next era of intelligent machines.</div>
+        </div>
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/GlobalCmd/status/2008974813784588785" target="_blank">@GlobalCmd</a></div>
+          <div class="tweet-text">"Chat is over; systems are starting." CES 2026 gravity shifting to agentic + physical AI.</div>
+          <div class="tweet-detail">NVIDIA's Vera Rubin architecture is the hardware play. Robots, devices, vehicles — AI leaving the screen.</div>
+        </div>
+        <div class="tweet-card">
+          <div class="tweet-account"><a href="https://x.com/globaltimesnews/status/2030131338552984050" target="_blank">@globaltimesnews</a></div>
+          <div class="tweet-text">China's AI addresses "essential demand" in key real-world scenarios — expanding globally.</div>
+          <div class="tweet-detail">Increasing Chinese AI products entering global markets. Core competitiveness claim for global expansion.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── YOUTUBE ── -->
+  <div class="section" id="youtube">
+    <div class="section-header" onclick="toggleSection('youtube')">
+      <div class="icon" style="background:rgba(255,0,0,0.12)">▶</div>
+      <h2>YouTube — AI Channels to Watch</h2>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--text-muted); font-size:14px; margin-bottom:16px;">YouTube search indexing lagged for March 19-20 content at scan time (7:20 AM). These channels typically post AI news roundups by midday. Check directly for today's coverage.</p>
+      <div class="yt-channels">
+        <div class="yt-channel">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="name">@AllAboutAI</div>
+            <div class="desc">220K subs · AI tools & agents</div>
+          </div>
+        </div>
+        <div class="yt-channel">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="name">@MattVidPro</div>
+            <div class="desc">Daily AI news roundups</div>
+          </div>
+        </div>
+        <div class="yt-channel">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="name">@TheAIGRID</div>
+            <div class="desc">AI news aggregation</div>
+          </div>
+        </div>
+        <div class="yt-channel">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="name">@AIJason</div>
+            <div class="desc">Tutorials & news</div>
+          </div>
+        </div>
+        <div class="yt-channel">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="name">@DavidOndrej</div>
+            <div class="desc">Analysis & news</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px; padding:16px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">
+        <strong style="color:#fff; font-size:14px;">📢 YouTube Platform News:</strong>
+        <p style="color:var(--text-dim); font-size:13px; margin-top:6px;">YouTube expanded AI deepfake detection to politicians, government officials, and journalists. New detection tech identifies synthetic media across the platform.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODEL RELEASES ── -->
+  <div class="section" id="models">
+    <div class="section-header" onclick="toggleSection('models')">
+      <div class="icon" style="background:rgba(6,182,212,0.12)">🧠</div>
+      <h2>Model Releases (March 17–20)</h2>
+      <span class="section-count">5</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Organization</th>
+              <th>Date</th>
+              <th>Key Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="model-name">MiMo V2 Pro (Hunter Alpha)</td>
+              <td><span class="org-badge org-xiaomi">Xiaomi</span></td>
+              <td>Mar 20</td>
+              <td>1T parameters · Near GPT-5.2 / Opus 4.6 level performance</td>
+            </tr>
+            <tr>
+              <td class="model-name">M2.7</td>
+              <td><span class="org-badge org-minimax">MiniMax</span></td>
+              <td>Mar 19</td>
+              <td>Self-evolving LLM · RL harness for autonomous optimization</td>
+            </tr>
+            <tr>
+              <td class="model-name">MAI-Image-2</td>
+              <td><span class="org-badge org-microsoft">Microsoft</span></td>
+              <td>Mar 19</td>
+              <td>Text-to-image · #3 on arena leaderboard · API coming soon</td>
+            </tr>
+            <tr>
+              <td class="model-name">GPT-5.4 mini</td>
+              <td><span class="org-badge org-openai">OpenAI</span></td>
+              <td>Mar 17</td>
+              <td>Compact model · GPQA benchmark: 0.88</td>
+            </tr>
+            <tr>
+              <td class="model-name">GPT-5.4 nano</td>
+              <td><span class="org-badge org-openai">OpenAI</span></td>
+              <td>Mar 17</td>
+              <td>Smallest model · GPQA benchmark: 0.828</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INDUSTRY MOVES ── -->
+  <div class="section" id="industry">
+    <div class="section-header" onclick="toggleSection('industry')">
+      <div class="icon" style="background:rgba(245,158,11,0.12)">💼</div>
+      <h2>Industry Moves</h2>
+      <span class="section-count">10</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="move-item">
+        <div class="move-icon">🏗️</div>
+        <div class="move-content">
+          <h4>Bezos / Project Prometheus — <span class="move-value">$100B</span> Industrial AI Fund</h4>
+          <p>Targeting manufacturing, aerospace, automotive companies for acquisition and AI automation. Co-CEO'd with former Google exec Vik Bajaj. Built on $6.2B seed from Oct 2025.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🔗</div>
+        <div class="move-content">
+          <h4>OpenAI — Merging ChatGPT + Codex + Atlas Into One Desktop App</h4>
+          <p>Unified desktop application combining chat, code, and browser. Signals OpenAI is going "super-app" — one interface to rule them all.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🤖</div>
+        <div class="move-content">
+          <h4>Meta Acquires Manus — <span class="move-value">~$2B</span></h4>
+          <p>Horizontal agentic AI platform enabling multi-step task automation. Biggest acquisition in the agent space. Validates agentic AI as a multi-billion dollar category.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🛠️</div>
+        <div class="move-content">
+          <h4>OpenAI Acquires Astral + OpenClaw · Anthropic Acquires Bun</h4>
+          <p>Developer tool consolidation wave. OpenClaw went from side project to 68K GitHub stars before acquisition in Feb 2026. Labs are buying their dev ecosystems.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🏗️</div>
+        <div class="move-content">
+          <h4>Meta — <span class="move-value">$27B</span> AI Infrastructure Commitment</h4>
+          <p>Massive data center and compute buildout. Signals Meta is going all-in on AI despite $66B in losses across Alibaba and Tencent on monetization concerns.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">💬</div>
+        <div class="move-content">
+          <h4>Tencent — AI Agent Inside WeChat</h4>
+          <p>Embedding an AI agent into WeChat super-app for practical task handling. Controls AI-assisted commerce and services within China's dominant messaging platform (1.3B users).</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">⚡</div>
+        <div class="move-content">
+          <h4>NTT — Doubling Data Center Capacity to <span class="move-value">4 GW</span></h4>
+          <p>NTT Global Data Centers expanding to meet surging AI infrastructure demand. AI competition now extends to physical infrastructure: power, land, and cooling.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🍎</div>
+        <div class="move-content">
+          <h4>Apple — Positioned for <span class="move-value">$1B+</span> AI Revenue</h4>
+          <p>Monetizing through subscriptions and device integration, not competing on model sophistication. AI-powered Siri reimagined for March 2026 release with iOS 26.4.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">💻</div>
+        <div class="move-content">
+          <h4>Claude Code — <span class="move-value">$1B ARR</span> in 6 Months</h4>
+          <p>Desktop-native AI development tool from Anthropic. Fastest growing product in the AI developer tools category. Proves desktop-native > browser-based for dev tools.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">📉</div>
+        <div class="move-content">
+          <h4>Alibaba & Tencent — <span style="color:var(--red)">Lost $66B Combined</span></h4>
+          <p>Market losses amid unclear AI monetization strategies. Investors are asking: "You spent billions on AI — where's the revenue?" Cautionary tale for AI overspending.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── REGULATION ── -->
+  <div class="section" id="regulation">
+    <div class="section-header" onclick="toggleSection('regulation')">
+      <div class="icon" style="background:rgba(236,72,153,0.12)">⚖️</div>
+      <h2>Regulation & Policy</h2>
+      <span class="section-count">6</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="reg-grid">
+        <div class="reg-card">
+          <h4>🏛️ White House Federal AI Framework</h4>
+          <p>Preparing comprehensive federal framework addressing state preemption and child safety in AI systems. Would create unified national standard.</p>
+          <span class="status status-active">In Progress</span>
+        </div>
+        <div class="reg-card">
+          <h4>📋 AI Accountability Act</h4>
+          <p>Requires companies deploying AI in hiring, lending, healthcare, and criminal justice to conduct and publish regular bias audits.</p>
+          <span class="status status-passed">Passed</span>
+        </div>
+        <div class="reg-card">
+          <h4>🏛️ Virginia — HB 580 & HB 797</h4>
+          <p>AI fraud/abuse framework + independent verification organizations for AI systems assessment. Both passed before adjournment March 14.</p>
+          <span class="status status-passed">Passed</span>
+        </div>
+        <div class="reg-card">
+          <h4>🏛️ Washington — HB 1170 & SB 5395</h4>
+          <p>AI content disclosure requirements + regulation of AI in health insurance decisions. Both passed before adjournment March 12.</p>
+          <span class="status status-passed">Passed</span>
+        </div>
+        <div class="reg-card">
+          <h4>🏛️ Connecticut — SB 86</h4>
+          <p>Responsible AI Innovation act. Approved committee vote 20-1. One of the strongest state-level AI governance frameworks.</p>
+          <span class="status status-active">Committee Approved</span>
+        </div>
+        <div class="reg-card">
+          <h4>🏛️ Florida — SB 482 "AI Bill of Rights"</h4>
+          <p>Governor DeSantis's AI Bill of Rights failed to pass before legislature adjourned on March 13.</p>
+          <span class="status status-failed">Failed</span>
+        </div>
+      </div>
+      <div style="margin-top:20px; padding:16px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">
+        <strong style="color:#fff; font-size:14px;">📊 McKinsey Workforce Report:</strong>
+        <p style="color:var(--text-dim); font-size:13px; margin-top:6px;">12% of current job tasks automated by AI in past 2 years — but 8% of new job categories created were directly AI-related. McKinsey now uses 20,000 AI agents alongside 40,000 human employees.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESEARCH ── -->
+  <div class="section" id="research">
+    <div class="section-header" onclick="toggleSection('research')">
+      <div class="icon" style="background:rgba(34,197,94,0.12)">🔬</div>
+      <h2>Research & Breakthroughs</h2>
+      <span class="section-count">4</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="move-item">
+        <div class="move-icon">🎯</div>
+        <div class="move-content">
+          <h4>New Uncertainty Metric Flags LLM Hallucinations</h4>
+          <p>Researchers developed a new metric for measuring uncertainty that could flag hallucinations and help users know whether to trust an AI model's output. Could become standard for production AI deployment.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🧪</div>
+        <div class="move-content">
+          <h4>Autonomous Lab Startups (Autoscience)</h4>
+          <p>Building AI systems that read research papers, connect to ML tools, and conduct experiments autonomously. Accelerating discovery cycles in materials science, biotech, and chemistry.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🌍</div>
+        <div class="move-content">
+          <h4>Semiconductor Emissions Rising 33%</h4>
+          <p>Manufacturing emissions could reach 247M metric tons CO2 by 2030 due to AI chip demand. The environmental cost of AI rarely discussed outside academic circles.</p>
+        </div>
+      </div>
+      <div class="move-item">
+        <div class="move-icon">🇨🇳</div>
+        <div class="move-content">
+          <h4>China's "One-Person AI Startup" Initiative</h4>
+          <p>Local Chinese governments launching incubators and coworking spaces to support thousands of single-person AI companies. Strategy: widen AI entrepreneurship through volume and rapid iteration.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <p>Generated by <span class="brand">Agent MOE</span> — Autonomous News Scanner</p>
+    <p style="margin-top:8px;">Next scan: <strong>March 21, 2026 at 7:20 AM ET</strong></p>
+  </div>
+
+</div>
+
+<script>
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+</script>
+
+</body>
+</html>

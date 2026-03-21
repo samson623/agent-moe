@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getExecutor } from '@/features/browser-agent/executor-registry'
 import type { Screencast } from '@/features/browser-agent/screencast'
+import { subscribeToSteps } from '@/features/browser-agent/step-emitter'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,11 +83,23 @@ export async function GET(
           })
         })
 
+        // Subscribe to autonomous step events
+        const unsubscribeSteps = subscribeToSteps(taskId, (step) => {
+          send('step', {
+            step: step.step,
+            action: step.action,
+            reasoning: step.reasoning,
+            params: step.params,
+            duration_ms: step.duration_ms,
+          })
+        })
+
         // Check periodically if screencast has stopped
         const healthCheck = setInterval(() => {
           if (!sc.isActive()) {
             clearInterval(healthCheck)
             unsubscribe()
+            unsubscribeSteps()
             send('status', {
               status: 'ended',
               totalFrames: sc.getFrameCount(),

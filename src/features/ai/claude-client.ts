@@ -74,7 +74,7 @@ function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): 
 // Timeout helper
 // ---------------------------------------------------------------------------
 
-const AI_CALL_TIMEOUT_MS = 90_000; // 90 seconds per AI call
+const AI_CALL_TIMEOUT_MS = 300_000; // 5 minutes per AI call (research + web search needs time)
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -89,63 +89,54 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 // ---------------------------------------------------------------------------
-// Agent SDK query helper
+// Subprocess query helper (claude -p)
 // ---------------------------------------------------------------------------
 
 /**
- * Run a prompt through the Claude Agent SDK (uses Max subscription via Claude Code).
- * Collects all assistant text messages and returns the combined output.
+ * Run a prompt through the Claude CLI subprocess.
+ * Uses the claude binary from PATH (installed via Claude Code / npm global).
+ * Non-blocking — uses spawn with a promise wrapper.
  */
-async function queryAgentSDK(prompt: string): Promise<string> {
-  // Dynamic import — the Agent SDK is ESM-only and uses Claude Code subprocess
-  const { query } = await import("@anthropic-ai/claude-agent-sdk");
+function queryViaSubprocess(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require("child_process") as typeof import("child_process");
 
-  const collectMessages = async (): Promise<string> => {
-    let resultText = "";
+    // On Windows, claude is a .cmd file — shell:true handles this transparently
+    const proc = spawn("claude", ["-p", "--max-turns", "5"], {
+      env: process.env,
+      shell: true,
+    });
 
-    for await (const message of query({
-      prompt,
-      options: {
-        allowedTools: [],
-        maxTurns: 1,
-      },
-    })) {
-      // Check for assistant-level errors (auth failures, rate limits, etc.)
-      if (message.type === "assistant") {
-        if (message.error) {
-          throw new Error(`Agent SDK assistant error: ${message.error}`);
-        }
-        if (message.message?.content) {
-          for (const block of message.message.content) {
-            if (block.type === "text") {
-              resultText += block.text;
-            }
-          }
-        }
+    let output = "";
+    let errorOutput = "";
+
+    proc.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString(); });
+    proc.stderr?.on("data", (chunk: Buffer) => { errorOutput += chunk.toString(); });
+
+    const timer = setTimeout(() => {
+      proc.kill();
+      reject(new Error(`claude -p timed out after ${AI_CALL_TIMEOUT_MS / 1000}s`));
+    }, AI_CALL_TIMEOUT_MS);
+
+    proc.stdin?.write(prompt, "utf-8");
+    proc.stdin?.end();
+
+    proc.on("close", (code: number | null) => {
+      clearTimeout(timer);
+      const text = output.trim();
+      if (code === 0 && text) {
+        resolve(text);
+      } else {
+        const errDetail = errorOutput.slice(0, 300) || `exit code ${code}`;
+        reject(new Error(`claude -p failed: ${errDetail}`));
       }
+    });
 
-      // Handle result messages (final output from the SDK)
-      if (message.type === "result") {
-        if (message.is_error || message.subtype !== "success") {
-          const errors = "errors" in message && Array.isArray(message.errors)
-            ? message.errors.join("; ")
-            : `SDK error: ${message.subtype}`;
-          throw new Error(`Agent SDK execution failed: ${errors}`);
-        }
-        if ("result" in message && typeof message.result === "string") {
-          resultText = message.result;
-        }
-      }
-    }
-
-    if (!resultText) {
-      throw new Error("Agent SDK returned no text output");
-    }
-
-    return resultText;
-  };
-
-  return withTimeout(collectMessages(), AI_CALL_TIMEOUT_MS, "Agent SDK query");
+    proc.on("error", (err: Error) => {
+      clearTimeout(timer);
+      reject(new Error(`claude -p spawn error: ${err.message}`));
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -183,14 +174,9 @@ async function queryDirectAPI(
 // ---------------------------------------------------------------------------
 
 export class ClaudeClient {
-  private readonly useAgentSDK: boolean;
-
   constructor() {
     const hasApiKey = !!process.env["ANTHROPIC_API_KEY"];
     const hasOAuthToken = !!process.env["CLAUDE_CODE_OAUTH_TOKEN"];
-
-    // Prefer Agent SDK (Max subscription, $0) over direct API (paid)
-    this.useAgentSDK = hasOAuthToken && !hasApiKey;
 
     if (!hasApiKey && !hasOAuthToken) {
       console.error(
@@ -199,7 +185,7 @@ export class ClaudeClient {
     }
 
     console.log("[ClaudeClient] Initialized", {
-      method: this.useAgentSDK ? "agent_sdk (Max subscription)" : "direct_api",
+      method: hasOAuthToken && !hasApiKey ? "subprocess (claude -p, Max subscription)" : "direct_api",
       hasApiKey,
       hasOAuthToken,
     });
@@ -223,16 +209,21 @@ export class ClaudeClient {
       let text: string;
       let tokensUsed: number | undefined;
 
-      if (this.useAgentSDK) {
-        // Build a combined prompt with system context for Agent SDK
-        const fullPrompt = options.systemPrompt
-          ? `${options.systemPrompt}\n\n---\n\n${prompt}`
-          : prompt;
-        text = await queryAgentSDK(fullPrompt);
-      } else {
+      if (process.env["ANTHROPIC_API_KEY"]) {
+        // Direct API (pay-per-token) when API key is explicitly set
         const result = await queryDirectAPI(prompt, options);
         text = result.text;
         tokensUsed = result.tokensUsed;
+      } else {
+        // Subprocess via claude -p (Max subscription, $0)
+        const fullPrompt = options.systemPrompt
+          ? `${options.systemPrompt}\n\n---\n\n${prompt}`
+          : prompt;
+        text = await withTimeout(
+          queryViaSubprocess(fullPrompt),
+          AI_CALL_TIMEOUT_MS,
+          "claude -p"
+        );
       }
 
       return {

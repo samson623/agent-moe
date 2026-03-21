@@ -9,6 +9,7 @@ export type BrowserTaskType =
   | 'monitor'
   | 'extract_data'
   | 'submit_form'
+  | 'autonomous'
 
 export type BrowserTaskStatus =
   | 'pending'
@@ -42,6 +43,10 @@ export interface BrowserTaskConfig {
   record?: boolean
   /** Recording quality preset */
   recording_quality?: 'low' | 'medium' | 'high'
+  /** Claude model for autonomous browsing (default: claude-sonnet-4-5-20250514) */
+  autonomous_model?: string
+  /** Max agent loop iterations for autonomous tasks (default: 25) */
+  max_autonomous_iterations?: number
 }
 
 export interface BrowserTaskInput {
@@ -73,6 +78,15 @@ export interface BrowserTaskResult {
   screencast_frames?: number
   /** Public URL path to the MP4 recording */
   recording_url?: string
+  /** Step-by-step log of autonomous agent actions */
+  autonomous_steps?: Array<{
+    step: number
+    action: string
+    reasoning?: string
+    duration_ms: number
+  }>
+  /** Claude's final output summary for autonomous tasks */
+  autonomous_output?: string
 }
 
 export interface BrowserTask {
@@ -173,13 +187,15 @@ export const BrowserTaskConfigSchema = z.object({
   screencast_quality: z.number().min(0).max(100).optional(),
   record: z.boolean().optional(),
   recording_quality: z.enum(['low', 'medium', 'high']).optional(),
+  autonomous_model: z.string().optional(),
+  max_autonomous_iterations: z.number().min(1).max(50).optional(),
 })
 
 export const BrowserTaskInputSchema = z.object({
   workspace_id: z.string().uuid(),
   mission_id: z.string().uuid().optional(),
   job_id: z.string().uuid().optional(),
-  task_type: z.enum(['scrape', 'screenshot', 'click', 'fill_form', 'navigate', 'monitor', 'extract_data', 'submit_form']),
+  task_type: z.enum(['scrape', 'screenshot', 'click', 'fill_form', 'navigate', 'monitor', 'extract_data', 'submit_form', 'autonomous']),
   url: z.string().url(),
   instructions: z.string().min(1).max(2000),
   config: BrowserTaskConfigSchema.optional(),
@@ -195,7 +211,7 @@ export const BrowserTaskScheduleInputSchema = z.object({
   cron_expression: z.string().max(100).optional(),
   scheduled_at: z.string().optional(),
   timezone: z.string().max(100).optional(),
-  task_type: z.enum(['scrape', 'screenshot', 'click', 'fill_form', 'navigate', 'monitor', 'extract_data', 'submit_form']),
+  task_type: z.enum(['scrape', 'screenshot', 'click', 'fill_form', 'navigate', 'monitor', 'extract_data', 'submit_form', 'autonomous']),
   url: z.string().url(),
   instructions: z.string().min(1).max(2000),
   config: BrowserTaskConfigSchema.optional(),
@@ -217,4 +233,11 @@ export const BrowserTaskResultSchema = z.object({
   final_url: z.string().optional(),
   screencast_frames: z.number().optional(),
   recording_url: z.string().optional(),
+  autonomous_steps: z.array(z.object({
+    step: z.number(),
+    action: z.string(),
+    reasoning: z.string().optional(),
+    duration_ms: z.number(),
+  })).optional(),
+  autonomous_output: z.string().optional(),
 })

@@ -19,6 +19,14 @@ export interface LiveStreamInfo {
   totalFrames?: number
 }
 
+export interface LiveStreamStep {
+  step: number
+  action: string
+  reasoning?: string
+  params?: Record<string, unknown>
+  duration_ms?: number
+}
+
 interface UseLiveBrowserStreamOptions {
   /** Task ID to stream */
   taskId: string
@@ -34,6 +42,8 @@ interface UseLiveBrowserStreamReturn {
   frameCount: number
   streamInfo: LiveStreamInfo
   error: string | null
+  steps: LiveStreamStep[]
+  latestStep: LiveStreamStep | null
   /** Manually reconnect */
   reconnect: () => void
   /** Manually disconnect */
@@ -50,6 +60,8 @@ export function useLiveBrowserStream({
   const [frameCount, setFrameCount] = useState(0)
   const [streamInfo, setStreamInfo] = useState<LiveStreamInfo>({})
   const [error, setError] = useState<string | null>(null)
+  const [steps, setSteps] = useState<LiveStreamStep[]>([])
+  const [latestStep, setLatestStep] = useState<LiveStreamStep | null>(null)
 
   const eventSourceRef = useRef<EventSource | null>(null)
   const onFrameRef = useRef(onFrame)
@@ -73,6 +85,8 @@ export function useLiveBrowserStream({
 
     setStatus('connecting')
     setError(null)
+    setSteps([])
+    setLatestStep(null)
     setFrameCount(0)
     setLatestFrame(null)
     setStreamInfo({})
@@ -113,6 +127,16 @@ export function useLiveBrowserStream({
         }
       } catch {
         // Malformed status data
+      }
+    })
+
+    es.addEventListener('step', (event: MessageEvent) => {
+      try {
+        const step: LiveStreamStep = JSON.parse(event.data)
+        setLatestStep(step)
+        setSteps((prev) => [...prev, step])
+      } catch {
+        // Malformed step data
       }
     })
 
@@ -158,6 +182,8 @@ export function useLiveBrowserStream({
     frameCount,
     streamInfo,
     error,
+    steps,
+    latestStep,
     reconnect: connect,
     disconnect,
   }

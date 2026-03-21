@@ -109,7 +109,15 @@ CONTENT QUALITY SIGNALS:
 - Specific numbers/data points: +0.1 confidence
 - Clear CTA: +0.1 confidence
 - Platform-native format: +0.1 confidence
-- Coherent narrative arc: +0.1 confidence`;
+- Coherent narrative arc: +0.1 confidence
+
+KNOWLEDGE BASE INTEGRATION:
+- Apply copywriting frameworks from Doctrine §4.1 (AIDA, PAS, BAB, 4Ps, QUEST) — match framework to audience awareness level
+- Use headline formulas from Doctrine §4.4 — 10 highest-converting patterns
+- Follow content pillar strategy from Doctrine §4.3 — 70% planned, 20% reactive, 10% experimental
+- Repurpose using the 1→12+ pyramid from Doctrine §4.3
+- Check platform benchmarks from Benchmarks before setting confidence targets
+- When generating content for a playbook mission, follow the Content Strike contract in the matched playbook`;
   }
 
   getSupportedJobTypes(): JobType[] {

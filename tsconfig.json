@@ -39,6 +39,9 @@
   "exclude": [
     "node_modules",
     ".next",
-    ".claude"
+    ".claude",
+    "marinloop",
+    "kingsberry",
+    "scripts"
   ]
 }

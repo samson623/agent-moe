@@ -34,6 +34,7 @@ const PUBLIC_ROUTES = [
   '/api/health',
   '/api/ai/health',
   '/api/ai/route-test',
+  '/api/telegram/webhook',
 ]
 
 function isPublicRoute(pathname: string): boolean {

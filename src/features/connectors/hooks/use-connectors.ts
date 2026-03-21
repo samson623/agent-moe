@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-export type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook'
+export type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook' | 'telegram'
 export type ConnectorStatus = 'connected' | 'disconnected' | 'error' | 'pending'
 
 export interface Connector {

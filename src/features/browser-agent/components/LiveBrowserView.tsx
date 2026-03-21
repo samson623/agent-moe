@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import { Wifi, WifiOff, Radio, MonitorPlay, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLiveBrowserStream } from '../hooks/use-live-browser-stream'
-import type { LiveStreamFrame, LiveStreamStatus } from '../hooks/use-live-browser-stream'
+import type { LiveStreamFrame, LiveStreamStatus, LiveStreamStep } from '../hooks/use-live-browser-stream'
 
 interface LiveBrowserViewProps {
   taskId: string
@@ -52,6 +52,8 @@ export function LiveBrowserView({ taskId, enabled = true, className }: LiveBrows
     streamInfo,
     error,
     reconnect,
+    steps,
+    latestStep,
   } = useLiveBrowserStream({
     taskId,
     enabled,
@@ -134,10 +136,38 @@ export function LiveBrowserView({ taskId, enabled = true, className }: LiveBrows
         </div>
       )}
 
+      {/* Step overlay — bottom-left, shows latest AI action */}
+      {latestStep && status === 'connected' && (
+        <div
+          className="absolute bottom-10 left-3 right-3 max-w-md rounded-[8px] px-3 py-2 text-xs backdrop-blur-md transition-all"
+          style={{ background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)' }}
+        >
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="w-4 h-4 rounded-full bg-[rgba(168,85,247,0.3)] text-[#a855f7] flex items-center justify-center text-[10px] font-bold">
+              {latestStep.step}
+            </span>
+            <span className="font-semibold text-[#a855f7] capitalize">
+              {latestStep.action.replace('_', ' ')}
+            </span>
+            {latestStep.duration_ms !== undefined && (
+              <span className="text-gray-400 ml-auto">{(latestStep.duration_ms / 1000).toFixed(1)}s</span>
+            )}
+          </div>
+          {latestStep.reasoning && (
+            <p className="text-gray-300 leading-tight line-clamp-2 pl-6">
+              {latestStep.reasoning}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Info bar — bottom */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2 text-xs backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.6)' }}>
         <div className="flex items-center gap-3 text-gray-300">
           <span>Frames: <span className="text-white font-semibold">{frameCount}</span></span>
+          {steps.length > 0 && (
+            <span>Steps: <span className="text-white font-semibold">{steps.length}</span></span>
+          )}
           {fps > 0 && (
             <span>FPS: <span className="text-white font-semibold">{fps}</span></span>
           )}

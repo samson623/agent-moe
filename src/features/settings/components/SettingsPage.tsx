@@ -11,11 +11,16 @@ import {
   Sliders,
   ChevronRight,
   CheckCircle2,
+  Send,
+  Copy,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MotionFadeIn, MotionStagger, MotionStaggerItem } from "@/components/nebula/motion";
+import { useState } from "react";
 
 interface SettingSection {
   icon: LucideIcon;
@@ -128,6 +133,92 @@ const ENV_STATUS = [
   },
 ];
 
+function TelegramConnectCard() {
+  const [loading, setLoading] = useState(false)
+  const [command, setCommand] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function generate() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/telegram/link-code', { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to generate code')
+      const { linkCode, botUsername } = await res.json()
+      setCommand(`/start ${linkCode}`)
+      // open bot in new tab
+      window.open(`https://t.me/${botUsername}`, '_blank')
+    } catch {
+      setError('Could not generate link code. Are you signed in?')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function copy() {
+    if (!command) return
+    await navigator.clipboard.writeText(command)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <Card glow="primary">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-[var(--radius)]"
+            style={{ background: '#0088cc18', border: '1px solid #0088cc30' }}>
+            <Send size={14} style={{ color: '#0088cc' }} />
+          </div>
+          <div>
+            <CardTitle className="text-sm">Telegram</CardTitle>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Connect your Telegram account to control Agent MOE from your phone
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-3">
+        {!command ? (
+          <Button
+            size="sm"
+            onClick={generate}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? (
+              <><Loader2 size={13} className="animate-spin mr-2" />Generating...</>
+            ) : (
+              'Generate Link Code'
+            )}
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs text-[var(--text-muted)]">
+              Telegram opened in a new tab. Paste this command there:
+            </p>
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius)]",
+              "border border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
+            )}>
+              <code className="text-xs font-mono text-[var(--primary)] flex-1 truncate">
+                {command}
+              </code>
+              <button onClick={copy} className="shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                <Copy size={13} />
+              </button>
+            </div>
+            {copied && <p className="text-xs text-[var(--success)]">Copied!</p>}
+            <p className="text-xs text-[var(--text-disabled)]">Code expires in 15 minutes.</p>
+          </div>
+        )}
+        {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+      </CardContent>
+    </Card>
+  )
+}
+
 function SettingSectionCard({ section }: { section: SettingSection }) {
   const Icon = section.icon;
   return (
@@ -239,6 +330,11 @@ export function SettingsPage() {
           ))}
         </CardContent>
       </Card>
+      </MotionFadeIn>
+
+      {/* Telegram connect */}
+      <MotionFadeIn delay={0.1}>
+        <TelegramConnectCard />
       </MotionFadeIn>
 
       {/* Setting sections grid */}

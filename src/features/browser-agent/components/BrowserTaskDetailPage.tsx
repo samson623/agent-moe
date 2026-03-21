@@ -2,10 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Globe, Camera, MousePointer, FileText, Search, Monitor, Send, Navigation,
-  ArrowLeft, RefreshCw, Play, X, Film, Download,
-} from 'lucide-react'
+import { ArrowLeft, RefreshCw, Play, X, Film, Download, Bot } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MotionFadeIn } from '@/components/nebula/motion'
@@ -14,30 +11,11 @@ import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
 import { useRealtimeBrowserTasks } from '../hooks/use-realtime-browser-tasks'
 import { BrowserTaskLog } from './BrowserTaskLog'
 import { BrowserTaskResult } from './BrowserTaskResult'
-import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
+import { TASK_TYPE_CONFIG, STATUS_CONFIG } from '../constants'
+import type { BrowserTask } from '../types'
 import { LiveBrowserView } from './LiveBrowserView'
 
-const TASK_ICONS: Record<BrowserTaskType, React.ElementType> = {
-  scrape:       Globe,
-  screenshot:   Camera,
-  click:        MousePointer,
-  fill_form:    FileText,
-  navigate:     Navigation,
-  monitor:      Monitor,
-  extract_data: Search,
-  submit_form:  Send,
-}
-
-const STATUS_COLORS: Record<BrowserTaskStatus, string> = {
-  pending:   '#f59e0b',
-  running:   '#3b82f6',
-  completed: '#10b981',
-  failed:    '#ef4444',
-  cancelled: '#6b7280',
-  timeout:   '#f97316',
-}
-
-type DetailTab = 'live' | 'result' | 'config' | 'activity'
+type DetailTab = 'live' | 'result' | 'steps' | 'config' | 'activity'
 
 interface BrowserTaskDetailPageProps {
   taskId: string
@@ -89,11 +67,14 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
     )
   }
 
-  const Icon = TASK_ICONS[task.task_type]
-  const statusColor = STATUS_COLORS[task.status]
+  const typeCfg = TASK_TYPE_CONFIG[task.task_type]
+  const Icon = typeCfg.Icon
+  const statusColor = STATUS_CONFIG[task.status].color
   const isRunning = task.status === 'running'
   const hasLiveView = Boolean(task.config.enable_live_view)
   const showLiveTab = isRunning && hasLiveView
+  const isAutonomous = task.task_type === 'autonomous'
+  const hasSteps = Boolean(task.result?.autonomous_steps?.length)
 
   return (
     <MotionFadeIn className="p-6 max-w-4xl mx-auto space-y-6">
@@ -167,7 +148,7 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
         <div className="lg:col-span-2 space-y-4">
           {/* Tab bar */}
           <div className="flex gap-1 border-b border-[var(--border)]">
-            {([...(showLiveTab ? ['live' as DetailTab] : []), 'result', 'config', 'activity'] as DetailTab[]).map((tab) => (
+            {([...(showLiveTab ? ['live' as DetailTab] : []), 'result', ...(isAutonomous || hasSteps ? ['steps' as DetailTab] : []), 'config', 'activity'] as DetailTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -201,6 +182,45 @@ export function BrowserTaskDetailPage({ taskId }: BrowserTaskDetailPageProps) {
               <LiveBrowserView taskId={task.id} enabled={isRunning} />
             )}
             {activeTab === 'result'   && <BrowserTaskResult task={task} />}
+            {activeTab === 'steps' && (
+              <div className="space-y-3">
+                {task.result?.autonomous_output && (
+                  <div className="rounded-[var(--radius)] border border-[rgba(168,85,247,0.3)] bg-[rgba(168,85,247,0.06)] px-4 py-3">
+                    <p className="text-xs font-semibold text-[#a855f7] mb-1">AI Summary</p>
+                    <p className="text-sm text-[var(--text)] leading-relaxed">{task.result.autonomous_output}</p>
+                  </div>
+                )}
+                {task.result?.autonomous_steps && task.result.autonomous_steps.length > 0 ? (
+                  <div className="space-y-2">
+                    {task.result.autonomous_steps.map((s, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 px-3 py-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-elevated)]"
+                      >
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[rgba(168,85,247,0.12)] text-[#a855f7] text-xs font-bold shrink-0 mt-0.5">
+                          {s.step}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-[var(--text)] capitalize">{s.action.replace('_', ' ')}</p>
+                          {s.reasoning && (
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">{s.reasoning}</p>
+                          )}
+                          <span className="text-xs text-[var(--text-disabled)]">{(s.duration_ms / 1000).toFixed(1)}s</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : isRunning && isAutonomous ? (
+                  <div className="text-center py-8">
+                    <Bot size={24} className="mx-auto text-[#a855f7] animate-pulse mb-2" />
+                    <p className="text-sm text-[var(--text-muted)]">AI is driving the browser...</p>
+                    <p className="text-xs text-[var(--text-disabled)] mt-1">Steps will appear here when the task completes</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)] text-center py-4">No step data available.</p>
+                )}
+              </div>
+            )}
             {activeTab === 'activity' && <BrowserTaskLog task={task} />}
             {activeTab === 'config' && (
               <div className="space-y-4">

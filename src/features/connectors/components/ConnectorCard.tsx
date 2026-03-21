@@ -17,6 +17,7 @@ const PLATFORM_META: Record<ConnectorPlatform, { displayName: string; color: str
   notion:    { displayName: 'Notion',          color: '#000000', iconText: 'NO' },
   airtable:  { displayName: 'Airtable',        color: '#fcb400', iconText: 'AT' },
   webhook:   { displayName: 'Webhook',         color: '#6366f1', iconText: 'WH' },
+  telegram:  { displayName: 'Telegram',        color: '#229ed9', iconText: 'TG' },
 }
 
 const STATUS_CONFIG = {

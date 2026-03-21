@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Loader2, ExternalLink } from 'lucide-react'
+import { X, Loader2, ExternalLink, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook'
+type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook' | 'telegram'
 
 interface PlatformOption {
   platform: ConnectorPlatform
   displayName: string
   color: string
   iconText: string
-  authType: 'oauth2' | 'api_key' | 'webhook' | 'oauth2_pkce'
+  authType: 'oauth2' | 'api_key' | 'webhook' | 'oauth2_pkce' | 'telegram'
   available: boolean
 }
 
@@ -24,6 +24,7 @@ const PLATFORM_OPTIONS: PlatformOption[] = [
   { platform: 'notion',    displayName: 'Notion',          color: '#000000', iconText: 'NO', authType: 'oauth2',      available: true  },
   { platform: 'email',     displayName: 'Email / Beehiiv', color: '#f59e0b', iconText: 'EM', authType: 'api_key',     available: true  },
   { platform: 'webhook',   displayName: 'Webhook',         color: '#6366f1', iconText: 'WH', authType: 'webhook',     available: true  },
+  { platform: 'telegram',  displayName: 'Telegram',        color: '#26a5e4', iconText: 'TG', authType: 'telegram',    available: true  },
   { platform: 'tiktok',    displayName: 'TikTok',          color: '#010101', iconText: 'TK', authType: 'oauth2',      available: false },
   { platform: 'airtable',  displayName: 'Airtable',        color: '#fcb400', iconText: 'AT', authType: 'api_key',     available: false },
 ]
@@ -42,14 +43,32 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
   const [webhookSecret, setWebhookSecret] = useState('')
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Telegram-specific state
+  const [telegramLink, setTelegramLink] = useState<string | null>(null)
+  const [telegramCopied, setTelegramCopied] = useState(false)
 
   if (!open) return null
 
-  const handlePlatformSelect = (opt: PlatformOption) => {
+  const handlePlatformSelect = async (opt: PlatformOption) => {
     if (!opt.available) return
     setSelected(opt)
     setName(opt.displayName)
     setError(null)
+    setTelegramLink(null)
+
+    if (opt.authType === 'telegram') {
+      setCreating(true)
+      try {
+        const res = await fetch('/api/telegram/link-code', { method: 'POST' })
+        const json = await res.json() as { linkCode?: string; botUsername?: string; error?: string }
+        if (!res.ok || !json.linkCode) throw new Error(json.error ?? 'Failed to generate link code')
+        setTelegramLink(`https://t.me/${json.botUsername ?? 'agentmoe_bot'}?start=${encodeURIComponent(json.linkCode)}`)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate Telegram link')
+      } finally {
+        setCreating(false)
+      }
+    }
   }
 
   const handleConnect = async () => {
@@ -212,76 +231,67 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
                   <p className="text-sm font-semibold text-[var(--text)]">{selected.displayName}</p>
                   <p className="text-xs text-[var(--text-muted)]">
                     {selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce' ? 'OAuth 2.0' :
-                     selected.authType === 'api_key' ? 'API Key' : 'Webhook'}
+                     selected.authType === 'api_key' ? 'API Key' :
+                     selected.authType === 'telegram' ? 'Deeplink Linking' : 'Webhook'}
                   </p>
                 </div>
               </div>
 
-              {/* Connector name */}
-              <div>
-                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-                  Connector Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={`e.g. Main ${selected.displayName} Account`}
-                  className={cn(
-                    'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
-                    'bg-[var(--surface-elevated)] border border-[var(--border)]',
-                    'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
-                    'focus:outline-none focus:border-[var(--primary)]'
+              {/* Telegram deep-link flow */}
+              {selected.authType === 'telegram' && (
+                <div className="space-y-3">
+                  {creating && (
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                      <Loader2 size={13} className="animate-spin" /> Generating secure link…
+                    </div>
                   )}
-                />
-              </div>
-
-              {/* API Key input */}
-              {selected.authType === 'api_key' && (
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">API Key</label>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter your API key..."
-                    className={cn(
-                      'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
-                      'bg-[var(--surface-elevated)] border border-[var(--border)]',
-                      'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
-                      'focus:outline-none focus:border-[var(--primary)]'
-                    )}
-                  />
+                  {telegramLink && (
+                    <>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Tap the button below to open Agent MOE bot in Telegram. Send the <code className="px-1 rounded bg-[var(--surface-elevated)]">/start</code> command it pre-fills to link your account.
+                      </p>
+                      <a
+                        href={telegramLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          'flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-[var(--radius)]',
+                          'bg-[#26a5e4] hover:bg-[#1a96d4] text-white text-sm font-medium transition-colors'
+                        )}
+                      >
+                        <ExternalLink size={13} />
+                        Open in Telegram
+                      </a>
+                      <button
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(telegramLink)
+                          setTelegramCopied(true)
+                          setTimeout(() => setTelegramCopied(false), 2000)
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                      >
+                        {telegramCopied ? <Check size={12} /> : <Copy size={12} />}
+                        {telegramCopied ? 'Copied!' : 'Copy link'}
+                      </button>
+                      <p className="text-[10px] text-[var(--text-disabled)]">Link expires in 15 minutes.</p>
+                    </>
+                  )}
+                  {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
                 </div>
               )}
 
-              {/* Webhook inputs */}
-              {selected.authType === 'webhook' && (
+              {/* Standard connector fields (not telegram) */}
+              {selected.authType !== 'telegram' && (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Webhook URL</label>
-                    <input
-                      type="url"
-                      value={webhookUrl}
-                      onChange={(e) => setWebhookUrl(e.target.value)}
-                      placeholder="https://your-server.com/webhook"
-                      className={cn(
-                        'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
-                        'bg-[var(--surface-elevated)] border border-[var(--border)]',
-                        'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
-                        'focus:outline-none focus:border-[var(--primary)]'
-                      )}
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-                      Secret (optional)
+                      Connector Name
                     </label>
                     <input
-                      type="password"
-                      value={webhookSecret}
-                      onChange={(e) => setWebhookSecret(e.target.value)}
-                      placeholder="HMAC signing secret..."
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={`e.g. Main ${selected.displayName} Account`}
                       className={cn(
                         'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
                         'bg-[var(--surface-elevated)] border border-[var(--border)]',
@@ -290,27 +300,80 @@ export function ConnectModal({ open, onClose, onSuccess }: ConnectModalProps) {
                       )}
                     />
                   </div>
+
+                  {selected.authType === 'api_key' && (
+                    <div>
+                      <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Enter your API key..."
+                        className={cn(
+                          'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
+                          'bg-[var(--surface-elevated)] border border-[var(--border)]',
+                          'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
+                          'focus:outline-none focus:border-[var(--primary)]'
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {selected.authType === 'webhook' && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Webhook URL</label>
+                        <input
+                          type="url"
+                          value={webhookUrl}
+                          onChange={(e) => setWebhookUrl(e.target.value)}
+                          placeholder="https://your-server.com/webhook"
+                          className={cn(
+                            'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
+                            'bg-[var(--surface-elevated)] border border-[var(--border)]',
+                            'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
+                            'focus:outline-none focus:border-[var(--primary)]'
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
+                          Secret (optional)
+                        </label>
+                        <input
+                          type="password"
+                          value={webhookSecret}
+                          onChange={(e) => setWebhookSecret(e.target.value)}
+                          placeholder="HMAC signing secret..."
+                          className={cn(
+                            'w-full px-3 py-2 text-sm rounded-[var(--radius)]',
+                            'bg-[var(--surface-elevated)] border border-[var(--border)]',
+                            'text-[var(--text)] placeholder:text-[var(--text-disabled)]',
+                            'focus:outline-none focus:border-[var(--primary)]'
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+
+                  <Button
+                    className="w-full gap-1.5"
+                    onClick={handleConnect}
+                    disabled={creating}
+                  >
+                    {creating ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce') ? (
+                      <ExternalLink size={13} />
+                    ) : null}
+                    {(selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce')
+                      ? 'Connect via OAuth'
+                      : 'Connect'}
+                  </Button>
                 </>
               )}
-
-              {error && (
-                <p className="text-xs text-[var(--danger)]">{error}</p>
-              )}
-
-              <Button
-                className="w-full gap-1.5"
-                onClick={handleConnect}
-                disabled={creating}
-              >
-                {creating ? (
-                  <Loader2 size={13} className="animate-spin" />
-                ) : (selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce') ? (
-                  <ExternalLink size={13} />
-                ) : null}
-                {(selected.authType === 'oauth2' || selected.authType === 'oauth2_pkce')
-                  ? 'Connect via OAuth'
-                  : 'Connect'}
-              </Button>
             </>
           )}
         </div>

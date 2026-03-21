@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarinLoop — Medication Adherence & Daily Care</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #fafaf9;
+    --bg-alt: #f5f3f0;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --primary: #16a34a;
+    --primary-hover: #15803d;
+    --primary-light: #dcfce7;
+    --accent: #0ea5e9;
+    --accent-light: #e0f2fe;
+    --card-bg: #ffffff;
+    --card-border: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --card-shadow-hover: 0 10px 25px rgba(0,0,0,0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --gradient-hero: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 50%, #faf5ff 100%);
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.dark {
+    --bg: #0f0f0f;
+    --bg-alt: #1a1a1a;
+    --text: #f0f0f0;
+    --text-muted: #9ca3af;
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
+    --primary-light: rgba(34,197,94,0.12);
+    --accent: #38bdf8;
+    --accent-light: rgba(56,189,248,0.12);
+    --card-bg: #1c1c1c;
+    --card-border: #2a2a2a;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --card-shadow-hover: 0 10px 25px rgba(0,0,0,0.4);
+    --gradient-hero: linear-gradient(135deg, #0a1f0f 0%, #0f172a 50%, #1a0f2e 100%);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    background: rgba(250,250,249,0.85);
+    border-bottom: 1px solid var(--card-border);
+    transition: background var(--transition), border var(--transition);
+  }
+  html.dark nav { background: rgba(15,15,15,0.85); }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; height: 64px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; text-decoration: none; color: var(--text); }
+  .nav-logo-icon {
+    width: 36px; height: 36px; background: var(--primary); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; transition: color var(--transition); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .beta-badge {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    background: var(--primary-light); color: var(--primary); padding: 3px 8px; border-radius: 6px;
+  }
+  .theme-toggle {
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--card-border);
+    background: var(--card-bg); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; transition: all var(--transition); color: var(--text);
+  }
+  .theme-toggle:hover { border-color: var(--primary); }
+
+  .btn-primary {
+    background: var(--primary); color: #fff; border: none; padding: 12px 28px;
+    border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    transition: all var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(22,163,74,0.3); }
+
+  .btn-outline {
+    background: transparent; color: var(--text); border: 1.5px solid var(--card-border);
+    padding: 11px 24px; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 500;
+    cursor: pointer; transition: all var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* HERO */
+  .hero {
+    padding: 140px 24px 80px; text-align: center;
+    background: var(--gradient-hero);
+    position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+  .hero-inner { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 100px;
+    padding: 6px 16px 6px 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 28px;
+    box-shadow: var(--card-shadow);
+  }
+  .hero-pill-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .hero h1 {
+    font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.03em; margin-bottom: 20px;
+  }
+  .hero h1 .highlight { color: var(--primary); }
+  .hero p.subtitle {
+    font-size: 1.15rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 12px; line-height: 1.7;
+  }
+  .hero p.disclaimer {
+    font-size: 0.8rem; color: var(--text-muted); opacity: 0.7; max-width: 520px; margin: 0 auto 36px; line-height: 1.6;
+  }
+  .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* PRODUCT PREVIEW */
+  .product-preview {
+    max-width: 1000px; margin: -20px auto 0; padding: 0 24px; position: relative; z-index: 2;
+  }
+  .preview-frame {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08); overflow: hidden;
+  }
+  html.dark .preview-frame { box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+  .preview-titlebar {
+    display: flex; align-items: center; gap: 8px; padding: 14px 18px;
+    border-bottom: 1px solid var(--card-border); background: var(--bg-alt);
+  }
+  .preview-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .preview-dot.r { background: #f87171; }
+  .preview-dot.y { background: #fbbf24; }
+  .preview-dot.g { background: #4ade80; }
+  .preview-urlbar {
+    flex: 1; margin-left: 12px; background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 6px 14px; font-size: 0.8rem; color: var(--text-muted);
+  }
+  .preview-body { padding: 24px; }
+
+  /* MOCK APP UI */
+  .app-mock { display: grid; grid-template-columns: 220px 1fr; gap: 20px; min-height: 420px; }
+  .app-sidebar {
+    background: var(--bg-alt); border-radius: var(--radius-sm); padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .app-sidebar-header { font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .app-sidebar-header span { color: var(--primary); }
+  .app-nav-item {
+    padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px;
+  }
+  .app-nav-item:hover { background: var(--card-bg); color: var(--text); }
+  .app-nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .app-main { display: flex; flex-direction: column; gap: 16px; }
+  .app-top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .app-top-bar h3 { font-size: 1.1rem; font-weight: 700; }
+  .app-top-bar .date-pill {
+    font-size: 0.8rem; color: var(--text-muted); background: var(--bg-alt);
+    padding: 6px 14px; border-radius: 8px;
+  }
+
+  /* Medication cards */
+  .med-timeline { display: flex; flex-direction: column; gap: 12px; }
+  .med-card {
+    display: flex; align-items: center; gap: 16px; padding: 16px;
+    background: var(--bg-alt); border-radius: var(--radius-sm);
+    border: 1px solid transparent; transition: all 0.2s; cursor: pointer;
+  }
+  .med-card:hover { border-color: var(--primary); transform: translateX(4px); }
+  .med-time { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; min-width: 60px; }
+  .med-icon {
+    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+  }
+  .med-icon.green { background: #dcfce7; }
+  .med-icon.blue { background: #dbeafe; }
+  .med-icon.purple { background: #f3e8ff; }
+  .med-icon.amber { background: #fef3c7; }
+  .med-info { flex: 1; }
+  .med-name { font-weight: 600; font-size: 0.9rem; }
+  .med-dose { font-size: 0.8rem; color: var(--text-muted); }
+  .med-status {
+    padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 600;
+  }
+  .med-status.taken { background: #dcfce7; color: #16a34a; }
+  .med-status.upcoming { background: #fef3c7; color: #d97706; }
+  .med-status.missed { background: #fee2e2; color: #dc2626; }
+
+  .adherence-bar {
+    background: var(--bg-alt); border-radius: var(--radius-sm); padding: 16px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .adherence-label { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+  .adherence-track { flex: 1; height: 10px; background: var(--card-border); border-radius: 100px; overflow: hidden; }
+  .adherence-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 100px; transition: width 1.5s ease; }
+  .adherence-pct { font-size: 0.9rem; font-weight: 700; color: var(--primary); min-width: 40px; }
+
+  /* SECTIONS */
+  section { padding: 100px 24px; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--primary); margin-bottom: 12px;
+  }
+  .section-title { font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .section-subtitle { font-size: 1.05rem; color: var(--text-muted); max-width: 600px; line-height: 1.7; margin-bottom: 48px; }
+
+  /* FEATURES GRID */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .feature-card {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius);
+    padding: 32px; transition: all var(--transition); cursor: default;
+    box-shadow: var(--card-shadow);
+  }
+  .feature-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-4px); border-color: var(--primary); }
+  .feature-icon {
+    width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.4rem; margin-bottom: 20px;
+  }
+  .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; counter-reset: step; }
+  .step { text-align: center; position: relative; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    display: flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; border-radius: 50%; background: var(--primary-light);
+    color: var(--primary); font-weight: 800; font-size: 1.2rem; margin: 0 auto 20px;
+    border: 2px solid var(--primary);
+  }
+  .step h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .step p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; max-width: 260px; margin: 0 auto; }
+
+  /* TRUST / REVIEWER */
+  .trust-section { background: var(--bg-alt); }
+  .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--card-border); border-radius: var(--radius); overflow: hidden; }
+  .trust-cell { background: var(--card-bg); padding: 32px; }
+  .trust-cell h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .trust-cell p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
+  .trust-cell .trust-icon { font-size: 1.6rem; margin-bottom: 14px; }
+
+  /* TESTIMONIALS */
+  .testimonials { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .testimonial-card {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius);
+    padding: 28px; box-shadow: var(--card-shadow);
+  }
+  .testimonial-card p { font-size: 0.95rem; line-height: 1.7; margin-bottom: 16px; font-style: italic; color: var(--text-muted); }
+  .testimonial-author { display: flex; align-items: center; gap: 12px; }
+  .testimonial-avatar {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff;
+  }
+  .testimonial-name { font-weight: 600; font-size: 0.9rem; }
+  .testimonial-role { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
+  .stat-card { text-align: center; }
+  .stat-number { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
+  .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    background: var(--gradient-hero);
+    border-radius: 0;
+  }
+  .cta-section h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 16px; }
+  .cta-section p { font-size: 1.05rem; color: var(--text-muted); max-width: 500px; margin: 0 auto 32px; }
+
+  /* FOOTER */
+  footer {
+    padding: 48px 24px; border-top: 1px solid var(--card-border);
+    background: var(--bg-alt);
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-left { display: flex; align-items: center; gap: 10px; }
+  .footer-left span { font-weight: 700; }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { text-decoration: none; color: var(--text-muted); font-size: 0.85rem; transition: color var(--transition); }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* ANIMATIONS */
+  .fade-up {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+  .fade-up.d1 { transition-delay: 0.1s; }
+  .fade-up.d2 { transition-delay: 0.2s; }
+  .fade-up.d3 { transition-delay: 0.3s; }
+  .fade-up.d4 { transition-delay: 0.4s; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .app-mock { grid-template-columns: 1fr; }
+    .app-sidebar { display: none; }
+    .trust-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .hero { padding: 120px 20px 60px; }
+  }
+</style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">M</div>
+        MarinLoop
+        <span class="beta-badge">BETA</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#trust">Trust</a>
+        <a href="#reviews">Reviews</a>
+      </div>
+      <div class="nav-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#127769;</button>
+        <button class="btn-primary" style="padding:10px 20px; font-size:0.85rem;">Sign In</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-pill fade-up">
+        <div class="hero-pill-dot"></div>
+        Open beta &mdash; free for early adopters
+      </div>
+      <h1 class="fade-up d1">
+        Never miss a dose.<br>
+        <span class="highlight">Stay in the loop.</span>
+      </h1>
+      <p class="subtitle fade-up d2">
+        Track medications, log vitals, coordinate with caregivers, and build daily health routines &mdash; all in one installable app.
+      </p>
+      <p class="disclaimer fade-up d3">
+        MarinLoop is a personal tracking tool. It is not a medical device, not for emergencies, and not offered for HIPAA covered-entity workflows in this beta.
+      </p>
+      <div class="hero-buttons fade-up d4">
+        <button class="btn-primary" style="padding: 16px 36px; font-size: 1rem;">
+          Get Started Free &rarr;
+        </button>
+        <button class="btn-outline">
+          &#9654;&nbsp; Watch Demo
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCT PREVIEW -->
+  <div class="product-preview fade-up">
+    <div class="preview-frame">
+      <div class="preview-titlebar">
+        <div class="preview-dot r"></div>
+        <div class="preview-dot y"></div>
+        <div class="preview-dot g"></div>
+        <div class="preview-urlbar">marinloop.com/dashboard</div>
+      </div>
+      <div class="preview-body">
+        <div class="app-mock">
+          <div class="app-sidebar">
+            <div class="app-sidebar-header"><span>&#9678;</span> MarinLoop</div>
+            <div class="app-nav-item active">&#128197;&nbsp; Timeline</div>
+            <div class="app-nav-item">&#128138;&nbsp; Medications</div>
+            <div class="app-nav-item">&#10084;&nbsp; Vitals</div>
+            <div class="app-nav-item">&#128221;&nbsp; Journal</div>
+            <div class="app-nav-item">&#128101;&nbsp; Care Team</div>
+            <div class="app-nav-item">&#9881;&nbsp; Settings</div>
+          </div>
+          <div class="app-main">
+            <div class="app-top-bar">
+              <h3>Today's Timeline</h3>
+              <div class="date-pill">Tue, Mar 18, 2026</div>
+            </div>
+            <div class="adherence-bar">
+              <div class="adherence-label">Today's Adherence</div>
+              <div class="adherence-track"><div class="adherence-fill" id="adherenceBar" style="width: 0%"></div></div>
+              <div class="adherence-pct" id="adherencePct">0%</div>
+            </div>
+            <div class="med-timeline">
+              <div class="med-card" onclick="toggleMed(this)">
+                <div class="med-time">8:00 AM</div>
+                <div class="med-icon green">&#128138;</div>
+                <div class="med-info"><div class="med-name">Lisinopril</div><div class="med-dose">10mg &middot; 1 tablet</div></div>
+                <div class="med-status taken">&#10003; Taken</div>
+              </div>
+              <div class="med-card" onclick="toggleMed(this)">
+                <div class="med-time">8:00 AM</div>
+                <div class="med-icon blue">&#128138;</div>
+                <div class="med-info"><div class="med-name">Metformin</div><div class="med-dose">500mg &middot; 1 tablet</div></div>
+                <div class="med-status taken">&#10003; Taken</div>
+              </div>
+              <div class="med-card" onclick="toggleMed(this)">
+                <div class="med-time">12:00 PM</div>
+                <div class="med-icon purple">&#128138;</div>
+                <div class="med-info"><div class="med-name">Vitamin D3</div><div class="med-dose">2000 IU &middot; 1 softgel</div></div>
+                <div class="med-status upcoming">&#9200; Upcoming</div>
+              </div>
+              <div class="med-card" onclick="toggleMed(this)">
+                <div class="med-time">9:00 PM</div>
+                <div class="med-icon amber">&#128138;</div>
+                <div class="med-info"><div class="med-name">Melatonin</div><div class="med-dose">3mg &middot; 1 tablet</div></div>
+                <div class="med-status upcoming">&#9200; Upcoming</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-label fade-up">Features</div>
+      <h2 class="section-title fade-up d1">Everything you need,<br>nothing you don't.</h2>
+      <p class="section-subtitle fade-up d2">Built for patients managing daily medications and caregivers who need visibility without complexity.</p>
+      <div class="features-grid">
+        <div class="feature-card fade-up">
+          <div class="feature-icon" style="background: #dcfce7;">&#128197;</div>
+          <h3>Daily Timeline</h3>
+          <p>See your full day at a glance &mdash; medications, vitals, and notes organized by time. Tap to log, swipe to reschedule.</p>
+        </div>
+        <div class="feature-card fade-up d1">
+          <div class="feature-icon" style="background: #dbeafe;">&#128276;</div>
+          <h3>Smart Reminders</h3>
+          <p>Push notifications, snooze support, and escalating alerts. Never miss a dose even on your busiest days.</p>
+        </div>
+        <div class="feature-card fade-up d2">
+          <div class="feature-icon" style="background: #f3e8ff;">&#128101;</div>
+          <h3>Care Network</h3>
+          <p>Invite family members or caregivers to view adherence. They see status updates &mdash; you keep full control.</p>
+        </div>
+        <div class="feature-card fade-up d3">
+          <div class="feature-icon" style="background: #fef3c7;">&#10084;</div>
+          <h3>Vitals Tracking</h3>
+          <p>Log blood pressure, glucose, weight, and more. Spot trends over time with simple visual charts.</p>
+        </div>
+        <div class="feature-card fade-up d4">
+          <div class="feature-icon" style="background: #e0f2fe;">&#128221;</div>
+          <h3>Health Journal</h3>
+          <p>Quick daily notes on symptoms, mood, and side effects. Export anytime for doctor appointments.</p>
+        </div>
+        <div class="feature-card fade-up">
+          <div class="feature-icon" style="background: #fce7f3;">&#128241;</div>
+          <h3>Installable PWA</h3>
+          <p>Add to your home screen on any device. Works offline, syncs when connected. No app store required.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works" style="background: var(--bg-alt);">
+    <div class="section-inner" style="text-align: center;">
+      <div class="section-label fade-up">How It Works</div>
+      <h2 class="section-title fade-up d1" style="margin-left:auto;margin-right:auto;">Up and running in 3 minutes.</h2>
+      <p class="section-subtitle fade-up d2" style="margin-left:auto;margin-right:auto;">No downloads, no setup wizards, no insurance forms.</p>
+      <div class="steps">
+        <div class="step fade-up">
+          <h3>Create Your Account</h3>
+          <p>Sign up with email or Google. No credit card, no insurance info needed.</p>
+        </div>
+        <div class="step fade-up d1">
+          <h3>Add Your Medications</h3>
+          <p>Search our database or type in your meds. Set doses, times, and reminder preferences.</p>
+        </div>
+        <div class="step fade-up d2">
+          <h3>Build Your Routine</h3>
+          <p>Check off doses, log vitals, invite caregivers. MarinLoop keeps your whole care team in sync.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section id="trust" class="trust-section">
+    <div class="section-inner">
+      <div class="section-label fade-up">Trust & Safety</div>
+      <h2 class="section-title fade-up d1">Built with clear boundaries.</h2>
+      <p class="section-subtitle fade-up d2">We tell you exactly what MarinLoop is &mdash; and what it isn't.</p>
+      <div class="trust-grid fade-up d3">
+        <div class="trust-cell">
+          <div class="trust-icon">&#9989;</div>
+          <h3>What MarinLoop Is</h3>
+          <p>A personal medication-management workflow for reminders, adherence tracking, vitals logging, and caregiver coordination.</p>
+        </div>
+        <div class="trust-cell">
+          <div class="trust-icon">&#10060;</div>
+          <h3>What It Is Not</h3>
+          <p>Not a diagnostic tool, not a clinician substitute, not an emergency alert system, and not a HIPAA deployment for covered entities in this beta.</p>
+        </div>
+        <div class="trust-cell">
+          <div class="trust-icon">&#129302;</div>
+          <h3>Optional AI</h3>
+          <p>AI features are fully opt-in and revocable. Core medication tracking works perfectly without AI enabled.</p>
+        </div>
+        <div class="trust-cell">
+          <div class="trust-icon">&#128274;</div>
+          <h3>Row-Level Security</h3>
+          <p>Your data is isolated at the database level. No other user can access your records, period.</p>
+        </div>
+        <div class="trust-cell">
+          <div class="trust-icon">&#128230;</div>
+          <h3>Data Portability</h3>
+          <p>Export all your data or delete your account at any time. Your data, your choice.</p>
+        </div>
+        <div class="trust-cell">
+          <div class="trust-icon">&#128220;</div>
+          <h3>In-App Legal</h3>
+          <p>Terms of service and privacy policy accessible inside the app, with consent gating on first use.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="reviews">
+    <div class="section-inner">
+      <div class="section-label fade-up">Early Feedback</div>
+      <h2 class="section-title fade-up d1">What beta testers are saying.</h2>
+      <p class="section-subtitle fade-up d2">Real feedback from our first cohort of users and reviewers.</p>
+      <div class="testimonials">
+        <div class="testimonial-card fade-up">
+          <p>"I've tried a dozen pill-reminder apps. MarinLoop is the first one that actually feels like it was built for people managing multiple medications daily."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background: #8b5cf6;">DK</div>
+            <div><div class="testimonial-name">David K.</div><div class="testimonial-role">Patient, beta tester</div></div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-up d1">
+          <p>"The caregiver view is exactly what I needed. I can check on my mom's adherence without calling her five times a day."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background: #0ea5e9;">RM</div>
+            <div><div class="testimonial-name">Rachel M.</div><div class="testimonial-role">Family caregiver</div></div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-up d2">
+          <p>"Clean trust boundaries, optional AI, RLS on the database &mdash; this is how health tools should be built. Looking forward to a full review."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background: #16a34a;">JT</div>
+            <div><div class="testimonial-name">James T.</div><div class="testimonial-role">Clinical reviewer</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row fade-up">
+        <div class="stat-card">
+          <div class="stat-number" data-target="94">0</div>
+          <div class="stat-label">% Avg Adherence</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-target="47">0</div>
+          <div class="stat-label">Beta Testers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-target="12">0</div>
+          <div class="stat-label">Medications Tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-target="99">0</div>
+          <div class="stat-label">% Uptime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="section-inner" style="text-align: center;">
+      <h2 class="fade-up">Ready to build your routine?</h2>
+      <p class="fade-up d1">Join the open beta today. Free, no credit card, no commitment.</p>
+      <div class="fade-up d2" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn-primary" style="padding:16px 40px; font-size:1rem;">Get Started Free &rarr;</button>
+        <button class="btn-outline">Review Trust Center</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="nav-logo-icon" style="width:28px;height:28px;font-size:12px;">M</div>
+        <span>MarinLoop</span>
+      </div>
+      <div class="footer-links">
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Trust Center</a>
+        <a href="#">Contact</a>
+        <a href="#">Status</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 MarinLoop. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    toggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      toggle.textContent = html.classList.contains('dark') ? '☀️' : '🌙';
+    });
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Adherence bar animation
+    setTimeout(() => {
+      document.getElementById('adherenceBar').style.width = '75%';
+      document.getElementById('adherencePct').textContent = '75%';
+    }, 1200);
+
+    // Stat counter animation
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('.stat-number').forEach(num => {
+            const target = parseInt(num.dataset.target);
+            let current = 0;
+            const step = Math.ceil(target / 40);
+            const timer = setInterval(() => {
+              current += step;
+              if (current >= target) { current = target; clearInterval(timer); }
+              num.textContent = current + (num.closest('.stat-card').querySelector('.stat-label').textContent.includes('%') ? '%' : '');
+            }, 30);
+          });
+          statObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.stats-row').forEach(el => statObserver.observe(el));
+
+    // Med card toggle
+    function toggleMed(card) {
+      const status = card.querySelector('.med-status');
+      if (status.classList.contains('upcoming')) {
+        status.classList.remove('upcoming');
+        status.classList.add('taken');
+        status.innerHTML = '&#10003; Taken';
+        updateAdherence();
+      } else if (status.classList.contains('taken')) {
+        status.classList.remove('taken');
+        status.classList.add('upcoming');
+        status.innerHTML = '&#9200; Upcoming';
+        updateAdherence();
+      }
+    }
+
+    function updateAdherence() {
+      const cards = document.querySelectorAll('.med-card');
+      const taken = document.querySelectorAll('.med-status.taken').length;
+      const pct = Math.round((taken / cards.length) * 100);
+      document.getElementById('adherenceBar').style.width = pct + '%';
+      document.getElementById('adherencePct').textContent = pct + '%';
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>

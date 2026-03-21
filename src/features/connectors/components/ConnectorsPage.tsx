@@ -14,7 +14,7 @@ import { PublishModal } from "@/features/connectors/components/PublishModal"
 import { ConnectorStats } from "@/features/connectors/components/ConnectorStats"
 import { ConnectorFilters } from "@/features/connectors/components/ConnectorFilters"
 
-type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook'
+type ConnectorPlatform = 'x' | 'linkedin' | 'instagram' | 'tiktok' | 'youtube' | 'email' | 'notion' | 'airtable' | 'webhook' | 'telegram'
 type ConnectorStatus = 'connected' | 'disconnected' | 'error' | 'pending'
 
 interface Connector {

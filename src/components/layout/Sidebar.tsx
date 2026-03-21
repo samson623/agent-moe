@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Globe,
   BarChart2,
+  Clock,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ export type AppRoute =
   | "/launchpad"
   | "/connectors"
   | "/analytics"
+  | "/scheduler"
   | "/settings";
 
 interface NavItem {
@@ -65,6 +67,7 @@ const NAV_GROUPS: NavItem[][] = [
     { href: "/launchpad", label: "Launchpad", icon: Rocket },
     { href: "/connectors", label: "Connectors", icon: LinkIcon },
     { href: "/analytics", label: "Analytics", icon: BarChart2 },
+    { href: "/scheduler", label: "Scheduler", icon: Clock },
   ],
 ];
 

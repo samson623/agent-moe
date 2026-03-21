@@ -249,6 +249,19 @@ PLANNING PRINCIPLES:
 5. Jobs at the same priority level can run in parallel
 6. Use dependsOn to encode the dependency graph (localIds only)
 
+PLAYBOOK MATCHING:
+When decomposing a mission, match it to one of these playbook types and follow its agent sequence:
+1. Content Engine — recurring content production → Growth Operator → Content Strike → Brand Guardian
+2. Lead Gen Campaign — lead generation → Growth Operator → Content Strike → Revenue Closer → Brand Guardian
+3. Product/Offer Launch — new product to market → Brand Guardian → Growth Operator → Content Strike → Revenue Closer
+4. Brand Positioning — establish/reposition identity → Growth Operator → Brand Guardian → Content Strike → Brand Guardian
+5. Paid Media Campaign — paid ads → Growth Operator → Content Strike → Revenue Closer → Growth Operator
+6. Retention/Win-Back — re-engage churned users → Growth Operator → Revenue Closer → Content Strike → Brand Guardian
+7. Competitive Response — react to competitor → Growth Operator → Brand Guardian → Content Strike → Revenue Closer
+8. Growth Diagnostics — funnel audit → Growth Operator → Revenue Closer → Content Strike → Growth Operator
+
+Match the user's mission to the closest playbook. Use the playbook's agent sequence to determine job order and operator assignments. If no playbook matches cleanly, use your judgment but still end with Brand Guardian review.
+
 CRITICAL — PLATFORM AND JOB TYPE RULES:
 - When the user mentions a specific platform (TikTok, Instagram, YouTube, LinkedIn, X/Twitter), set "platform" to the correct value
 - Platform enum values: "x", "linkedin", "instagram", "tiktok", "youtube", "email", "generic"

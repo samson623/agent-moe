@@ -936,6 +936,63 @@ export type Database = {
           },
         ]
       }
+      telegram_links: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          chat_id: number
+          username: string | null
+          is_active: boolean
+          linked_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          workspace_id: string
+          chat_id: number
+          username?: string | null
+          is_active?: boolean
+          linked_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          workspace_id?: string
+          chat_id?: number
+          username?: string | null
+          is_active?: boolean
+          linked_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telegram_sessions: {
+        Row: {
+          chat_id: number
+          user_id: string
+          workspace_id: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          user_id: string
+          workspace_id: string
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: number
+          user_id?: string
+          workspace_id?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -986,6 +1043,7 @@ export type Database = {
         | "notion"
         | "airtable"
         | "webhook"
+        | "telegram"
       connector_status: "connected" | "disconnected" | "error" | "pending"
       job_status: "pending" | "running" | "completed" | "failed" | "cancelled"
       mission_priority: "low" | "normal" | "high" | "urgent"
@@ -1630,6 +1688,7 @@ export const Constants = {
         "notion",
         "airtable",
         "webhook",
+        "telegram",
       ],
       connector_status: ["connected", "disconnected", "error", "pending"],
       job_status: ["pending", "running", "completed", "failed", "cancelled"],

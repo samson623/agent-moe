@@ -11,7 +11,10 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "remotion:preview": "npx remotion preview src/features/video-rendering/remotion/index.ts",
-    "remotion:studio": "npx remotion studio src/features/video-rendering/remotion/index.ts"
+    "remotion:studio": "npx remotion studio src/features/video-rendering/remotion/index.ts",
+    "tunnel": "powershell -ExecutionPolicy Bypass -File scripts/start-tunnel.ps1",
+    "ngrok:setup": "powershell -ExecutionPolicy Bypass -File scripts/configure-ngrok.ps1",
+    "telegram:webhook:status": "powershell -ExecutionPolicy Bypass -File scripts/telegram-webhook-status.ps1"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.72",
@@ -31,6 +34,7 @@
     "edge-tts": "^1.0.1",
     "ffmpeg-static": "^5.3.0",
     "framer-motion": "^12.35.2",
+    "grammy": "^1.41.1",
     "lucide-react": "^0.487.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",

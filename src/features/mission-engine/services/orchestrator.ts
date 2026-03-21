@@ -18,6 +18,7 @@ import { createExecutionEngine } from './execution-engine'
 import { createJobsBatch } from '@/lib/supabase/queries/jobs'
 import { updateMissionStatus } from '@/lib/supabase/queries/missions'
 import { logActivity } from '@/lib/supabase/queries/activity'
+import { notifyMissionStage } from '@/features/telegram/notifier'
 import type { JobInsert, Json } from '@/lib/supabase/types'
 import type { Job as AIJob } from '@/features/ai/types'
 
@@ -69,6 +70,9 @@ export async function planAndExecuteMission(
       return
     }
 
+    // Telegram: notify planning started
+    notifyMissionStage(missionRow.user_id, missionId, 'planning').catch(() => {})
+
     const workspace = await loadWorkspacePreferences(workspaceId)
     const planner = getMissionPlanner()
     const planResult = await planner.plan(missionRow.instruction, workspace)
@@ -115,6 +119,8 @@ export async function planAndExecuteMission(
 
     // ── Phase 2: Execute ───────────────────────────────────────────────────
     await updateMissionStatus(client, missionId, 'running')
+    // Telegram: notify operators working
+    notifyMissionStage(missionRow.user_id, missionId, 'working', `${jobInserts.length} jobs queued`).catch(() => {})
 
     const engine = createExecutionEngine(missionId, workspaceId)
     const summary = await engine.execute()
@@ -139,6 +145,15 @@ export async function planAndExecuteMission(
       summary: `Execution finished: ${summary.jobsCompleted}/${summary.jobsExecuted} jobs completed`,
       details: summary as unknown as Record<string, unknown>,
     })
+
+    // Telegram: notify final status
+    const telegramStage = finalStatus === 'completed' ? 'completed' : 'failed' as const
+    notifyMissionStage(
+      missionRow.user_id,
+      missionId,
+      telegramStage,
+      `${summary.jobsCompleted}/${summary.jobsExecuted} jobs completed`,
+    ).catch(() => {})
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error(`[Orchestrator] Unhandled error for mission ${missionId}:`, message)

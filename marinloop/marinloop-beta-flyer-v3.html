@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarinLoop Beta Flyer v3 — Premium Redesign</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
+
+  @page { size: letter; margin: 0; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1B7A4A;
+    --green-dark: #145C38;
+    --green-light: #2A9D5C;
+    --green-pale: #E8F5EE;
+    --green-glow: rgba(27, 122, 74, 0.12);
+    --cream: #F7F5F2;
+    --cream-dark: #EFEBE6;
+    --white: #FFFFFF;
+    --text: #111111;
+    --text-secondary: #4E4A46;
+    --text-tertiary: #8A857F;
+    --amber: #D4930D;
+    --amber-pale: #FFF8E7;
+    --red: #C41E3A;
+    --red-pale: #FFF0F2;
+    --blue: #2563EB;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #d4d4d4;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media print {
+    body { background: none; padding: 0; }
+    .page { box-shadow: none; }
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ========== TOP GRADIENT BAR ========== */
+  .top-bar {
+    height: 6px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--green-light));
+    flex-shrink: 0;
+  }
+
+  /* ========== HEADER ========== */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.18in 0.5in 0.12in;
+    flex-shrink: 0;
+  }
+
+  .logo-row { display: flex; align-items: center; gap: 10px; }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--green);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(27, 122, 74, 0.3);
+  }
+  .logo-mark svg { width: 20px; height: 20px; fill: #fff; }
+
+  .brand-name {
+    font-size: 24px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.8px;
+  }
+
+  .beta-pill {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-size: 8px; font-weight: 700;
+    padding: 2.5px 7px; border-radius: 4px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-left: 6px; vertical-align: middle; position: relative; top: -2px;
+  }
+
+  .header-url {
+    font-size: 13px; font-weight: 600; color: var(--green);
+    letter-spacing: -0.2px;
+    background: var(--green-pale);
+    padding: 5px 14px;
+    border-radius: 20px;
+  }
+
+  /* ========== HERO ========== */
+  .hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35in;
+    padding: 0.08in 0.5in 0.12in;
+    flex: 0 0 auto;
+  }
+
+  .hero-text { flex: 1; padding-top: 0.05in; }
+
+  .headline {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -2.5px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .headline .accent { color: var(--green); }
+
+  .subhead {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 14px;
+    max-width: 340px;
+  }
+
+  /* BETA BANNER */
+  .beta-banner {
+    background: linear-gradient(135deg, var(--green), var(--green-light));
+    border-radius: var(--radius-md);
+    padding: 11px 16px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .beta-banner::before {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    transform: translate(20px, -20px);
+  }
+  .beta-banner strong {
+    font-size: 14px; font-weight: 700; color: #fff;
+    display: block; margin-bottom: 1px;
+  }
+  .beta-banner span {
+    font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 400;
+  }
+
+  /* HOW IT WORKS — 3 steps */
+  .steps-row { display: flex; gap: 10px; }
+
+  .step-card {
+    flex: 1;
+    background: var(--white);
+    border: 1.5px solid rgba(0,0,0,0.06);
+    border-radius: var(--radius-md);
+    padding: 10px 10px 9px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .step-num {
+    width: 22px; height: 22px;
+    background: var(--green);
+    color: #fff; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; margin-bottom: 4px;
+  }
+
+  .step-title { font-size: 10.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .step-desc { font-size: 8.5px; color: var(--text-tertiary); line-height: 1.35; font-weight: 400; }
+
+  /* ========== PHONE MOCKUP ========== */
+  .phone-col { flex-shrink: 0; }
+
+  .phone {
+    width: 215px;
+    border: 2.5px solid #1a1a1a;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow:
+      0 8px 30px rgba(0,0,0,0.12),
+      0 2px 8px rgba(0,0,0,0.08);
+    background: var(--white);
+  }
+
+  .phone-notch {
+    width: 70px; height: 5px;
+    background: #1a1a1a;
+    border-radius: 0 0 6px 6px;
+    margin: 0 auto;
+  }
+
+  .phone-top {
+    background: var(--green);
+    padding: 10px 16px 9px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .phone-brand {
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .phone-m {
+    width: 18px; height: 18px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+  }
+
+  /* Adherence ring */
+  .adherence-ring {
+    width: 32px; height: 32px; position: relative;
+  }
+  .adherence-ring svg { width: 32px; height: 32px; transform: rotate(-90deg); }
+  .adherence-ring .ring-bg { fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 3; }
+  .adherence-ring .ring-fill { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 82; stroke-dashoffset: 20.5; }
+  .adherence-pct {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 8px; font-weight: 800; color: #fff;
+  }
+
+  .phone-body { padding: 12px 14px 8px; background: var(--white); }
+  .phone-today { font-size: 14px; font-weight: 800; color: var(--text); }
+  .phone-day { font-size: 9px; color: var(--text-tertiary); margin-bottom: 8px; font-weight: 400; }
+
+  .phone-pills { display: flex; gap: 5px; margin-bottom: 10px; }
+  .phone-pill {
+    font-size: 7.5px; font-weight: 600; padding: 3px 8px;
+    border-radius: 6px; border: none;
+  }
+  .phone-pill.done { background: var(--green-pale); color: var(--green); }
+  .phone-pill.late { background: var(--amber-pale); color: var(--amber); }
+  .phone-pill.missed { background: var(--red-pale); color: var(--red); }
+
+  .med {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 8px; margin-bottom: 4px;
+    background: #FAFAF8; border: 1px solid rgba(0,0,0,0.04);
+  }
+  .med-info { display: flex; align-items: center; gap: 8px; }
+  .med-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .med-dot.green { background: var(--green); }
+  .med-dot.amber { background: var(--amber); }
+  .med-dot.red { background: var(--red); }
+  .med-dot.gray { background: #ccc; }
+  .med-dot.blue { background: var(--blue); }
+  .med-name { font-size: 10.5px; font-weight: 600; color: var(--text); }
+  .med-time { font-size: 7.5px; color: var(--text-tertiary); font-weight: 400; }
+  .med-st { font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .med-st.done { color: var(--green); background: var(--green-pale); }
+  .med-st.late { color: var(--amber); background: var(--amber-pale); }
+  .med-st.next { color: var(--blue); background: #EFF6FF; }
+  .med-st.pending { color: var(--text-tertiary); background: #F3F3F0; }
+  .med-st.missed { color: var(--red); background: var(--red-pale); }
+
+  .phone-nav {
+    display: flex; justify-content: space-around;
+    padding: 7px 6px 11px; border-top: 1px solid #f0ece8; background: var(--white);
+  }
+  .pnav { text-align: center; }
+  .pnav svg { width: 15px; height: 15px; stroke: #c4c0ba; fill: none; stroke-width: 2; stroke-linecap: round; display: block; margin: 0 auto 1px; }
+  .pnav.on svg { stroke: var(--green); }
+  .pnav span { font-size: 6.5px; font-weight: 600; color: #c4c0ba; }
+  .pnav.on span { color: var(--green); }
+
+  /* ========== FEATURES SECTION ========== */
+  .features-section {
+    padding: 0.1in 0.5in 0.1in;
+    flex-shrink: 0;
+  }
+
+  .section-label {
+    font-size: 9px; font-weight: 700; color: var(--green);
+    letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .feat-card {
+    background: var(--white);
+    border: 1.5px solid rgba(0,0,0,0.05);
+    border-radius: var(--radius-md);
+    padding: 10px 11px 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+
+  .feat-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 5px;
+  }
+  .feat-icon svg { width: 14px; height: 14px; }
+  .feat-icon svg { width: 16px; height: 16px; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+  .feat-icon.green { background: var(--green-pale); }
+  .feat-icon.green svg { stroke: var(--green); }
+  .feat-icon.amber { background: var(--amber-pale); }
+  .feat-icon.amber svg { stroke: var(--amber); }
+  .feat-icon.blue { background: #EFF6FF; }
+  .feat-icon.blue svg { stroke: var(--blue); }
+  .feat-icon.red { background: var(--red-pale); }
+  .feat-icon.red svg { stroke: var(--red); }
+  .feat-icon.purple { background: #F3F0FF; }
+  .feat-icon.purple svg { stroke: #7C3AED; }
+  .feat-icon.teal { background: #F0FDFA; }
+  .feat-icon.teal svg { stroke: #0D9488; }
+
+  .feat-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .feat-desc { font-size: 8.5px; color: var(--text-tertiary); line-height: 1.4; font-weight: 400; }
+
+  /* ========== TRUST STRIP ========== */
+  .trust-strip {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 7px 0.5in;
+    flex-shrink: 0;
+  }
+
+  .trust-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 9px; font-weight: 600; color: var(--text-secondary);
+  }
+  .trust-icon {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--green-pale);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .trust-icon svg { width: 11px; height: 11px; stroke: var(--green); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ========== CTA SECTION ========== */
+  .cta-section {
+    background: var(--green);
+    margin: 0 0.35in;
+    border-radius: var(--radius-lg);
+    padding: 0.18in 0.25in;
+    display: flex;
+    align-items: center;
+    gap: 0.25in;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .cta-section::after {
+    content: '';
+    position: absolute; bottom: -30px; left: 30%;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+
+  .qr-wrap { flex-shrink: 0; text-align: center; position: relative; z-index: 1; }
+  .qr-box {
+    width: 1.25in; height: 1.25in;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .qr-box svg { width: 100%; height: 100%; }
+  .qr-caption {
+    font-size: 8px; color: rgba(255,255,255,0.7);
+    font-weight: 500; margin-top: 5px;
+  }
+
+  .cta-copy { flex: 1; position: relative; z-index: 1; }
+  .cta-headline {
+    font-size: 19px; font-weight: 800; color: #fff;
+    letter-spacing: -0.5px; margin-bottom: 6px; line-height: 1.15;
+  }
+
+  .cta-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 5px;
+    margin-bottom: 12px;
+  }
+  .cta-list li {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 400;
+  }
+  .cta-num {
+    width: 19px; height: 19px;
+    background: rgba(255,255,255,0.2);
+    color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800; flex-shrink: 0;
+  }
+
+  .url-bar {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 7px 18px;
+    display: inline-block;
+    backdrop-filter: blur(4px);
+  }
+  .url-bar span { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+
+  /* ========== FOOTER ========== */
+  .footer {
+    margin-top: auto;
+    padding: 6px 0.5in 0.12in;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .footer-badges {
+    display: flex; gap: 10px;
+    font-size: 8.5px; color: var(--text-tertiary); font-weight: 500;
+  }
+  .footer-badges span.dot { color: #d4d0cb; }
+  .footer-legal {
+    font-size: 7px; color: #b8b3ad;
+    text-align: right; max-width: 240px; line-height: 1.4; font-weight: 400;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOP GRADIENT BAR -->
+  <div class="top-bar"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="4" rx="1.5" opacity="0.5"/><rect x="4" y="10" width="16" height="4" rx="1.5" opacity="0.75"/><rect x="4" y="16" width="16" height="4" rx="1.5"/></svg>
+      </div>
+      <div>
+        <span class="brand-name">MarinLoop</span>
+        <span class="beta-pill">Beta</span>
+      </div>
+    </div>
+    <span class="header-url">marinloop.com</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-text">
+      <h1 class="headline">Never Miss<br>a Dose<br><span class="accent">Again.</span></h1>
+      <p class="subhead">
+        Medication reminders, adherence tracking, and care
+        coordination in one installable app — built for patients
+        and caregivers who need a daily system that actually works.
+      </p>
+
+      <div class="beta-banner">
+        <strong>Open Beta — Free for Personal Use</strong>
+        <span>No credit card. No app store. Installs on any phone.</span>
+      </div>
+
+      <div class="steps-row">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-title">Add Medications</div>
+          <div class="step-desc">Search, scan a barcode, or enter manually</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-title">Set Reminders</div>
+          <div class="step-desc">Push notifications fire on schedule, even offline</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-title">Track Adherence</div>
+          <div class="step-desc">Daily rings and weekly trends at a glance</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHONE MOCKUP -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-top">
+          <div class="phone-brand"><div class="phone-m">M</div> MarinLoop</div>
+          <div class="adherence-ring">
+            <svg viewBox="0 0 32 32">
+              <circle class="ring-bg" cx="16" cy="16" r="13"/>
+              <circle class="ring-fill" cx="16" cy="16" r="13"/>
+            </svg>
+            <span class="adherence-pct">75%</span>
+          </div>
+        </div>
+        <div class="phone-body">
+          <div class="phone-today">Today</div>
+          <div class="phone-day">Thursday</div>
+          <div class="phone-pills">
+            <span class="phone-pill done">1 Done</span>
+            <span class="phone-pill late">2 Late</span>
+            <span class="phone-pill missed">1 Missed</span>
+          </div>
+          <div class="med"><div class="med-info"><div class="med-dot green"></div><div><div class="med-name">Ciprofloxacin</div><div class="med-time">12:07 AM</div></div></div><span class="med-st done">Done</span></div>
+          <div class="med"><div class="med-info"><div class="med-dot amber"></div><div><div class="med-name">Gabapentin</div><div class="med-time">9:11 PM</div></div></div><span class="med-st late">Late</span></div>
+          <div class="med"><div class="med-info"><div class="med-dot blue"></div><div><div class="med-name">Vitamin D3</div><div class="med-time">6:00 PM</div></div></div><span class="med-st next">Next</span></div>
+          <div class="med"><div class="med-info"><div class="med-dot gray"></div><div><div class="med-name">Aspirin</div><div class="med-time">9:00 PM</div></div></div><span class="med-st pending">Pending</span></div>
+          <div class="med"><div class="med-info"><div class="med-dot red"></div><div><div class="med-name">Metformin</div><div class="med-time">8:00 AM</div></div></div><span class="med-st missed">Missed</span></div>
+        </div>
+        <div class="phone-nav">
+          <div class="pnav on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Timeline</span></div>
+          <div class="pnav"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="6" rx="1"/><rect x="6" y="8" width="12" height="14" rx="2"/><path d="M6 14h12"/></svg><span>Meds</span></div>
+          <div class="pnav"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg><span>Appts</span></div>
+          <div class="pnav"><svg viewBox="0 0 24 24"><rect x="4" y="14" width="4" height="6" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg><span>Health</span></div>
+          <div class="pnav"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Care</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="features-section">
+    <div class="section-label">What MarinLoop Does</div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon green">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="feat-name">Daily Timeline</div>
+        <div class="feat-desc">Visual schedule of every dose, color-coded by status</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon amber">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="feat-name">Push Reminders</div>
+        <div class="feat-desc">Notifications fire at the exact time, even when closed</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon blue">
+          <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="6" rx="1"/><rect x="6" y="8" width="12" height="14" rx="2"/><path d="M6 14h12"/></svg>
+        </div>
+        <div class="feat-name">Medication Manager</div>
+        <div class="feat-desc">Add by name, barcode, or label photo. Track supply & refills.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon red">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="feat-name">Health Tracking</div>
+        <div class="feat-desc">Log vitals, journal entries, and adherence trends over time</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon purple">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="feat-name">Care Network</div>
+        <div class="feat-desc">Share your care plan with family, caregivers, and providers</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon teal">
+          <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <div class="feat-name">AI Assistant</div>
+        <div class="feat-desc">Voice commands and label scanning. Opt-in, revocable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRUST STRIP -->
+  <div class="trust-strip">
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      No Ad Tracking
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      Full Data Export
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/></svg>
+      </div>
+      Your Data Stays Yours
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      Installable PWA
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="qr-wrap">
+      <div class="qr-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+          <rect fill="#fff" x="0" y="0" width="300" height="300"/>
+          <g><path fill="#1B7A4A" d="M 0,0 l 12,0 0,12 -12,0 z M 12,0 l 12,0 0,12 -12,0 z M 24,0 l 12,0 0,12 -12,0 z M 36,0 l 12,0 0,12 -12,0 z M 48,0 l 12,0 0,12 -12,0 z M 60,0 l 12,0 0,12 -12,0 z M 72,0 l 12,0 0,12 -12,0 z M 144,0 l 12,0 0,12 -12,0 z M 156,0 l 12,0 0,12 -12,0 z M 216,0 l 12,0 0,12 -12,0 z M 228,0 l 12,0 0,12 -12,0 z M 240,0 l 12,0 0,12 -12,0 z M 252,0 l 12,0 0,12 -12,0 z M 264,0 l 12,0 0,12 -12,0 z M 276,0 l 12,0 0,12 -12,0 z M 288,0 l 12,0 0,12 -12,0 z M 0,12 l 12,0 0,12 -12,0 z M 72,12 l 12,0 0,12 -12,0 z M 96,12 l 12,0 0,12 -12,0 z M 120,12 l 12,0 0,12 -12,0 z M 156,12 l 12,0 0,12 -12,0 z M 168,12 l 12,0 0,12 -12,0 z M 180,12 l 12,0 0,12 -12,0 z M 216,12 l 12,0 0,12 -12,0 z M 288,12 l 12,0 0,12 -12,0 z M 0,24 l 12,0 0,12 -12,0 z M 24,24 l 12,0 0,12 -12,0 z M 36,24 l 12,0 0,12 -12,0 z M 48,24 l 12,0 0,12 -12,0 z M 72,24 l 12,0 0,12 -12,0 z M 132,24 l 12,0 0,12 -12,0 z M 180,24 l 12,0 0,12 -12,0 z M 216,24 l 12,0 0,12 -12,0 z M 240,24 l 12,0 0,12 -12,0 z M 252,24 l 12,0 0,12 -12,0 z M 264,24 l 12,0 0,12 -12,0 z M 288,24 l 12,0 0,12 -12,0 z M 0,36 l 12,0 0,12 -12,0 z M 24,36 l 12,0 0,12 -12,0 z M 36,36 l 12,0 0,12 -12,0 z M 48,36 l 12,0 0,12 -12,0 z M 72,36 l 12,0 0,12 -12,0 z M 96,36 l 12,0 0,12 -12,0 z M 108,36 l 12,0 0,12 -12,0 z M 120,36 l 12,0 0,12 -12,0 z M 144,36 l 12,0 0,12 -12,0 z M 156,36 l 12,0 0,12 -12,0 z M 168,36 l 12,0 0,12 -12,0 z M 180,36 l 12,0 0,12 -12,0 z M 192,36 l 12,0 0,12 -12,0 z M 216,36 l 12,0 0,12 -12,0 z M 240,36 l 12,0 0,12 -12,0 z M 252,36 l 12,0 0,12 -12,0 z M 264,36 l 12,0 0,12 -12,0 z M 288,36 l 12,0 0,12 -12,0 z M 0,48 l 12,0 0,12 -12,0 z M 24,48 l 12,0 0,12 -12,0 z M 36,48 l 12,0 0,12 -12,0 z M 48,48 l 12,0 0,12 -12,0 z M 72,48 l 12,0 0,12 -12,0 z M 108,48 l 12,0 0,12 -12,0 z M 132,48 l 12,0 0,12 -12,0 z M 192,48 l 12,0 0,12 -12,0 z M 216,48 l 12,0 0,12 -12,0 z M 240,48 l 12,0 0,12 -12,0 z M 252,48 l 12,0 0,12 -12,0 z M 264,48 l 12,0 0,12 -12,0 z M 288,48 l 12,0 0,12 -12,0 z M 0,60 l 12,0 0,12 -12,0 z M 72,60 l 12,0 0,12 -12,0 z M 96,60 l 12,0 0,12 -12,0 z M 108,60 l 12,0 0,12 -12,0 z M 144,60 l 12,0 0,12 -12,0 z M 156,60 l 12,0 0,12 -12,0 z M 180,60 l 12,0 0,12 -12,0 z M 192,60 l 12,0 0,12 -12,0 z M 216,60 l 12,0 0,12 -12,0 z M 288,60 l 12,0 0,12 -12,0 z M 0,72 l 12,0 0,12 -12,0 z M 12,72 l 12,0 0,12 -12,0 z M 24,72 l 12,0 0,12 -12,0 z M 36,72 l 12,0 0,12 -12,0 z M 48,72 l 12,0 0,12 -12,0 z M 60,72 l 12,0 0,12 -12,0 z M 72,72 l 12,0 0,12 -12,0 z M 96,72 l 12,0 0,12 -12,0 z M 120,72 l 12,0 0,12 -12,0 z M 144,72 l 12,0 0,12 -12,0 z M 168,72 l 12,0 0,12 -12,0 z M 192,72 l 12,0 0,12 -12,0 z M 216,72 l 12,0 0,12 -12,0 z M 228,72 l 12,0 0,12 -12,0 z M 240,72 l 12,0 0,12 -12,0 z M 252,72 l 12,0 0,12 -12,0 z M 264,72 l 12,0 0,12 -12,0 z M 276,72 l 12,0 0,12 -12,0 z M 288,72 l 12,0 0,12 -12,0 z M 108,84 l 12,0 0,12 -12,0 z M 120,84 l 12,0 0,12 -12,0 z M 132,84 l 12,0 0,12 -12,0 z M 168,84 l 12,0 0,12 -12,0 z M 192,84 l 12,0 0,12 -12,0 z M 0,96 l 12,0 0,12 -12,0 z M 12,96 l 12,0 0,12 -12,0 z M 24,96 l 12,0 0,12 -12,0 z M 36,96 l 12,0 0,12 -12,0 z M 48,96 l 12,0 0,12 -12,0 z M 72,96 l 12,0 0,12 -12,0 z M 84,96 l 12,0 0,12 -12,0 z M 96,96 l 12,0 0,12 -12,0 z M 108,96 l 12,0 0,12 -12,0 z M 132,96 l 12,0 0,12 -12,0 z M 144,96 l 12,0 0,12 -12,0 z M 156,96 l 12,0 0,12 -12,0 z M 168,96 l 12,0 0,12 -12,0 z M 204,96 l 12,0 0,12 -12,0 z M 228,96 l 12,0 0,12 -12,0 z M 252,96 l 12,0 0,12 -12,0 z M 276,96 l 12,0 0,12 -12,0 z M 0,108 l 12,0 0,12 -12,0 z M 12,108 l 12,0 0,12 -12,0 z M 24,108 l 12,0 0,12 -12,0 z M 36,108 l 12,0 0,12 -12,0 z M 60,108 l 12,0 0,12 -12,0 z M 84,108 l 12,0 0,12 -12,0 z M 96,108 l 12,0 0,12 -12,0 z M 120,108 l 12,0 0,12 -12,0 z M 132,108 l 12,0 0,12 -12,0 z M 156,108 l 12,0 0,12 -12,0 z M 192,108 l 12,0 0,12 -12,0 z M 228,108 l 12,0 0,12 -12,0 z M 276,108 l 12,0 0,12 -12,0 z M 0,120 l 12,0 0,12 -12,0 z M 12,120 l 12,0 0,12 -12,0 z M 36,120 l 12,0 0,12 -12,0 z M 60,120 l 12,0 0,12 -12,0 z M 72,120 l 12,0 0,12 -12,0 z M 84,120 l 12,0 0,12 -12,0 z M 96,120 l 12,0 0,12 -12,0 z M 120,120 l 12,0 0,12 -12,0 z M 156,120 l 12,0 0,12 -12,0 z M 168,120 l 12,0 0,12 -12,0 z M 180,120 l 12,0 0,12 -12,0 z M 192,120 l 12,0 0,12 -12,0 z M 216,120 l 12,0 0,12 -12,0 z M 228,120 l 12,0 0,12 -12,0 z M 252,120 l 12,0 0,12 -12,0 z M 276,120 l 12,0 0,12 -12,0 z M 288,120 l 12,0 0,12 -12,0 z M 12,132 l 12,0 0,12 -12,0 z M 24,132 l 12,0 0,12 -12,0 z M 144,132 l 12,0 0,12 -12,0 z M 168,132 l 12,0 0,12 -12,0 z M 192,132 l 12,0 0,12 -12,0 z M 204,132 l 12,0 0,12 -12,0 z M 216,132 l 12,0 0,12 -12,0 z M 228,132 l 12,0 0,12 -12,0 z M 240,132 l 12,0 0,12 -12,0 z M 288,132 l 12,0 0,12 -12,0 z M 12,144 l 12,0 0,12 -12,0 z M 60,144 l 12,0 0,12 -12,0 z M 72,144 l 12,0 0,12 -12,0 z M 84,144 l 12,0 0,12 -12,0 z M 108,144 l 12,0 0,12 -12,0 z M 120,144 l 12,0 0,12 -12,0 z M 132,144 l 12,0 0,12 -12,0 z M 144,144 l 12,0 0,12 -12,0 z M 156,144 l 12,0 0,12 -12,0 z M 168,144 l 12,0 0,12 -12,0 z M 204,144 l 12,0 0,12 -12,0 z M 216,144 l 12,0 0,12 -12,0 z M 240,144 l 12,0 0,12 -12,0 z M 264,144 l 12,0 0,12 -12,0 z M 276,144 l 12,0 0,12 -12,0 z M 288,144 l 12,0 0,12 -12,0 z M 0,156 l 12,0 0,12 -12,0 z M 36,156 l 12,0 0,12 -12,0 z M 48,156 l 12,0 0,12 -12,0 z M 60,156 l 12,0 0,12 -12,0 z M 84,156 l 12,0 0,12 -12,0 z M 132,156 l 12,0 0,12 -12,0 z M 156,156 l 12,0 0,12 -12,0 z M 192,156 l 12,0 0,12 -12,0 z M 204,156 l 12,0 0,12 -12,0 z M 228,156 l 12,0 0,12 -12,0 z M 252,156 l 12,0 0,12 -12,0 z M 276,156 l 12,0 0,12 -12,0 z M 0,168 l 12,0 0,12 -12,0 z M 24,168 l 12,0 0,12 -12,0 z M 48,168 l 12,0 0,12 -12,0 z M 60,168 l 12,0 0,12 -12,0 z M 72,168 l 12,0 0,12 -12,0 z M 144,168 l 12,0 0,12 -12,0 z M 168,168 l 12,0 0,12 -12,0 z M 180,168 l 12,0 0,12 -12,0 z M 216,168 l 12,0 0,12 -12,0 z M 228,168 l 12,0 0,12 -12,0 z M 240,168 l 12,0 0,12 -12,0 z M 252,168 l 12,0 0,12 -12,0 z M 276,168 l 12,0 0,12 -12,0 z M 288,168 l 12,0 0,12 -12,0 z M 0,180 l 12,0 0,12 -12,0 z M 24,180 l 12,0 0,12 -12,0 z M 60,180 l 12,0 0,12 -12,0 z M 108,180 l 12,0 0,12 -12,0 z M 168,180 l 12,0 0,12 -12,0 z M 180,180 l 12,0 0,12 -12,0 z M 192,180 l 12,0 0,12 -12,0 z M 228,180 l 12,0 0,12 -12,0 z M 240,180 l 12,0 0,12 -12,0 z M 288,180 l 12,0 0,12 -12,0 z M 0,192 l 12,0 0,12 -12,0 z M 24,192 l 12,0 0,12 -12,0 z M 36,192 l 12,0 0,12 -12,0 z M 48,192 l 12,0 0,12 -12,0 z M 60,192 l 12,0 0,12 -12,0 z M 72,192 l 12,0 0,12 -12,0 z M 84,192 l 12,0 0,12 -12,0 z M 120,192 l 12,0 0,12 -12,0 z M 144,192 l 12,0 0,12 -12,0 z M 156,192 l 12,0 0,12 -12,0 z M 192,192 l 12,0 0,12 -12,0 z M 204,192 l 12,0 0,12 -12,0 z M 216,192 l 12,0 0,12 -12,0 z M 228,192 l 12,0 0,12 -12,0 z M 240,192 l 12,0 0,12 -12,0 z M 264,192 l 12,0 0,12 -12,0 z M 96,204 l 12,0 0,12 -12,0 z M 108,204 l 12,0 0,12 -12,0 z M 120,204 l 12,0 0,12 -12,0 z M 132,204 l 12,0 0,12 -12,0 z M 156,204 l 12,0 0,12 -12,0 z M 180,204 l 12,0 0,12 -12,0 z M 192,204 l 12,0 0,12 -12,0 z M 240,204 l 12,0 0,12 -12,0 z M 252,204 l 12,0 0,12 -12,0 z M 0,216 l 12,0 0,12 -12,0 z M 12,216 l 12,0 0,12 -12,0 z M 24,216 l 12,0 0,12 -12,0 z M 36,216 l 12,0 0,12 -12,0 z M 48,216 l 12,0 0,12 -12,0 z M 60,216 l 12,0 0,12 -12,0 z M 72,216 l 12,0 0,12 -12,0 z M 96,216 l 12,0 0,12 -12,0 z M 108,216 l 12,0 0,12 -12,0 z M 120,216 l 12,0 0,12 -12,0 z M 144,216 l 12,0 0,12 -12,0 z M 156,216 l 12,0 0,12 -12,0 z M 168,216 l 12,0 0,12 -12,0 z M 192,216 l 12,0 0,12 -12,0 z M 216,216 l 12,0 0,12 -12,0 z M 240,216 l 12,0 0,12 -12,0 z M 264,216 l 12,0 0,12 -12,0 z M 276,216 l 12,0 0,12 -12,0 z M 288,216 l 12,0 0,12 -12,0 z M 0,228 l 12,0 0,12 -12,0 z M 72,228 l 12,0 0,12 -12,0 z M 132,228 l 12,0 0,12 -12,0 z M 168,228 l 12,0 0,12 -12,0 z M 192,228 l 12,0 0,12 -12,0 z M 240,228 l 12,0 0,12 -12,0 z M 252,228 l 12,0 0,12 -12,0 z M 276,228 l 12,0 0,12 -12,0 z M 288,228 l 12,0 0,12 -12,0 z M 0,240 l 12,0 0,12 -12,0 z M 24,240 l 12,0 0,12 -12,0 z M 36,240 l 12,0 0,12 -12,0 z M 48,240 l 12,0 0,12 -12,0 z M 72,240 l 12,0 0,12 -12,0 z M 96,240 l 12,0 0,12 -12,0 z M 108,240 l 12,0 0,12 -12,0 z M 132,240 l 12,0 0,12 -12,0 z M 144,240 l 12,0 0,12 -12,0 z M 156,240 l 12,0 0,12 -12,0 z M 168,240 l 12,0 0,12 -12,0 z M 180,240 l 12,0 0,12 -12,0 z M 192,240 l 12,0 0,12 -12,0 z M 204,240 l 12,0 0,12 -12,0 z M 216,240 l 12,0 0,12 -12,0 z M 228,240 l 12,0 0,12 -12,0 z M 240,240 l 12,0 0,12 -12,0 z M 264,240 l 12,0 0,12 -12,0 z M 276,240 l 12,0 0,12 -12,0 z M 0,252 l 12,0 0,12 -12,0 z M 24,252 l 12,0 0,12 -12,0 z M 36,252 l 12,0 0,12 -12,0 z M 48,252 l 12,0 0,12 -12,0 z M 72,252 l 12,0 0,12 -12,0 z M 96,252 l 12,0 0,12 -12,0 z M 108,252 l 12,0 0,12 -12,0 z M 132,252 l 12,0 0,12 -12,0 z M 156,252 l 12,0 0,12 -12,0 z M 180,252 l 12,0 0,12 -12,0 z M 192,252 l 12,0 0,12 -12,0 z M 204,252 l 12,0 0,12 -12,0 z M 216,252 l 12,0 0,12 -12,0 z M 240,252 l 12,0 0,12 -12,0 z M 252,252 l 12,0 0,12 -12,0 z M 264,252 l 12,0 0,12 -12,0 z M 276,252 l 12,0 0,12 -12,0 z M 288,252 l 12,0 0,12 -12,0 z M 0,264 l 12,0 0,12 -12,0 z M 24,264 l 12,0 0,12 -12,0 z M 36,264 l 12,0 0,12 -12,0 z M 48,264 l 12,0 0,12 -12,0 z M 72,264 l 12,0 0,12 -12,0 z M 96,264 l 12,0 0,12 -12,0 z M 168,264 l 12,0 0,12 -12,0 z M 192,264 l 12,0 0,12 -12,0 z M 252,264 l 12,0 0,12 -12,0 z M 264,264 l 12,0 0,12 -12,0 z M 288,264 l 12,0 0,12 -12,0 z M 0,276 l 12,0 0,12 -12,0 z M 72,276 l 12,0 0,12 -12,0 z M 96,276 l 12,0 0,12 -12,0 z M 108,276 l 12,0 0,12 -12,0 z M 120,276 l 12,0 0,12 -12,0 z M 144,276 l 12,0 0,12 -12,0 z M 180,276 l 12,0 0,12 -12,0 z M 192,276 l 12,0 0,12 -12,0 z M 228,276 l 12,0 0,12 -12,0 z M 240,276 l 12,0 0,12 -12,0 z M 252,276 l 12,0 0,12 -12,0 z M 288,276 l 12,0 0,12 -12,0 z M 0,288 l 12,0 0,12 -12,0 z M 12,288 l 12,0 0,12 -12,0 z M 24,288 l 12,0 0,12 -12,0 z M 36,288 l 12,0 0,12 -12,0 z M 48,288 l 12,0 0,12 -12,0 z M 60,288 l 12,0 0,12 -12,0 z M 72,288 l 12,0 0,12 -12,0 z M 96,288 l 12,0 0,12 -12,0 z M 120,288 l 12,0 0,12 -12,0 z M 144,288 l 12,0 0,12 -12,0 z M 156,288 l 12,0 0,12 -12,0 z M 168,288 l 12,0 0,12 -12,0 z M 204,288 l 12,0 0,12 -12,0 z M 216,288 l 12,0 0,12 -12,0 z M 228,288 l 12,0 0,12 -12,0 z M 240,288 l 12,0 0,12 -12,0 z M 252,288 l 12,0 0,12 -12,0 z M 264,288 l 12,0 0,12 -12,0 z M 276,288 l 12,0 0,12 -12,0 z M 288,288 l 12,0 0,12 -12,0 z "/></g>
+        </svg>
+      </div>
+      <div class="qr-caption">Scan to get started</div>
+    </div>
+
+    <div class="cta-copy">
+      <h2 class="cta-headline">Ready to Simplify Your<br>Medication Routine?</h2>
+      <ul class="cta-list">
+        <li><span class="cta-num">1</span> Scan the QR code or visit the link below</li>
+        <li><span class="cta-num">2</span> Create a free account (email or Google)</li>
+        <li><span class="cta-num">3</span> Add your medications and set reminders</li>
+        <li><span class="cta-num">4</span> Use it for a week, then tell us what you think</li>
+      </ul>
+      <div class="url-bar">
+        <span>marinloop.com</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-badges">
+      <span>Free for Personal Use</span>
+      <span class="dot">&middot;</span>
+      <span>Installable PWA</span>
+      <span class="dot">&middot;</span>
+      <span>No Ad Tracking</span>
+      <span class="dot">&middot;</span>
+      <span>Full Data Export</span>
+    </div>
+    <div class="footer-legal">
+      MarinLoop is a personal tracking and reminder tool. Not a medical device,
+      not for emergency use. Always follow your provider's instructions.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

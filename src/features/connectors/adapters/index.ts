@@ -48,6 +48,8 @@ export function createAdapter(
       throw new Error('TikTok adapter is not yet implemented. Coming in a future phase.')
     case 'airtable':
       throw new Error('Airtable adapter is not yet implemented. Coming in a future phase.')
+    case 'telegram':
+      throw new Error('Telegram connector does not support publishing. Use the bot for messaging.')
     default: {
       const _exhaustive: never = platform
       throw new Error(`Unknown connector platform: ${String(_exhaustive)}`)

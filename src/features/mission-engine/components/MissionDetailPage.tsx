@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { MotionFadeIn, MotionStagger, MotionStaggerItem } from '@/components/nebula/motion'
 import { JobCard } from './JobCard'
 import { JobTree } from './JobTree'
@@ -179,6 +180,27 @@ export function MissionDetailPage({
     }
   }
 
+  const [retrying, setRetrying] = useState(false)
+
+  async function handleRetry() {
+    setError(null)
+    setRetrying(true)
+    try {
+      const res = await fetch(`/api/missions/${initialMission.id}/retry`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Retry failed')
+      setMissionStatus('running')
+      // Start polling again
+      if (pollRef.current) clearInterval(pollRef.current)
+      pollRef.current = setInterval(fetchUpdates, 2000)
+      await fetchUpdates()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   return (
     <MotionFadeIn className="p-6 space-y-6">
       {/* Header */}
@@ -225,6 +247,17 @@ export function MissionDetailPage({
               </p>
             )}
           </div>
+          {(missionStatus === 'paused' || missionStatus === 'failed') && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRetry}
+              disabled={retrying}
+              className="shrink-0"
+            >
+              {retrying ? 'Retrying…' : '↺ Retry Mission'}
+            </Button>
+          )}
         </div>
       </div>
 

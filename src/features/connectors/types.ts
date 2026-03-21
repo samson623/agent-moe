@@ -19,6 +19,7 @@ export type ConnectorPlatform =
   | 'notion'
   | 'airtable'
   | 'webhook'
+  | 'telegram'
 
 export type ConnectorStatus = 'connected' | 'disconnected' | 'error' | 'pending'
 
@@ -258,6 +259,17 @@ export const PLATFORM_CAPABILITIES: Record<ConnectorPlatform, PlatformCapabiliti
     supportsThreads: false,
     color: '#6366f1',
     iconText: 'WH',
+  },
+  telegram: {
+    platform: 'telegram',
+    displayName: 'Telegram',
+    authType: 'api_key',
+    supportedContentTypes: ['post', 'cta'],
+    supportsMedia: false,
+    supportsScheduling: false,
+    supportsThreads: false,
+    color: '#229ed9',
+    iconText: 'TG',
   },
 }
 

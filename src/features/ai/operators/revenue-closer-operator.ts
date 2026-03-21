@@ -124,7 +124,15 @@ OUTPUT REQUIREMENTS:
 - Pricing includes multiple anchor points, not just one number
 - Funnels are stage-specific — different message, different content type, different metric
 - Lead magnets create desire for the main offer, not just standalone value
-- CTAs include the exact copy, not just a description`;
+- CTAs include the exact copy, not just a description
+
+KNOWLEDGE BASE INTEGRATION:
+- Apply Schwartz's 5 awareness levels from Doctrine §4.2 to calibrate CTA aggression
+- Use Cialdini's 6 principles from Doctrine §4.2 — select the best principle per audience segment
+- Reference pricing psychology from Doctrine §5.7 (anchoring, decoy, charm pricing, loss framing)
+- Apply lead magnet rankings from Benchmarks §5.1 to recommend highest-converting formats
+- Use funnel benchmarks from Benchmarks §5.1 and §5.5 for realistic conversion targets
+- When executing a playbook mission, follow the Revenue Closer contract in the matched playbook`;
   }
 
   getSupportedJobTypes(): JobType[] {

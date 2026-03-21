@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { useCreateBrowserTask } from '../hooks/use-create-browser-task'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
 import { useCreateBrowserTaskSchedule } from '../hooks/use-create-browser-task-schedule'
+import { TASK_TYPE_CONFIG } from '../constants'
 import type { BrowserTaskType } from '../types'
 import { SchedulePicker, buildScheduleFromPicker } from './SchedulePicker'
 import type { ExecutionMode } from './SchedulePicker'
@@ -25,16 +26,11 @@ interface CreateBrowserTaskModalProps {
   onCreated?: () => void
 }
 
-const TASK_TYPES: Array<{ value: BrowserTaskType; label: string; description: string }> = [
-  { value: 'scrape',       label: 'Scrape',       description: 'Extract full page text, links, and HTML' },
-  { value: 'screenshot',   label: 'Screenshot',   description: 'Capture a full-page screenshot' },
-  { value: 'navigate',     label: 'Navigate',     description: 'Load a URL and capture page metadata' },
-  { value: 'extract_data', label: 'Extract Data', description: 'Pull specific fields using selectors' },
-  { value: 'click',        label: 'Click',        description: 'Click an element and capture result' },
-  { value: 'fill_form',    label: 'Fill Form',    description: 'Fill form fields with data' },
-  { value: 'submit_form',  label: 'Submit Form',  description: 'Fill and submit a form' },
-  { value: 'monitor',      label: 'Monitor',      description: 'Check a page for changes or metrics' },
-]
+const TASK_TYPES = Object.entries(TASK_TYPE_CONFIG).map(([value, cfg]) => ({
+  value: value as BrowserTaskType,
+  label: cfg.label,
+  description: cfg.description,
+}))
 
 const TIMEOUT_OPTIONS = [
   { value: 15000,  label: '15s' },
@@ -112,9 +108,9 @@ export function CreateBrowserTaskModal({
         instructions,
         priority,
         timeout_ms: timeoutMs,
-        config: (enableLiveView || enableRecording) ? {
-          ...(enableLiveView ? { enable_live_view: true } : {}),
-          ...(enableRecording ? { record: true, recording_quality: recordingQuality } : {}),
+        config: (enableLiveView || enableRecording || taskType === 'autonomous') ? {
+          ...(enableLiveView || taskType === 'autonomous' ? { enable_live_view: true } : {}),
+          ...(enableRecording || taskType === 'autonomous' ? { record: true, recording_quality: recordingQuality } : {}),
         } : undefined,
       })
 
@@ -230,12 +226,24 @@ export function CreateBrowserTaskModal({
                 {TASK_TYPES.map((t) => (
                   <button
                     key={t.value}
-                    onClick={() => setTaskType(t.value)}
+                    onClick={() => {
+                      setTaskType(t.value)
+                      if (t.value === 'autonomous') {
+                        setEnableLiveView(true)
+                        setEnableRecording(true)
+                        setShowAdvanced(true)
+                        setTimeoutMs(120000)
+                      }
+                    }}
                     className={cn(
                       'text-left px-3 py-2 rounded-[var(--radius)] border text-xs transition-all',
-                      taskType === t.value
-                        ? 'border-[var(--accent)] bg-[rgba(99,102,241,0.08)] text-[var(--accent)]'
-                        : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text)]'
+                      t.value === 'autonomous' && taskType === t.value
+                        ? 'border-[#a855f7] bg-[rgba(168,85,247,0.08)] text-[#a855f7] col-span-2'
+                        : t.value === 'autonomous'
+                          ? 'border-[var(--border)] text-[var(--text-muted)] hover:border-[#a855f7] hover:text-[#a855f7] col-span-2'
+                          : taskType === t.value
+                            ? 'border-[var(--accent)] bg-[rgba(99,102,241,0.08)] text-[var(--accent)]'
+                            : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text)]'
                     )}
                   >
                     <span className="font-semibold block">{t.label}</span>
@@ -251,7 +259,9 @@ export function CreateBrowserTaskModal({
               <textarea
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Describe what you want the agent to do on this page..."
+                placeholder={taskType === 'autonomous'
+                  ? "Tell the AI what to do, e.g. 'Find the pricing page and extract all plan details'"
+                  : "Describe what you want the agent to do on this page..."}
                 rows={3}
                 className={cn(
                   'w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]',

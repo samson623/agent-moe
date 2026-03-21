@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getBrowserTask, updateBrowserTask } from '@/lib/supabase/queries/browser-tasks'
 import { TaskExecutor } from '@/features/browser-agent/task-executor'
 import { registerExecutor, unregisterExecutor } from '@/features/browser-agent/executor-registry'
+import { cleanupStepEmitter } from '@/features/browser-agent/step-emitter'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,6 +59,7 @@ export async function POST(
       console.error('[TaskExecutor]', err)
     }).finally(() => {
       unregisterExecutor(id)
+      cleanupStepEmitter(id)
     })
 
     return NextResponse.json({ data: updated, queued: true })

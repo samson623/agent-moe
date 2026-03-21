@@ -2,7 +2,7 @@
  * BrowserRunner — Low-level Playwright execution engine
  *
  * Pure Playwright — no AI, no DB. Just drives a headless browser and returns
- * structured results. Handles all 8 browser task types.
+ * structured results. Handles all 9 browser task types (including autonomous).
  *
  * Import: `import { BrowserRunner } from '@/features/browser-agent/browser-runner'`
  * NOTE: Only import this server-side. Playwright is a Node.js-only library.
@@ -13,6 +13,8 @@ import type { BrowserTask, BrowserTaskResult, BrowserTaskConfig } from './types'
 import { Screencast } from './screencast'
 import type { ScreencastOptions } from './screencast'
 import { Recorder } from './recorder'
+import { AutonomousBrowser } from './autonomous-browser'
+import { emitStep } from './step-emitter'
 
 // ---------------------------------------------------------------------------
 // BrowserRunner
@@ -103,6 +105,9 @@ export class BrowserRunner {
           break
         case 'monitor':
           result = await this.monitor(page, task)
+          break
+        case 'autonomous':
+          result = await this.autonomous(page, task)
           break
         default:
           result = this.buildResult(false, { error: `Unknown task type: ${String(task.task_type)}` })
@@ -389,6 +394,47 @@ export class BrowserRunner {
           monitored_values: monitored,
           checked_at: new Date().toISOString(),
         },
+      })
+    } catch (err) {
+      return this.buildResult(false, { error: err instanceof Error ? err.message : String(err) })
+    }
+  }
+
+  private async autonomous(page: Page, task: BrowserTask): Promise<BrowserTaskResult> {
+    try {
+      // Navigate to the starting URL first
+      await this.navigateToUrl(page, task.url, task.config)
+
+      const agent = new AutonomousBrowser()
+      const autonomousResult = await agent.run(page, task.instructions, {
+        model: task.config.autonomous_model,
+        maxIterations: task.config.max_autonomous_iterations,
+        onStep: (step) => {
+          console.log(
+            `[BrowserRunner] Autonomous step ${step.step}: ${step.action}` +
+            (step.reasoning ? ` — ${step.reasoning.slice(0, 100)}` : '')
+          )
+          // Broadcast step to SSE subscribers
+          emitStep(task.id, step)
+        },
+      })
+
+      return this.buildResult(autonomousResult.success, {
+        page_title: autonomousResult.page_title,
+        final_url: autonomousResult.final_url,
+        text_content: autonomousResult.output,
+        error: autonomousResult.error,
+        data: {
+          total_steps: autonomousResult.total_steps,
+          total_duration_ms: autonomousResult.total_duration_ms,
+        },
+        autonomous_steps: autonomousResult.steps.map((s) => ({
+          step: s.step,
+          action: s.action,
+          reasoning: s.reasoning,
+          duration_ms: s.duration_ms,
+        })),
+        autonomous_output: autonomousResult.output,
       })
     } catch (err) {
       return this.buildResult(false, { error: err instanceof Error ? err.message : String(err) })

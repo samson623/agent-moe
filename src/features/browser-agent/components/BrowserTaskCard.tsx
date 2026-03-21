@@ -1,47 +1,15 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import {
-  Globe,
-  Camera,
-  MousePointer,
-  FileText,
-  Search,
-  Monitor,
-  Send,
-  Navigation,
-  ChevronRight,
-  RefreshCw,
-  Film,
-  Radio,
-} from 'lucide-react'
+import { ChevronRight, RefreshCw, Film, Radio } from 'lucide-react'
 import { useExecuteBrowserTask } from '../hooks/use-execute-browser-task'
-import type { BrowserTask, BrowserTaskType, BrowserTaskStatus } from '../types'
+import { TASK_TYPE_CONFIG, STATUS_CONFIG } from '../constants'
+import type { BrowserTask } from '../types'
 
 interface BrowserTaskCardProps {
   task: BrowserTask
   onClick?: () => void
   onActionComplete?: () => void
-}
-
-const TASK_TYPE_CONFIG: Record<BrowserTaskType, { label: string; Icon: React.ElementType; color: string }> = {
-  scrape:       { label: 'Scrape',       Icon: Globe,         color: '#6366f1' },
-  screenshot:   { label: 'Screenshot',   Icon: Camera,        color: '#8b5cf6' },
-  click:        { label: 'Click',        Icon: MousePointer,  color: '#f59e0b' },
-  fill_form:    { label: 'Fill Form',    Icon: FileText,      color: '#3b82f6' },
-  navigate:     { label: 'Navigate',     Icon: Navigation,    color: '#10b981' },
-  monitor:      { label: 'Monitor',      Icon: Monitor,       color: '#ec4899' },
-  extract_data: { label: 'Extract Data', Icon: Search,        color: '#14b8a6' },
-  submit_form:  { label: 'Submit Form',  Icon: Send,          color: '#f97316' },
-}
-
-const STATUS_CONFIG: Record<BrowserTaskStatus, { label: string; color: string; pulse?: boolean }> = {
-  pending:   { label: 'Pending',   color: '#f59e0b' },
-  running:   { label: 'Running',   color: '#3b82f6', pulse: true },
-  completed: { label: 'Completed', color: '#10b981' },
-  failed:    { label: 'Failed',    color: '#ef4444' },
-  cancelled: { label: 'Cancelled', color: '#6b7280' },
-  timeout:   { label: 'Timeout',   color: '#f97316' },
 }
 
 function truncateUrl(url: string, max = 50): string {

@@ -135,7 +135,15 @@ REVIEW PRINCIPLES:
 
 OUTPUT FORMAT:
 Always return the approved/rejected decision, risk level, specific flags, and tonal score.
-Include revised content when you can make it better while keeping the core message.`;
+Include revised content when you can make it better while keeping the core message.
+
+KNOWLEDGE BASE INTEGRATION:
+- Enforce brand identity standards from Doctrine §1.3 (visual identity, archetypes, tone dimensions)
+- Apply E-E-A-T principles from Doctrine §3.1 when reviewing claims for credibility
+- Reference platform algorithm rules from Doctrine §3.3 for platform-specific compliance
+- Check deliverability rules from Doctrine §3.4 for email content reviews
+- Use confidence label rules from Agent Rules §5 — block LOW confidence content from public channels
+- When reviewing playbook mission output, follow the Brand Guardian contract in the matched playbook`;
   }
 
   getSupportedJobTypes(): JobType[] {

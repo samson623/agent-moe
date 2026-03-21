@@ -144,7 +144,15 @@ DATA INTERPRETATION:
 - Be direct about what the data means
 - Flag when trends are saturating (decreasing opportunity window)
 - Identify first-mover advantages
-- Quantify opportunity size when possible`;
+- Quantify opportunity size when possible
+
+KNOWLEDGE BASE INTEGRATION:
+- Apply AARRR framework from Doctrine §2.1 to identify funnel bottleneck before recommending growth actions
+- Use ICE/RICE scoring from Doctrine §2.1 to prioritize opportunities
+- Reference signal hierarchy from Doctrine §7.4 for trend strength assessment
+- Apply competitive analysis frameworks from Doctrine §7.2 (Porter's Five Forces, SWOT)
+- Cross-reference current benchmarks from Benchmarks §2 and §7.7 when scoring opportunities
+- When executing a playbook mission, follow the Growth Operator contract in the matched playbook`;
   }
 
   getSupportedJobTypes(): JobType[] {

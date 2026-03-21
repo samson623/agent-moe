@@ -48,10 +48,3 @@ export function hasExecutor(taskId: string): boolean {
 export function getActiveCount(): number {
   return registry.size
 }
-
-/**
- * Get all active task IDs (for debugging / monitoring).
- */
-export function getActiveTaskIds(): string[] {
-  return Array.from(registry.keys())
-}

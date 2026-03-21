@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { STATUS_OPTIONS, TASK_TYPE_OPTIONS } from '../constants'
 import type { BrowserTaskStatus, BrowserTaskType } from '../types'
 
 interface BrowserTaskFiltersProps {
@@ -12,28 +13,6 @@ interface BrowserTaskFiltersProps {
   onUrlSearchChange: (v: string) => void
   activeCount: number
 }
-
-const STATUS_OPTIONS: Array<{ value: BrowserTaskStatus | 'all'; label: string }> = [
-  { value: 'all',       label: 'All' },
-  { value: 'pending',   label: 'Pending' },
-  { value: 'running',   label: 'Running' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'failed',    label: 'Failed' },
-  { value: 'timeout',   label: 'Timeout' },
-  { value: 'cancelled', label: 'Cancelled' },
-]
-
-const TYPE_OPTIONS: Array<{ value: BrowserTaskType | 'all'; label: string }> = [
-  { value: 'all',          label: 'All Types' },
-  { value: 'scrape',       label: 'Scrape' },
-  { value: 'screenshot',   label: 'Screenshot' },
-  { value: 'navigate',     label: 'Navigate' },
-  { value: 'extract_data', label: 'Extract' },
-  { value: 'click',        label: 'Click' },
-  { value: 'fill_form',    label: 'Fill Form' },
-  { value: 'submit_form',  label: 'Submit' },
-  { value: 'monitor',      label: 'Monitor' },
-]
 
 function FilterPill({
   active,
@@ -91,7 +70,7 @@ export function BrowserTaskFilters({
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-[var(--text-muted)] font-medium w-14 shrink-0">Type</span>
           <div className="flex gap-1.5 flex-wrap">
-            {TYPE_OPTIONS.map((opt) => (
+            {TASK_TYPE_OPTIONS.map((opt) => (
               <FilterPill
                 key={opt.value}
                 active={taskType === opt.value}

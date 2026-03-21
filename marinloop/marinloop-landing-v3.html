@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarinLoop — Medication Adherence & Daily Care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #060709;
+    --bg-raised: #0c0d12;
+    --bg-card: #0f1017;
+    --bg-card-hover: #14151e;
+    --text: #e8e8ed;
+    --text-secondary: #9c9caa;
+    --text-tertiary: #5e5e6e;
+    --accent: #2dd4a8;
+    --accent-secondary: #06b6d4;
+    --accent-glow: rgba(45, 212, 168, 0.35);
+    --accent-dim: rgba(45, 212, 168, 0.08);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --radius: 16px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font: 'Lexend', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', Consolas, monospace;
+  }
+
+  html.light {
+    --bg: #f8f8fa;
+    --bg-raised: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f2f2f5;
+    --text: #111118;
+    --text-secondary: #55555e;
+    --text-tertiary: #8e8e9a;
+    --accent: #0d9668;
+    --accent-secondary: #0891b2;
+    --accent-glow: rgba(13, 150, 104, 0.25);
+    --accent-dim: rgba(13, 150, 104, 0.06);
+    --border: rgba(0,0,0,0.07);
+    --border-hover: rgba(0,0,0,0.14);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background 0.5s, color 0.3s;
+  }
+
+  /* ═══ NOISE TEXTURE ═══ */
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+  }
+
+  /* ═══ AURORA BACKGROUND ═══ */
+  .aurora {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .aurora-orb {
+    position: absolute; border-radius: 50%; filter: blur(100px);
+    animation: aurora-drift 20s ease-in-out infinite alternate;
+  }
+  .aurora-orb:nth-child(1) {
+    width: 700px; height: 700px; top: -20%; left: 10%;
+    background: radial-gradient(circle, rgba(45,212,168,0.12) 0%, transparent 70%);
+  }
+  .aurora-orb:nth-child(2) {
+    width: 500px; height: 500px; top: 30%; right: -5%;
+    background: radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%);
+    animation-delay: -5s; animation-duration: 25s;
+  }
+  .aurora-orb:nth-child(3) {
+    width: 600px; height: 600px; bottom: -10%; left: 30%;
+    background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+    animation-delay: -10s; animation-duration: 30s;
+  }
+  html.light .aurora-orb:nth-child(1) { background: radial-gradient(circle, rgba(13,150,104,0.08) 0%, transparent 70%); }
+  html.light .aurora-orb:nth-child(2) { background: radial-gradient(circle, rgba(8,145,178,0.06) 0%, transparent 70%); }
+  html.light .aurora-orb:nth-child(3) { background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%); }
+  @keyframes aurora-drift {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 30px) scale(0.95); }
+    100% { transform: translate(10px, -10px) scale(1.02); }
+  }
+
+  /* ═══ GRID PATTERN ═══ */
+  .grid-pattern {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, black 20%, transparent 70%);
+    opacity: 0.4;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  /* ═══ NAV ═══ */
+  nav {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100;
+    max-width: 900px; width: calc(100% - 32px);
+    background: rgba(12,13,18,0.7);
+    backdrop-filter: blur(24px) saturate(1.2); -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 0 24px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.5s, border 0.3s;
+  }
+  html.light nav { background: rgba(255,255,255,0.75); }
+  nav:hover { border-color: var(--border-hover); }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-icon {
+    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; color: #000;
+  }
+  .nav-icon svg { width: 18px; height: 18px; }
+  .nav-name { font-weight: 700; font-size: 0.95rem; letter-spacing: -0.01em; }
+  .nav-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+    background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px;
+  }
+  .nav-center { display: flex; align-items: center; gap: 6px; }
+  .nav-center a {
+    text-decoration: none; color: var(--text-tertiary); font-size: 0.82rem; font-weight: 500;
+    padding: 6px 14px; border-radius: 8px; transition: all var(--transition);
+  }
+  .nav-center a:hover { color: var(--text); background: var(--accent-dim); }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .btn-theme {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; cursor: pointer; color: var(--text-tertiary); font-size: 1rem;
+    display: flex; align-items: center; justify-content: center; transition: all var(--transition);
+  }
+  .btn-theme:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-cta-nav {
+    background: var(--accent); color: #000; border: none; padding: 8px 20px;
+    border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    font-family: var(--font); transition: all var(--transition); letter-spacing: -0.01em;
+  }
+  .btn-cta-nav:hover { box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-1px); }
+
+  /* ═══ HERO ═══ */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 120px 24px 80px;
+    position: relative;
+  }
+  .hero-glow {
+    position: absolute; width: 600px; height: 600px; top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    filter: blur(80px); pointer-events: none;
+    animation: hero-pulse 8s ease-in-out infinite alternate;
+  }
+  @keyframes hero-pulse {
+    0% { opacity: 0.4; transform: translate(-50%, -60%) scale(1); }
+    100% { opacity: 0.7; transform: translate(-50%, -60%) scale(1.15); }
+  }
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px;
+    padding: 6px 18px 6px 10px; font-size: 0.8rem; color: var(--text-secondary);
+    margin-bottom: 32px; position: relative;
+  }
+  .hero-pill-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: dot-pulse 2.5s infinite; }
+  @keyframes dot-pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); } 50% { opacity: 0.6; box-shadow: 0 0 0 6px transparent; } }
+  .hero h1 {
+    font-size: clamp(2.8rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.05;
+    letter-spacing: -0.04em; margin-bottom: 24px; max-width: 800px; position: relative;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 50%, #818cf8 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-flow 6s ease infinite;
+  }
+  @keyframes gradient-flow {
+    0%,100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .hero .subtitle {
+    font-size: clamp(1rem, 1.5vw, 1.2rem); color: var(--text-secondary); max-width: 560px;
+    margin: 0 auto 16px; line-height: 1.7; font-weight: 400;
+  }
+  .hero .disclaimer {
+    font-size: 0.75rem; color: var(--text-tertiary); max-width: 520px;
+    margin: 0 auto 40px; line-height: 1.7; opacity: 0.8;
+  }
+  .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+  .btn-primary {
+    background: var(--accent); color: #000; border: none; padding: 14px 36px;
+    border-radius: var(--radius-xs); font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    font-family: var(--font); transition: all var(--transition); letter-spacing: -0.01em;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+    background-size: 200% 100%; animation: shimmer 3s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .btn-primary:hover { box-shadow: 0 0 40px var(--accent-glow), 0 4px 20px rgba(0,0,0,0.3); transform: translateY(-2px); }
+  .btn-secondary {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+    padding: 13px 32px; border-radius: var(--radius-xs); font-size: 0.9rem; font-weight: 500;
+    cursor: pointer; font-family: var(--font); transition: all var(--transition);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* ═══ PRODUCT PREVIEW ═══ */
+  .preview-wrap {
+    max-width: 1000px; margin: -40px auto 0; padding: 0 24px; position: relative;
+  }
+  .preview-outer {
+    position: relative; padding: 1px; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(45,212,168,0.2), rgba(6,182,212,0.15), rgba(99,102,241,0.1));
+  }
+  .preview-frame {
+    background: var(--bg-raised); border-radius: 19px; overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  html.light .preview-frame { box-shadow: 0 40px 80px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05); }
+  .preview-chrome {
+    display: flex; align-items: center; gap: 8px; padding: 14px 18px;
+    border-bottom: 1px solid var(--border); background: var(--bg-card);
+  }
+  .pdot { width: 10px; height: 10px; border-radius: 50%; }
+  .pdot.r { background: #ff5f57; } .pdot.y { background: #febc2e; } .pdot.g { background: #28c840; }
+  .purl {
+    flex: 1; margin-left: 12px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 14px; font-size: 0.72rem; color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+  .preview-body { padding: 24px; }
+
+  /* Mock App */
+  .mock { display: grid; grid-template-columns: 190px 1fr; gap: 16px; min-height: 360px; }
+  .mock-side {
+    background: var(--bg); border-radius: var(--radius-sm); padding: 16px 12px;
+    display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--border);
+  }
+  .mock-side-hdr { font-weight: 700; font-size: 0.82rem; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; color: var(--text); }
+  .mock-side-hdr .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 3px; }
+  .mock-nav {
+    padding: 8px 11px; border-radius: 7px; font-size: 0.78rem; color: var(--text-tertiary);
+    display: flex; align-items: center; gap: 8px; transition: all 0.15s;
+  }
+  .mock-nav.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .mock-main { display: flex; flex-direction: column; gap: 12px; }
+  .mock-topbar { display: flex; align-items: center; justify-content: space-between; }
+  .mock-topbar h3 { font-size: 0.95rem; font-weight: 700; }
+  .mock-topbar .dpill { font-size: 0.7rem; color: var(--text-tertiary); background: var(--bg); padding: 5px 12px; border-radius: 6px; font-family: var(--mono); border: 1px solid var(--border); }
+
+  .adh-bar { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); }
+  .adh-label { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+  .adh-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+  html.light .adh-track { background: rgba(0,0,0,0.06); }
+  .adh-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); border-radius: 100px; transition: width 2s cubic-bezier(0.4,0,0.2,1); }
+  .adh-pct { font-size: 0.82rem; font-weight: 700; color: var(--accent); min-width: 34px; font-family: var(--mono); }
+
+  .med-list { display: flex; flex-direction: column; gap: 6px; }
+  .med-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    background: var(--bg); border-radius: var(--radius-xs); border: 1px solid var(--border);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .med-row:hover { border-color: var(--accent); transform: translateX(3px); }
+  .med-t { font-size: 0.7rem; color: var(--text-tertiary); font-weight: 600; min-width: 52px; font-family: var(--mono); }
+  .med-ic { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+  .med-ic.a { background: rgba(45,212,168,0.1); } .med-ic.b { background: rgba(6,182,212,0.1); }
+  .med-ic.c { background: rgba(129,140,248,0.1); } .med-ic.d { background: rgba(251,191,36,0.1); }
+  .med-inf { flex: 1; }
+  .med-nm { font-weight: 600; font-size: 0.82rem; }
+  .med-ds { font-size: 0.7rem; color: var(--text-tertiary); }
+  .med-st { padding: 3px 10px; border-radius: 100px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .med-st.done { background: rgba(45,212,168,0.1); color: var(--accent); }
+  .med-st.next { background: rgba(251,191,36,0.1); color: #fbbf24; }
+
+  /* ═══ SECTION SHARED ═══ */
+  section { padding: 120px 24px; position: relative; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--accent); margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800;
+    letter-spacing: -0.03em; margin-bottom: 14px; line-height: 1.15;
+  }
+  .section-sub {
+    font-size: 1rem; color: var(--text-secondary); max-width: 520px;
+    line-height: 1.7; margin-bottom: 56px; font-weight: 400;
+  }
+  .section-divider {
+    height: 1px; max-width: 1100px; margin: 0 auto;
+    background: linear-gradient(90deg, transparent, var(--border-hover), transparent);
+  }
+
+  /* ═══ BENTO GRID ═══ */
+  .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .bento-card {
+    position: relative; padding: 1px; border-radius: var(--radius); overflow: hidden;
+    background: var(--border);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bento-card:hover {
+    background: linear-gradient(135deg, rgba(45,212,168,0.3), rgba(6,182,212,0.2));
+  }
+  .bento-inner {
+    background: var(--bg-card); border-radius: calc(var(--radius) - 1px);
+    padding: 32px; height: 100%;
+    transition: background var(--transition);
+  }
+  .bento-card:hover .bento-inner { background: var(--bg-card-hover); }
+  .bento-card.wide { grid-column: span 2; }
+  .bento-icon {
+    width: 44px; height: 44px; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.3rem;
+    margin-bottom: 18px; background: var(--accent-dim);
+    border: 1px solid rgba(45,212,168,0.1);
+  }
+  .bento-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .bento-card p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.65; }
+
+  /* ═══ HOW IT WORKS ═══ */
+  .steps-section { background: var(--bg-raised); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; position: relative; }
+  .steps::before {
+    content: ''; position: absolute; top: 32px; left: 16%; right: 16%; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary), #818cf8);
+    opacity: 0.2; border-radius: 2px;
+  }
+  .step { text-align: center; }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; color: var(--accent);
+    background: var(--accent-dim); border: 2px solid rgba(45,212,168,0.2);
+    position: relative; z-index: 1;
+  }
+  .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .step p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.65; max-width: 280px; margin: 0 auto; }
+
+  /* ═══ TRUST ═══ */
+  .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .trust-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px; transition: all var(--transition);
+  }
+  .trust-card:hover { border-color: var(--border-hover); }
+  .trust-card .t-icon { font-size: 1.5rem; margin-bottom: 14px; }
+  .trust-card h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; }
+  .trust-card p { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; }
+
+  /* ═══ CTA ═══ */
+  .cta {
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-glow {
+    position: absolute; width: 500px; height: 500px; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    filter: blur(80px); pointer-events: none; opacity: 0.5;
+  }
+  .cta h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 14px; letter-spacing: -0.03em; position: relative; }
+  .cta p { font-size: 1rem; color: var(--text-secondary); max-width: 440px; margin: 0 auto 32px; position: relative; }
+
+  /* ═══ FOOTER ═══ */
+  footer { padding: 48px 24px; border-top: 1px solid var(--border); }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-left { display: flex; align-items: center; gap: 8px; }
+  .footer-left .nav-icon { width: 24px; height: 24px; border-radius: 6px; }
+  .footer-left .nav-icon svg { width: 14px; height: 14px; }
+  .footer-left span { font-weight: 700; font-size: 0.85rem; }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { text-decoration: none; color: var(--text-tertiary); font-size: 0.8rem; transition: color var(--transition); }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-copy { font-size: 0.72rem; color: var(--text-tertiary); }
+  .footer-disc {
+    max-width: 1100px; margin: 20px auto 0; font-size: 0.68rem; color: var(--text-tertiary);
+    line-height: 1.7; text-align: center; opacity: 0.7;
+  }
+
+  /* ═══ ANIMATIONS ═══ */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal.d1 { transition-delay: 0.08s; } .reveal.d2 { transition-delay: 0.16s; }
+  .reveal.d3 { transition-delay: 0.24s; } .reveal.d4 { transition-delay: 0.32s; }
+  .reveal.d5 { transition-delay: 0.4s; }  .reveal.d6 { transition-delay: 0.48s; }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 900px) {
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .bento-card.wide { grid-column: span 1; }
+    .trust-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: 1fr; gap: 40px; }
+    .steps::before { display: none; }
+  }
+  @media (max-width: 640px) {
+    .nav-center { display: none; }
+    .bento { grid-template-columns: 1fr; }
+    .trust-grid { grid-template-columns: 1fr; }
+    .mock { grid-template-columns: 1fr; }
+    .mock-side { display: none; }
+    .hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+    nav { padding: 0 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- Aurora background -->
+  <div class="aurora">
+    <div class="aurora-orb"></div>
+    <div class="aurora-orb"></div>
+    <div class="aurora-orb"></div>
+  </div>
+  <div class="grid-pattern"></div>
+
+  <div class="content">
+    <!-- NAV -->
+    <nav>
+      <div class="nav-left">
+        <div class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h6l4 4v12H7z"/><path d="M9 13h6M9 17h4M13 4v4h4"/></svg>
+        </div>
+        <span class="nav-name">MarinLoop</span>
+        <span class="nav-badge">BETA</span>
+      </div>
+      <div class="nav-center">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#trust">Trust</a>
+      </div>
+      <div class="nav-right">
+        <button class="btn-theme" id="themeBtn" aria-label="Toggle theme">&#9789;</button>
+        <button class="btn-cta-nav">Get Started</button>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-pill reveal">
+        <div class="hero-pill-dot"></div>
+        Open beta &mdash; free to use
+      </div>
+      <h1 class="reveal d1">
+        Your medications,<br>
+        <span class="gradient-text">on track every day.</span>
+      </h1>
+      <p class="subtitle reveal d2">
+        Track doses, log vitals, coordinate with caregivers, and get timely reminders&nbsp;&mdash; all in one installable app that works offline.
+      </p>
+      <p class="disclaimer reveal d3">
+        MarinLoop is a personal tracking and reminder tool. It is not a medical device, not for emergency use, and not offered in this beta for covered-entity workflows requiring HIPAA business associate agreements.
+      </p>
+      <div class="hero-buttons reveal d4">
+        <button class="btn-primary">Sign up free &rarr;</button>
+        <button class="btn-secondary">Review trust center</button>
+      </div>
+    </section>
+
+    <!-- PRODUCT PREVIEW -->
+    <div class="preview-wrap reveal">
+      <div class="preview-outer">
+        <div class="preview-frame">
+          <div class="preview-chrome">
+            <div class="pdot r"></div><div class="pdot y"></div><div class="pdot g"></div>
+            <div class="purl">marinloop.com/timeline</div>
+          </div>
+          <div class="preview-body">
+            <div class="mock">
+              <div class="mock-side">
+                <div class="mock-side-hdr"><div class="dot"></div> MarinLoop</div>
+                <div class="mock-nav active">&#128339; Timeline</div>
+                <div class="mock-nav">&#128138; Medications</div>
+                <div class="mock-nav">&#128197; Appointments</div>
+                <div class="mock-nav">&#128200; Health</div>
+                <div class="mock-nav">&#128101; Care Network</div>
+                <div class="mock-nav">&#128100; Profile</div>
+              </div>
+              <div class="mock-main">
+                <div class="mock-topbar">
+                  <h3>Today's Timeline</h3>
+                  <div class="dpill">Tue, Mar 18</div>
+                </div>
+                <div class="adh-bar">
+                  <div class="adh-label">Today's Adherence</div>
+                  <div class="adh-track"><div class="adh-fill" id="adhFill" style="width:0%"></div></div>
+                  <div class="adh-pct" id="adhPct">0%</div>
+                </div>
+                <div class="med-list">
+                  <div class="med-row" onclick="toggleMed(this)">
+                    <div class="med-t">8:00 AM</div>
+                    <div class="med-ic a">&#128138;</div>
+                    <div class="med-inf"><div class="med-nm">Lisinopril</div><div class="med-ds">10mg &middot; 1 tablet</div></div>
+                    <div class="med-st done">&#10003; Done</div>
+                  </div>
+                  <div class="med-row" onclick="toggleMed(this)">
+                    <div class="med-t">8:00 AM</div>
+                    <div class="med-ic b">&#128138;</div>
+                    <div class="med-inf"><div class="med-nm">Metformin</div><div class="med-ds">500mg &middot; 1 tablet</div></div>
+                    <div class="med-st done">&#10003; Done</div>
+                  </div>
+                  <div class="med-row" onclick="toggleMed(this)">
+                    <div class="med-t">12:00 PM</div>
+                    <div class="med-ic c">&#128138;</div>
+                    <div class="med-inf"><div class="med-nm">Vitamin D3</div><div class="med-ds">2000 IU &middot; 1 softgel</div></div>
+                    <div class="med-st next">&#9200; Next</div>
+                  </div>
+                  <div class="med-row" onclick="toggleMed(this)">
+                    <div class="med-t">9:00 PM</div>
+                    <div class="med-ic d">&#128138;</div>
+                    <div class="med-inf"><div class="med-nm">Melatonin</div><div class="med-ds">3mg &middot; 1 tablet</div></div>
+                    <div class="med-st next">&#9200; Upcoming</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 120px;"></div>
+    <div class="section-divider"></div>
+
+    <!-- FEATURES (BENTO GRID) -->
+    <section id="features">
+      <div class="section-inner">
+        <div class="section-label reveal">Features</div>
+        <h2 class="section-title reveal d1">Everything you need to<br>stay on track.</h2>
+        <p class="section-sub reveal d2">Built for patients managing daily medications and caregivers who need visibility into routines.</p>
+        <div class="bento">
+          <div class="bento-card wide reveal">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128339;</div>
+              <h3>Daily Timeline</h3>
+              <p>See every scheduled dose with a live adherence ring. Tap to log, navigate between days, and get FDA-sourced catch-up guidance for late doses. Voice commands let you log hands-free.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d1">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128276;</div>
+              <h3>Reminders &amp; Notifications</h3>
+              <p>Server-dispatched push notifications for doses and refills. Create reminders with quick presets or custom times. Snooze, mark taken, or dismiss right from the notification.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d2">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128138;</div>
+              <h3>Medication Management</h3>
+              <p>Add medications manually or scan a label with AI. Track schedules, refill quantities, supply levels, and discontinuation history. Active and archived views.</p>
+            </div>
+          </div>
+          <div class="bento-card wide reveal d3">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128200;</div>
+              <h3>Health Tracking</h3>
+              <p>Log vitals (blood pressure, glucose, weight, heart rate), journal entries with mood, symptoms, and notes. View adherence charts, streak tracking, refill predictions, and miss-pattern analysis. Everything in one Health dashboard.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d4">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128101;</div>
+              <h3>Care Network</h3>
+              <p>Add providers by specialty, invite caregivers with role-based access, and manage emergency contacts. Shareable ICE card with QR code.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d5">
+            <div class="bento-inner">
+              <div class="bento-icon">&#129302;</div>
+              <h3>AI Assistant</h3>
+              <p>Ask about interactions, side effects, or schedules. Scan labels with your camera. All AI is opt-in, consent-gated, and runs server-side. Revoke anytime.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d6">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128241;</div>
+              <h3>Installable PWA</h3>
+              <p>Add to your home screen on any device. Works offline with local action queuing and automatic sync. No app store required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works" class="steps-section">
+      <div class="section-inner" style="text-align: center;">
+        <div class="section-label reveal">How It Works</div>
+        <h2 class="section-title reveal d1" style="margin-left:auto;margin-right:auto;">Up and running in minutes.</h2>
+        <p class="section-sub reveal d2" style="margin-left:auto;margin-right:auto;">No app store download. No insurance forms. Works on any device.</p>
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step-num">1</div>
+            <h3>Create your account</h3>
+            <p>Sign up with email or Google. Accept the beta terms, choose your AI preferences, and add MarinLoop to your home screen.</p>
+          </div>
+          <div class="step reveal d1">
+            <div class="step-num">2</div>
+            <h3>Add your medications</h3>
+            <p>Enter medications manually or scan a prescription label with AI. Set doses, times, quantities, and reminder preferences.</p>
+          </div>
+          <div class="step reveal d2">
+            <div class="step-num">3</div>
+            <h3>Build your routine</h3>
+            <p>Log doses on the timeline, track vitals, invite caregivers, and let push reminders keep you on schedule every day.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- TRUST & SAFETY -->
+    <section id="trust">
+      <div class="section-inner">
+        <div class="section-label reveal">Trust &amp; Safety</div>
+        <h2 class="section-title reveal d1">Built with clear boundaries.</h2>
+        <p class="section-sub reveal d2">We tell you exactly what MarinLoop is — and what it isn't.</p>
+        <div class="trust-grid">
+          <div class="trust-card reveal">
+            <div class="t-icon">&#9989;</div>
+            <h3>What MarinLoop Is</h3>
+            <p>A personal medication-management workflow for reminders, adherence tracking, vitals logging, and caregiver coordination.</p>
+          </div>
+          <div class="trust-card reveal d1">
+            <div class="t-icon">&#10060;</div>
+            <h3>What It Is Not</h3>
+            <p>Not a diagnostic tool, not a clinician substitute, not an emergency alerting system, and not a HIPAA deployment for covered-entity workflows in this beta.</p>
+          </div>
+          <div class="trust-card reveal d2">
+            <div class="t-icon">&#129302;</div>
+            <h3>Optional AI</h3>
+            <p>AI features are opt-in and revocable. Core medication tracking, reminders, and adherence work without AI enabled.</p>
+          </div>
+          <div class="trust-card reveal d3">
+            <div class="t-icon">&#128274;</div>
+            <h3>Row-Level Security</h3>
+            <p>Your data is isolated at the database level with Supabase RLS. No other user can access your records.</p>
+          </div>
+          <div class="trust-card reveal d4">
+            <div class="t-icon">&#128230;</div>
+            <h3>Data Portability</h3>
+            <p>Export all your health data as JSON or delete your account and data entirely — anytime, from your profile.</p>
+          </div>
+          <div class="trust-card reveal d5">
+            <div class="t-icon">&#128220;</div>
+            <h3>In-App Legal</h3>
+            <p>Terms of service, privacy policy, and trust center accessible inside the app with consent gating on first use.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- UNDER THE HOOD -->
+    <section>
+      <div class="section-inner">
+        <div class="section-label reveal">Under the Hood</div>
+        <h2 class="section-title reveal d1">Built for trust, not just features.</h2>
+        <p class="section-sub reveal d2">The details that matter when health data is involved.</p>
+        <div class="bento">
+          <div class="bento-card reveal">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128018;</div>
+              <h3>Drug Safety Lookups</h3>
+              <p>Real-time interaction checks and allergy alerts via NIH RxNav and OpenFDA. No personal data is transmitted to these services.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d1">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128272;</div>
+              <h3>Privacy by Design</h3>
+              <p>HTTPS-only transport, encryption at rest, Sentry error reporting with PII scrubbing, and AI keys that never touch the client.</p>
+            </div>
+          </div>
+          <div class="bento-card reveal d2">
+            <div class="bento-inner">
+              <div class="bento-icon">&#128488;</div>
+              <h3>Built-in Feedback</h3>
+              <p>Report bugs, suggest features, or share general thoughts right inside the app. Your feedback is saved with route and device context automatically.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- CTA -->
+    <section class="cta" id="cta">
+      <div class="cta-glow"></div>
+      <div class="section-inner" style="text-align: center; position: relative;">
+        <h2 class="reveal">Ready to simplify your medication routine?</h2>
+        <p class="reveal d1">Join the open beta. Free, no credit card, no commitment.</p>
+        <div class="reveal d2" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn-primary">Sign up free &rarr;</button>
+          <button class="btn-secondary">Review trust center</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-inner">
+        <div class="footer-left">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h6l4 4v12H7z"/><path d="M9 13h6M9 17h4M13 4v4h4"/></svg>
+          </div>
+          <span>MarinLoop</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Terms</a>
+          <a href="#">Privacy</a>
+          <a href="#">Trust Center</a>
+          <a href="mailto:admin@marinloop.com">Contact</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 MarinLoop. All rights reserved.</div>
+      </div>
+      <div class="footer-disc">
+        MarinLoop is a personal tracking and reminder product. It is not a medical device, does not provide clinical advice, and is not offered in this beta as a HIPAA-regulated deployment for covered-entity workflows. AI-assisted features are optional informational tools only and do not constitute medical recommendations. In a medical emergency, call 911 or your local emergency number. Always follow your healthcare provider's instructions.
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Theme
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    btn.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      html.classList.toggle('light');
+      btn.textContent = html.classList.contains('dark') ? '☽' : '☀';
+    });
+
+    // Scroll reveal
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // Adherence animation
+    setTimeout(() => {
+      document.getElementById('adhFill').style.width = '50%';
+      document.getElementById('adhPct').textContent = '50%';
+    }, 1200);
+
+    // Med toggle
+    function toggleMed(row) {
+      const st = row.querySelector('.med-st');
+      if (st.classList.contains('next')) {
+        st.classList.remove('next'); st.classList.add('done');
+        st.innerHTML = '&#10003; Done';
+      } else if (st.classList.contains('done')) {
+        st.classList.remove('done'); st.classList.add('next');
+        st.innerHTML = '&#9200; Upcoming';
+      }
+      updateAdh();
+    }
+    function updateAdh() {
+      const total = document.querySelectorAll('.med-row').length;
+      const done = document.querySelectorAll('.med-st.done').length;
+      const pct = Math.round((done / total) * 100);
+      document.getElementById('adhFill').style.width = pct + '%';
+      document.getElementById('adhPct').textContent = pct + '%';
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const t = document.querySelector(a.getAttribute('href'));
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>
