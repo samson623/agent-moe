@@ -32,8 +32,9 @@ function formatPlatformName(platform: string): string {
 }
 
 export function ContentPerformancePanel({ data, isLoading }: ContentPerformancePanelProps) {
-  const maxPlatformCount = data
-    ? Math.max(...data.by_platform.map((p) => p.count), 1)
+  const byPlatform = Array.isArray(data?.by_platform) ? data.by_platform : []
+  const maxPlatformCount = byPlatform.length > 0
+    ? Math.max(...byPlatform.map((p) => p.count), 1)
     : 1
 
   return (
@@ -93,10 +94,10 @@ export function ContentPerformancePanel({ data, isLoading }: ContentPerformanceP
               <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3">
                 By Platform
               </p>
-              {data.by_platform.length === 0 ? (
+              {byPlatform.length === 0 ? (
                 <p className="text-xs text-[var(--text-muted)]">No platform data.</p>
               ) : (
-                data.by_platform.map((item) => {
+                byPlatform.map((item) => {
                   const pct = Math.round((item.count / maxPlatformCount) * 100)
                   return (
                     <div key={item.platform} className="space-y-0.5">

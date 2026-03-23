@@ -15,6 +15,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { JobType, Platform } from '@/features/ai/types'
 import type { ModelChoice } from '@/features/ai/types'
 import type { Database, Json } from '@/lib/supabase/types'
+import { notifyAssetCreated, notifyApprovalNeeded } from '@/features/telegram/notifier'
 
 // ---------------------------------------------------------------------------
 // DB type aliases
@@ -327,6 +328,8 @@ export async function createAssetFromJobOutput(
       return { data: null, error: error.message }
     }
 
+    notifyAssetCreated(missionId, title, assetType).catch(() => {})
+
     return { data: data as AssetRow, error: null }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
@@ -362,19 +365,17 @@ export async function createApprovalIfNeeded(
     const flags = Array.isArray(record.flags) ? record.flags : []
     const riskLevel = typeof record.riskLevel === 'string' ? record.riskLevel : null
 
-    if (approved === true && flags.length === 0) {
-      return { data: null, error: null }
-    }
-
-    if (typeof approved !== 'boolean' && flags.length === 0) {
-      return { data: null, error: null }
-    }
+    // Only create approval for critical or high risk explicit rejections.
+    // Low and medium risk content flows through automatically.
+    if (approved === true) return { data: null, error: null }
+    if (typeof approved !== 'boolean') return { data: null, error: null }
+    if (riskLevel === 'low' || riskLevel === 'medium') return { data: null, error: null }
 
     const supabase = createAdminClient()
 
     const { data: relatedAsset, error: assetError } = await supabase
       .from('assets')
-      .select('id')
+      .select('id, title')
       .eq('mission_id', missionId)
       .eq('workspace_id', workspaceId)
       .neq('job_id', jobId)
@@ -420,6 +421,14 @@ export async function createApprovalIfNeeded(
       )
       return { data: null, error: error.message }
     }
+
+    notifyApprovalNeeded(
+      missionId,
+      (data as ApprovalRow).id,
+      relatedAsset.title ?? 'Generated asset',
+      dbRiskLevel,
+      formatRiskFlags(flags),
+    ).catch(() => {})
 
     return { data: data as ApprovalRow, error: null }
   } catch (err) {

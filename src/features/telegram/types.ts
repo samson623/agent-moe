@@ -105,3 +105,7 @@ export type MissionNotificationStage =
   | 'completed'
   | 'paused'
   | 'failed'
+
+export type ExperimentNotificationStage =
+  | 'experiment_iteration'
+  | 'experiment_complete'

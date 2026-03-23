@@ -552,6 +552,8 @@ export type Database = {
           updated_at: string
           user_id: string
           workspace_id: string
+          experiment_brief_id: string | null
+          iteration_number: number | null
         }
         Insert: {
           created_at?: string
@@ -566,6 +568,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           workspace_id: string
+          experiment_brief_id?: string | null
+          iteration_number?: number | null
         }
         Update: {
           created_at?: string
@@ -580,6 +584,8 @@ export type Database = {
           updated_at?: string
           user_id?: string
           workspace_id?: string
+          experiment_brief_id?: string | null
+          iteration_number?: number | null
         }
         Relationships: [
           {
@@ -993,6 +999,151 @@ export type Database = {
           workspace_id?: string
           state?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      experiment_briefs: {
+        Row: {
+          id: string
+          workspace_id: string
+          user_id: string
+          name: string
+          goal: string
+          operator_team: string
+          target_platform: string
+          target_asset_type: string
+          metric_type: string
+          metric_direction: string
+          metric_target: number | null
+          keep_threshold: number
+          max_tokens_per_run: number
+          max_duration_ms: number
+          max_iterations: number
+          current_iteration: number
+          best_metric_value: number | null
+          best_asset_id: string | null
+          cron_expression: string
+          timezone: string
+          last_run_at: string | null
+          next_run_at: string | null
+          is_active: boolean
+          is_complete: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          user_id: string
+          name: string
+          goal: string
+          operator_team?: string
+          target_platform?: string
+          target_asset_type?: string
+          metric_type?: string
+          metric_direction?: string
+          metric_target?: number | null
+          keep_threshold?: number
+          max_tokens_per_run?: number
+          max_duration_ms?: number
+          max_iterations?: number
+          current_iteration?: number
+          best_metric_value?: number | null
+          best_asset_id?: string | null
+          cron_expression?: string
+          timezone?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          is_active?: boolean
+          is_complete?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          user_id?: string
+          name?: string
+          goal?: string
+          operator_team?: string
+          target_platform?: string
+          target_asset_type?: string
+          metric_type?: string
+          metric_direction?: string
+          metric_target?: number | null
+          keep_threshold?: number
+          max_tokens_per_run?: number
+          max_duration_ms?: number
+          max_iterations?: number
+          current_iteration?: number
+          best_metric_value?: number | null
+          best_asset_id?: string | null
+          cron_expression?: string
+          timezone?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          is_active?: boolean
+          is_complete?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      experiment_runs: {
+        Row: {
+          id: string
+          experiment_brief_id: string
+          mission_id: string | null
+          iteration: number
+          instruction_used: string
+          diff_summary: string | null
+          metric_value: number | null
+          metric_delta: number | null
+          decision: string
+          decision_reason: string | null
+          tokens_used: number | null
+          duration_ms: number | null
+          exceeded_token_budget: boolean
+          exceeded_duration_budget: boolean
+          started_at: string | null
+          completed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          experiment_brief_id: string
+          mission_id?: string | null
+          iteration: number
+          instruction_used: string
+          diff_summary?: string | null
+          metric_value?: number | null
+          metric_delta?: number | null
+          decision?: string
+          decision_reason?: string | null
+          tokens_used?: number | null
+          duration_ms?: number | null
+          exceeded_token_budget?: boolean
+          exceeded_duration_budget?: boolean
+          started_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          experiment_brief_id?: string
+          mission_id?: string | null
+          iteration?: number
+          instruction_used?: string
+          diff_summary?: string | null
+          metric_value?: number | null
+          metric_delta?: number | null
+          decision?: string
+          decision_reason?: string | null
+          tokens_used?: number | null
+          duration_ms?: number | null
+          exceeded_token_budget?: boolean
+          exceeded_duration_budget?: boolean
+          started_at?: string | null
+          completed_at?: string | null
         }
         Relationships: []
       }

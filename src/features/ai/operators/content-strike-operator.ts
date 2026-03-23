@@ -486,8 +486,9 @@ Return ONLY valid JSON:
         } as ExecutionResult<ContentOutput>;
       }
 
+      const raw: unknown = JSON.parse(extractJSON(result.data))
       const parsed: unknown = normalizePlatformFields(
-        JSON.parse(extractJSON(result.data))
+        Array.isArray(raw) ? raw[0] : raw
       );
       const validated = this.validateOutput(parsed, ContentOutputSchema);
 

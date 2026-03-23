@@ -166,6 +166,44 @@ export function formatNotification(
   return `${emoji} *${escapeMarkdown(label)}*${extra}\n\n[View in dashboard](${link})`
 }
 
+export function formatAssetCreated(
+  assetTitle: string,
+  assetType: string,
+  missionId: string,
+): string {
+  const safeTitle = escapeMarkdown(assetTitle)
+  const safeType = escapeMarkdown(assetType)
+  const link = escapeMarkdown(missionDeepLink(missionId))
+  return [
+    `🎨 *Asset created* — ${safeType}`,
+    ``,
+    `_${safeTitle}_`,
+    ``,
+    `[View in dashboard](${link})`,
+  ].join('\n')
+}
+
+export function formatApprovalNeeded(
+  assetTitle: string,
+  riskLevel: string,
+  flags: string[],
+  missionId: string,
+): string {
+  const safeTitle = escapeMarkdown(assetTitle)
+  const safeRisk = escapeMarkdown(riskLevel)
+  const link = escapeMarkdown(missionDeepLink(missionId))
+  const flagLines = flags.slice(0, 3).map((f) => `• ${escapeMarkdown(f)}`).join('\n')
+  return [
+    `🚨 *Approval needed* — ${safeRisk} risk`,
+    ``,
+    `_${safeTitle}_`,
+    ``,
+    flagLines || `_No specific flags_`,
+    ``,
+    `[View mission](${link})`,
+  ].join('\n')
+}
+
 export function formatForwardedSummary(summary: string): string {
   const safe = escapeMarkdown(summary)
   return [
@@ -187,4 +225,76 @@ export function formatUnlinked(): string {
 
 export function formatPrivateChatOnly(): string {
   return `I only work in private chats\\. Send me a DM\\!`
+}
+
+// ---------------------------------------------------------------------------
+// Experiment digest templates
+// ---------------------------------------------------------------------------
+
+/**
+ * Morning digest: one or more iterations completed overnight.
+ * Sent after each Vercel Cron run (one message per experiment brief).
+ */
+export function formatExperimentDigest(
+  briefName: string,
+  iterationsRun: number,
+  bestMetricValue: number | null,
+  runs: Array<{
+    iteration: number
+    decision: string
+    metric_value: number | null
+    metric_delta: number | null
+    diff_summary: string | null
+  }>,
+  briefId: string,
+): string {
+  const { appUrl } = getTelegramConfig()
+  const link = escapeMarkdown(`${appUrl}/experiments/${briefId}`)
+  const safeName = escapeMarkdown(briefName)
+  const bestStr = bestMetricValue !== null ? escapeMarkdown(bestMetricValue.toFixed(4)) : 'N/A'
+
+  const runLines = runs.map((r) => {
+    const decisionEmoji = r.decision === 'kept' ? '✅' : r.decision === 'baseline' ? '🔖' : '❌'
+    const metricStr = r.metric_value !== null ? escapeMarkdown(r.metric_value.toFixed(4)) : 'N/A'
+    const deltaStr = r.metric_delta !== null
+      ? ` \\(${r.metric_delta >= 0 ? '\\+' : ''}${escapeMarkdown(r.metric_delta.toFixed(4))}\\)`
+      : ''
+    const diff = r.diff_summary ? `\n    _${escapeMarkdown(r.diff_summary)}_` : ''
+    return `${decisionEmoji} *Iter ${r.iteration}* — ${metricStr}${deltaStr}${diff}`
+  })
+
+  return [
+    `🔬 *Experiment Update: ${safeName}*`,
+    ``,
+    `*Iterations run:* ${iterationsRun}`,
+    `*Best metric:* ${bestStr}`,
+    ``,
+    ...runLines,
+    ``,
+    `[View experiment](${link})`,
+  ].join('\n')
+}
+
+/**
+ * Final notification when an experiment reaches max_iterations or its target metric.
+ */
+export function formatExperimentComplete(
+  briefName: string,
+  totalIterations: number,
+  bestMetricValue: number | null,
+  briefId: string,
+): string {
+  const { appUrl } = getTelegramConfig()
+  const link = escapeMarkdown(`${appUrl}/experiments/${briefId}`)
+  const safeName = escapeMarkdown(briefName)
+  const bestStr = bestMetricValue !== null ? escapeMarkdown(bestMetricValue.toFixed(4)) : 'N/A'
+
+  return [
+    `🏁 *Experiment Complete: ${safeName}*`,
+    ``,
+    `*Total iterations:* ${totalIterations}`,
+    `*Best metric value:* ${bestStr}`,
+    ``,
+    `[View full results](${link})`,
+  ].join('\n')
 }

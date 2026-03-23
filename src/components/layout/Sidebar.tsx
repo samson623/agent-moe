@@ -19,6 +19,7 @@ import {
   Globe,
   BarChart2,
   Clock,
+  FlaskConical,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ export type AppRoute =
   | "/connectors"
   | "/analytics"
   | "/scheduler"
+  | "/experiments"
   | "/settings";
 
 interface NavItem {
@@ -68,6 +70,7 @@ const NAV_GROUPS: NavItem[][] = [
     { href: "/connectors", label: "Connectors", icon: LinkIcon },
     { href: "/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/scheduler", label: "Scheduler", icon: Clock },
+    { href: "/experiments", label: "Experiments", icon: FlaskConical },
   ],
 ];
 

@@ -1,0 +1,9 @@
+{
+  "installCommand": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm install",
+  "crons": [
+    {
+      "path": "/api/cron/experiment-runner",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

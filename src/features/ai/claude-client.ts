@@ -89,54 +89,32 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 // ---------------------------------------------------------------------------
-// Subprocess query helper (claude -p)
+// Agent SDK query helper
 // ---------------------------------------------------------------------------
 
 /**
- * Run a prompt through the Claude CLI subprocess.
- * Uses the claude binary from PATH (installed via Claude Code / npm global).
- * Non-blocking — uses spawn with a promise wrapper.
+ * Run a prompt through the Claude Agent SDK.
+ * Uses the bundled cli.js inside @anthropic-ai/claude-agent-sdk — no global
+ * binary required. Authenticates via CLAUDE_CODE_OAUTH_TOKEN automatically.
  */
-function queryViaSubprocess(prompt: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const { spawn } = require("child_process") as typeof import("child_process");
+async function queryViaAgentSDK(prompt: string, systemPrompt?: string): Promise<string> {
+  const { query } = await import("@anthropic-ai/claude-agent-sdk");
 
-    // On Windows, claude is a .cmd file — shell:true handles this transparently
-    const proc = spawn("claude", ["-p", "--max-turns", "5"], {
-      env: process.env,
-      shell: true,
-    });
-
-    let output = "";
-    let errorOutput = "";
-
-    proc.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString(); });
-    proc.stderr?.on("data", (chunk: Buffer) => { errorOutput += chunk.toString(); });
-
-    const timer = setTimeout(() => {
-      proc.kill();
-      reject(new Error(`claude -p timed out after ${AI_CALL_TIMEOUT_MS / 1000}s`));
-    }, AI_CALL_TIMEOUT_MS);
-
-    proc.stdin?.write(prompt, "utf-8");
-    proc.stdin?.end();
-
-    proc.on("close", (code: number | null) => {
-      clearTimeout(timer);
-      const text = output.trim();
-      if (code === 0 && text) {
-        resolve(text);
-      } else {
-        const errDetail = errorOutput.slice(0, 300) || `exit code ${code}`;
-        reject(new Error(`claude -p failed: ${errDetail}`));
-      }
-    });
-
-    proc.on("error", (err: Error) => {
-      clearTimeout(timer);
-      reject(new Error(`claude -p spawn error: ${err.message}`));
-    });
+  const gen = query({
+    prompt,
+    options: systemPrompt ? { systemPrompt } : undefined,
   });
+
+  for await (const message of gen) {
+    if (message.type === "result" && message.subtype === "success") {
+      return message.result;
+    }
+    if (message.type === "result") {
+      throw new Error(`Claude Agent SDK error: ${message.subtype}`);
+    }
+  }
+
+  throw new Error("Claude Agent SDK: no result message received");
 }
 
 // ---------------------------------------------------------------------------
@@ -185,7 +163,7 @@ export class ClaudeClient {
     }
 
     console.log("[ClaudeClient] Initialized", {
-      method: hasOAuthToken && !hasApiKey ? "subprocess (claude -p, Max subscription)" : "direct_api",
+      method: hasOAuthToken && !hasApiKey ? "agent-sdk (Max subscription, $0)" : "direct_api",
       hasApiKey,
       hasOAuthToken,
     });
@@ -215,14 +193,11 @@ export class ClaudeClient {
         text = result.text;
         tokensUsed = result.tokensUsed;
       } else {
-        // Subprocess via claude -p (Max subscription, $0)
-        const fullPrompt = options.systemPrompt
-          ? `${options.systemPrompt}\n\n---\n\n${prompt}`
-          : prompt;
+        // Agent SDK via bundled cli.js (Max subscription, $0)
         text = await withTimeout(
-          queryViaSubprocess(fullPrompt),
+          queryViaAgentSDK(prompt, options.systemPrompt),
           AI_CALL_TIMEOUT_MS,
-          "claude -p"
+          "claude-agent-sdk"
         );
       }
 

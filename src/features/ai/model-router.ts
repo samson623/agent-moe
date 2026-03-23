@@ -51,14 +51,6 @@ const CLAUDE_JOB_TYPES = new Set<JobType>([
   JobType.OPPORTUNITY_GENERATION,
   JobType.PRICING_STRATEGY,
   JobType.VIDEO_PACKAGE,
-  JobType.BROWSER_SCRAPE,
-  JobType.BROWSER_SCREENSHOT,
-  JobType.BROWSER_CLICK,
-  JobType.BROWSER_FILL_FORM,
-  JobType.BROWSER_NAVIGATE,
-  JobType.BROWSER_MONITOR,
-  JobType.BROWSER_EXTRACT_DATA,
-  JobType.BROWSER_SUBMIT_FORM,
 ]);
 
 /**
@@ -76,6 +68,14 @@ const GPT_NANO_JOB_TYPES = new Set<JobType>([
   JobType.CONTENT_CLASSIFICATION,
   JobType.CLAIM_FLAGGING,
   JobType.TONAL_ALIGNMENT_CHECK,
+  JobType.BROWSER_SCRAPE,
+  JobType.BROWSER_SCREENSHOT,
+  JobType.BROWSER_CLICK,
+  JobType.BROWSER_FILL_FORM,
+  JobType.BROWSER_NAVIGATE,
+  JobType.BROWSER_MONITOR,
+  JobType.BROWSER_EXTRACT_DATA,
+  JobType.BROWSER_SUBMIT_FORM,
 ]);
 
 // ---------------------------------------------------------------------------
