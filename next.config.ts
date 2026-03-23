@@ -32,10 +32,12 @@ const nextConfig: NextConfig = {
     // Playwright via instrumentation.ts) with a no-op stub. This breaks the
     // import chain so NFT never traces Playwright into any Lambda bundle.
     if (process.env.VERCEL) {
-      config.resolve.alias['@/features/browser-agent/scheduler'] = path.join(
-        __dirname,
-        'src/lib/stubs/browser-scheduler-stub.ts'
-      );
+      // Use the resolved absolute path as the alias key — the @/ prefix is
+      // already expanded by Next.js before custom aliases are checked.
+      const real = path.join(__dirname, 'src/features/browser-agent/scheduler');
+      const stub = path.join(__dirname, 'src/lib/stubs/browser-scheduler-stub.ts');
+      config.resolve.alias[real] = stub;
+      config.resolve.alias[real + '.ts'] = stub;
     }
     return config;
   },
