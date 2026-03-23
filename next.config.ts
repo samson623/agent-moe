@@ -12,6 +12,9 @@ const TURBOPACK_STUBS: Record<string, string> = {
   '@/features/browser-agent/scheduler': '@/lib/stubs/browser-scheduler-stub',
   '@/features/browser-agent/browser-runner': '@/lib/stubs/browser-runner-stub',
   '@/features/browser-agent/recorder': '@/lib/stubs/recorder-stub',
+  '@/features/browser-agent/task-executor': '@/lib/stubs/task-executor-stub',
+  '@/features/browser-agent/executor-registry': '@/lib/stubs/executor-registry-stub',
+  '@/features/browser-agent/step-emitter': '@/lib/stubs/step-emitter-stub',
   '@/features/video-rendering/services/render-service': '@/lib/stubs/render-service-stub',
 };
 
