@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const stub = path.join(__dirname, 'src/lib/stubs/browser-scheduler-stub.ts');
+const real = path.join(__dirname, 'src/features/browser-agent/scheduler');
+
 const nextConfig: NextConfig = {
-  // Required so the webpack function below doesn't crash the build worker
-  // when Next.js dev uses Turbopack and prod uses webpack.
-  turbopack: {},
   serverExternalPackages: [
     'playwright',
     'playwright-core',
@@ -27,18 +27,22 @@ const nextConfig: NextConfig = {
       '**/node_modules/edge-tts/**',
     ],
   },
+  // Turbopack alias (used by `next dev --turbopack` and Vercel production builds
+  // when Turbopack is detected). Stubs the browser scheduler so playwright is
+  // never traced into the Lambda bundle.
+  turbopack: {
+    resolveAlias: {
+      // Turbopack paths are relative to the project root
+      '@/features/browser-agent/scheduler': './src/lib/stubs/browser-scheduler-stub',
+    },
+  },
+  // Webpack alias (used by `next build` locally / CI without Turbopack).
+  // `turbopack: {}` must be present or this function crashes the build worker.
   webpack: (config) => {
-    // On Vercel, replace the browser-agent scheduler (which transitively imports
-    // Playwright via instrumentation.ts) with a no-op stub. This breaks the
-    // import chain so NFT never traces Playwright into any Lambda bundle.
-    if (process.env.VERCEL) {
-      // Use the resolved absolute path as the alias key — the @/ prefix is
-      // already expanded by Next.js before custom aliases are checked.
-      const real = path.join(__dirname, 'src/features/browser-agent/scheduler');
-      const stub = path.join(__dirname, 'src/lib/stubs/browser-scheduler-stub.ts');
-      config.resolve.alias[real] = stub;
-      config.resolve.alias[real + '.ts'] = stub;
-    }
+    // Replace the browser-agent scheduler with a no-op stub so playwright is
+    // never included in any server bundle (breaks the instrumentation→playwright chain).
+    config.resolve.alias[real] = stub;
+    config.resolve.alias[real + '.ts'] = stub;
     return config;
   },
 };
