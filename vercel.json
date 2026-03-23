@@ -1,5 +1,4 @@
 {
-  "installCommand": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm install && rm -rf node_modules/playwright node_modules/playwright-core node_modules/@playwright node_modules/ffmpeg-static node_modules/remotion node_modules/@remotion node_modules/edge-tts",
   "crons": [
     {
       "path": "/api/cron/experiment-runner",
