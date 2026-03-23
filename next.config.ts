@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Required so the webpack function below doesn't crash the build worker
+  // when Next.js dev uses Turbopack and prod uses webpack.
+  turbopack: {},
   serverExternalPackages: [
     'playwright',
     'playwright-core',
@@ -22,6 +26,18 @@ const nextConfig: NextConfig = {
       '**/node_modules/@remotion/**',
       '**/node_modules/edge-tts/**',
     ],
+  },
+  webpack: (config) => {
+    // On Vercel, replace the browser-agent scheduler (which transitively imports
+    // Playwright via instrumentation.ts) with a no-op stub. This breaks the
+    // import chain so NFT never traces Playwright into any Lambda bundle.
+    if (process.env.VERCEL) {
+      config.resolve.alias['@/features/browser-agent/scheduler'] = path.join(
+        __dirname,
+        'src/lib/stubs/browser-scheduler-stub.ts'
+      );
+    }
+    return config;
   },
 };
 
