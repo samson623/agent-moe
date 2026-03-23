@@ -7,19 +7,21 @@ const isVercel = process.env.VERCEL === '1';
 // Modules that transitively import playwright/ffmpeg/remotion.
 // On Vercel these are replaced with no-op stubs so NFT never traces
 // the heavy packages into any Lambda bundle.
-const STUBS: Record<string, string> = {
-  '@/features/browser-agent/scheduler': './src/lib/stubs/browser-scheduler-stub',
-  '@/features/browser-agent/browser-runner': './src/lib/stubs/browser-runner-stub',
-  '@/features/browser-agent/recorder': './src/lib/stubs/recorder-stub',
-  '@/features/video-rendering/services/render-service': './src/lib/stubs/render-service-stub',
+// Turbopack resolveAlias values must be @/-prefixed module specifiers
+const TURBOPACK_STUBS: Record<string, string> = {
+  '@/features/browser-agent/scheduler': '@/lib/stubs/browser-scheduler-stub',
+  '@/features/browser-agent/browser-runner': '@/lib/stubs/browser-runner-stub',
+  '@/features/browser-agent/recorder': '@/lib/stubs/recorder-stub',
+  '@/features/video-rendering/services/render-service': '@/lib/stubs/render-service-stub',
 };
 
 // Absolute-path versions for webpack (which resolves @/ before alias lookup)
 const WEBPACK_STUBS = Object.fromEntries(
-  Object.entries(STUBS).map(([k, v]) => {
+  Object.entries(TURBOPACK_STUBS).map(([k, v]) => {
     const rel = k.replace('@/', 'src/');
     const abs = path.join(__dirname, rel);
-    const stubAbs = path.join(__dirname, v.replace('./', ''));
+    const stubRel = v.replace('@/', 'src/');
+    const stubAbs = path.join(__dirname, stubRel);
     return [[abs, stubAbs], [abs + '.ts', stubAbs + '.ts']];
   }).flat()
 );
@@ -53,7 +55,7 @@ const nextConfig: NextConfig = {
   },
   // Turbopack alias (Vercel uses Turbopack for production builds when
   // turbopack config is present; `next dev --turbopack` also uses this).
-  turbopack: isVercel ? { resolveAlias: STUBS } : {},
+  turbopack: isVercel ? { resolveAlias: TURBOPACK_STUBS } : {},
   // Webpack alias (local `next build` without --turbopack flag).
   webpack: (config) => {
     if (isVercel) {
