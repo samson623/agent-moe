@@ -15,6 +15,7 @@ const TURBOPACK_STUBS: Record<string, string> = {
   '@/features/browser-agent/task-executor': '@/lib/stubs/task-executor-stub',
   '@/features/browser-agent/executor-registry': '@/lib/stubs/executor-registry-stub',
   '@/features/browser-agent/step-emitter': '@/lib/stubs/step-emitter-stub',
+  '@/features/browser-agent/browser-agent-operator': '@/lib/stubs/browser-agent-operator-stub',
   '@/features/video-rendering/services/render-service': '@/lib/stubs/render-service-stub',
 };
 
