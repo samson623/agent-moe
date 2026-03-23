@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-serverExternalPackages: [
+  typescript: {
+    // Heavy packages (playwright, remotion, ffmpeg) are stripped from the
+    // Vercel install to keep the bundle under 300MB. Their types are absent
+    // on the build server, so we skip TS errors there only.
+    ignoreBuildErrors: !!process.env.VERCEL,
+  },
+  serverExternalPackages: [
     '@remotion/renderer',
     '@remotion/bundler',
     '@remotion/cli',
