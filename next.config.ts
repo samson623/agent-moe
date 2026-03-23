@@ -1,3 +1,4 @@
+// Build: 2026-03-23T03:00Z — force Vercel cache invalidation
 import type { NextConfig } from "next";
 import path from "path";
 
