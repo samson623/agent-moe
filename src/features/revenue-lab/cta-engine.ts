@@ -26,7 +26,13 @@ import type {
 // OpenAI client
 // ---------------------------------------------------------------------------
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+let _openai: OpenAI | null = null
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  }
+  return _openai
+}
 const GPT_NANO_MODEL = process.env.OPENAI_NANO_MODEL ?? 'gpt-5-nano'
 
 // ---------------------------------------------------------------------------
@@ -160,7 +166,7 @@ export class CTAEngine {
     ].join('\n')
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: GPT_NANO_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
@@ -194,7 +200,7 @@ export class CTAEngine {
     const prompt = this.buildCTAPrompt(offer, platform, contentType, count)
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: GPT_NANO_MODEL,
         messages: [
           {
