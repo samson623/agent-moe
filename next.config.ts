@@ -1,10 +1,33 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const stub = path.join(__dirname, 'src/lib/stubs/browser-scheduler-stub.ts');
-const real = path.join(__dirname, 'src/features/browser-agent/scheduler');
+const isVercel = process.env.VERCEL === '1';
+
+// Modules that transitively import playwright/ffmpeg/remotion.
+// On Vercel these are replaced with no-op stubs so NFT never traces
+// the heavy packages into any Lambda bundle.
+const STUBS: Record<string, string> = {
+  '@/features/browser-agent/scheduler': './src/lib/stubs/browser-scheduler-stub',
+  '@/features/browser-agent/browser-runner': './src/lib/stubs/browser-runner-stub',
+  '@/features/browser-agent/recorder': './src/lib/stubs/recorder-stub',
+  '@/features/video-rendering/services/render-service': './src/lib/stubs/render-service-stub',
+};
+
+// Absolute-path versions for webpack (which resolves @/ before alias lookup)
+const WEBPACK_STUBS = Object.fromEntries(
+  Object.entries(STUBS).map(([k, v]) => {
+    const rel = k.replace('@/', 'src/');
+    const abs = path.join(__dirname, rel);
+    const stubAbs = path.join(__dirname, v.replace('./', ''));
+    return [[abs, stubAbs], [abs + '.ts', stubAbs + '.ts']];
+  }).flat()
+);
 
 const nextConfig: NextConfig = {
+  typescript: {
+    // Stubs may not perfectly match original types — ignore on Vercel only
+    ignoreBuildErrors: isVercel,
+  },
   serverExternalPackages: [
     'playwright',
     'playwright-core',
@@ -27,22 +50,14 @@ const nextConfig: NextConfig = {
       '**/node_modules/edge-tts/**',
     ],
   },
-  // Turbopack alias (used by `next dev --turbopack` and Vercel production builds
-  // when Turbopack is detected). Stubs the browser scheduler so playwright is
-  // never traced into the Lambda bundle.
-  turbopack: {
-    resolveAlias: {
-      // Turbopack paths are relative to the project root
-      '@/features/browser-agent/scheduler': './src/lib/stubs/browser-scheduler-stub',
-    },
-  },
-  // Webpack alias (used by `next build` locally / CI without Turbopack).
-  // `turbopack: {}` must be present or this function crashes the build worker.
+  // Turbopack alias (Vercel uses Turbopack for production builds when
+  // turbopack config is present; `next dev --turbopack` also uses this).
+  turbopack: isVercel ? { resolveAlias: STUBS } : {},
+  // Webpack alias (local `next build` without --turbopack flag).
   webpack: (config) => {
-    // Replace the browser-agent scheduler with a no-op stub so playwright is
-    // never included in any server bundle (breaks the instrumentation→playwright chain).
-    config.resolve.alias[real] = stub;
-    config.resolve.alias[real + '.ts'] = stub;
+    if (isVercel) {
+      Object.assign(config.resolve.alias, WEBPACK_STUBS);
+    }
     return config;
   },
 };
