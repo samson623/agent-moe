@@ -7,6 +7,7 @@ import { planAndExecuteMission } from '@/features/mission-engine/services/orches
 import type { MissionStatus, MissionPriority } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 const MISSION_PRIORITIES: MissionPriority[] = ['low', 'normal', 'high', 'urgent']
 const MISSION_STATUSES: MissionStatus[] = [

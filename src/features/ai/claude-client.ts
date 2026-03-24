@@ -47,6 +47,7 @@ function extractJSON(raw: string): string {
 function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): AIError {
   if (err instanceof Error) {
     const message = err.message;
+    const isTimeout = message.includes("timed out") || message.includes("timeout");
     const code =
       message.includes("401") || message.includes("auth")
         ? AIErrorCode.AUTH_FAILED
@@ -54,12 +55,14 @@ function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): 
           ? AIErrorCode.RATE_LIMITED
           : message.includes("context")
             ? AIErrorCode.CONTEXT_TOO_LONG
-            : fallbackCode;
+            : isTimeout
+              ? AIErrorCode.TIMEOUT
+              : fallbackCode;
 
     return {
       code,
       message,
-      retryable: code === AIErrorCode.RATE_LIMITED,
+      retryable: code === AIErrorCode.RATE_LIMITED || code === AIErrorCode.TIMEOUT,
     };
   }
 
@@ -74,7 +77,7 @@ function buildAIError(err: unknown, fallbackCode = AIErrorCode.UPSTREAM_ERROR): 
 // Timeout helper
 // ---------------------------------------------------------------------------
 
-const AI_CALL_TIMEOUT_MS = 300_000; // 5 minutes per AI call (research + web search needs time)
+const AI_CALL_TIMEOUT_MS = 240_000; // 240s — fits within Vercel Pro 300s maxDuration limit
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -97,12 +100,19 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
  * Uses the bundled cli.js inside @anthropic-ai/claude-agent-sdk — no global
  * binary required. Authenticates via CLAUDE_CODE_OAUTH_TOKEN automatically.
  */
-async function queryViaAgentSDK(prompt: string, systemPrompt?: string): Promise<string> {
+async function queryViaAgentSDK(
+  prompt: string,
+  systemPrompt?: string,
+  allowedTools?: string[],
+): Promise<string> {
   const { query } = await import("@anthropic-ai/claude-agent-sdk");
 
   const gen = query({
     prompt,
-    options: systemPrompt ? { systemPrompt } : undefined,
+    options: {
+      ...(systemPrompt ? { systemPrompt } : {}),
+      ...(allowedTools ? { allowedTools } : {}),
+    },
   });
 
   for await (const message of gen) {
@@ -147,6 +157,41 @@ async function queryDirectAPI(
   };
 }
 
+/**
+ * Direct API call with Anthropic's built-in web_search tool enabled.
+ * Used for research jobs on Vercel where the Agent SDK is not available.
+ * The model autonomously searches the web and returns results as text.
+ */
+async function queryDirectAPIWithSearch(
+  prompt: string,
+  options: { systemPrompt?: string; maxTokens?: number } = {}
+): Promise<{ text: string; tokensUsed: number }> {
+  const Anthropic = (await import("@anthropic-ai/sdk")).default;
+  const client = new Anthropic({
+    apiKey: process.env["ANTHROPIC_API_KEY"],
+    timeout: AI_CALL_TIMEOUT_MS,
+  });
+
+  const response = await (client.beta.messages.create as Function)({
+    model: "claude-sonnet-4-6-20250514",
+    max_tokens: options.maxTokens ?? 4096,
+    ...(options.systemPrompt ? { system: options.systemPrompt } : {}),
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
+    messages: [{ role: "user", content: prompt }],
+    betas: ["web-search-2025-03-05"],
+  });
+
+  const textBlocks = (response.content as Array<{ type: string; text?: string }>)
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "");
+  const text = textBlocks.join("\n").trim();
+
+  return {
+    text,
+    tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // ClaudeClient class
 // ---------------------------------------------------------------------------
@@ -179,6 +224,8 @@ export class ClaudeClient {
       systemPrompt?: string;
       maxTokens?: number;
       temperature?: number;
+      allowedTools?: string[];
+      useWebSearch?: boolean;
     } = {}
   ): Promise<ExecutionResult<string>> {
     const start = Date.now();
@@ -187,15 +234,29 @@ export class ClaudeClient {
       let text: string;
       let tokensUsed: number | undefined;
 
-      if (process.env["ANTHROPIC_API_KEY"]) {
-        // Direct API (pay-per-token) when API key is explicitly set
-        const result = await queryDirectAPI(prompt, options);
-        text = result.text;
-        tokensUsed = result.tokensUsed;
+      const hasApiKey = !!process.env["ANTHROPIC_API_KEY"];
+      const isVercel = !!process.env["VERCEL"];
+
+      if (hasApiKey) {
+        if (options.useWebSearch) {
+          const result = await queryDirectAPIWithSearch(prompt, options);
+          text = result.text;
+          tokensUsed = result.tokensUsed;
+        } else {
+          const result = await queryDirectAPI(prompt, options);
+          text = result.text;
+          tokensUsed = result.tokensUsed;
+        }
+      } else if (isVercel) {
+        // Agent SDK requires a local Claude Code binary — cannot run on Vercel.
+        throw new Error(
+          "ANTHROPIC_API_KEY is not set. Claude Agent SDK cannot run on Vercel serverless. " +
+          "Set ANTHROPIC_API_KEY in your Vercel environment variables."
+        );
       } else {
-        // Agent SDK via bundled cli.js (Max subscription, $0)
+        // Agent SDK via bundled cli.js (Max subscription, $0) — local dev only
         text = await withTimeout(
-          queryViaAgentSDK(prompt, options.systemPrompt),
+          queryViaAgentSDK(prompt, options.systemPrompt, options.allowedTools),
           AI_CALL_TIMEOUT_MS,
           "claude-agent-sdk"
         );
@@ -446,11 +507,18 @@ Return ONLY valid JSON:
     options: { depth?: "surface" | "deep"; format?: "bullet" | "paragraph" | "structured" } = {}
   ): Promise<ExecutionResult<string>> {
     const systemPrompt = `You are a professional market researcher and trend analyst.
-Produce factual, actionable research. Cite your reasoning. Structure output clearly.
+Search the web for real, current information. Produce factual, actionable research with sources.
 Format: ${options.format ?? "structured"}
 Depth: ${options.depth ?? "deep"}`;
 
-    return this.run(`Research: ${query}`, { systemPrompt, maxTokens: 4096 });
+    return this.run(`Research the following using live web search: ${query}`, {
+      systemPrompt,
+      maxTokens: 4096,
+      // Agent SDK path: grant WebSearch permission without prompting
+      allowedTools: ["WebSearch"],
+      // Direct API path: use Anthropic's built-in web_search tool
+      useWebSearch: true,
+    });
   }
 
   // ---------------------------------------------------------------------------
