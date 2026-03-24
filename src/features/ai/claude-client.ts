@@ -234,10 +234,9 @@ export class ClaudeClient {
       let text: string;
       let tokensUsed: number | undefined;
 
-      const hasApiKey = !!process.env["ANTHROPIC_API_KEY"];
-      const isVercel = !!process.env["VERCEL"];
+      const useDirectAPI = !!process.env["ANTHROPIC_API_KEY"];
 
-      if (hasApiKey) {
+      if (useDirectAPI) {
         if (options.useWebSearch) {
           const result = await queryDirectAPIWithSearch(prompt, options);
           text = result.text;
@@ -247,14 +246,8 @@ export class ClaudeClient {
           text = result.text;
           tokensUsed = result.tokensUsed;
         }
-      } else if (isVercel) {
-        // Agent SDK requires a local Claude Code binary — cannot run on Vercel.
-        throw new Error(
-          "ANTHROPIC_API_KEY is not set. Claude Agent SDK cannot run on Vercel serverless. " +
-          "Set ANTHROPIC_API_KEY in your Vercel environment variables."
-        );
       } else {
-        // Agent SDK via bundled cli.js (Max subscription, $0) — local dev only
+        // Agent SDK via bundled cli.js (Max subscription, $0)
         text = await withTimeout(
           queryViaAgentSDK(prompt, options.systemPrompt, options.allowedTools),
           AI_CALL_TIMEOUT_MS,
